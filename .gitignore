@@ -1,0 +1,42 @@
+# Dependencies and generated output
+node_modules/
+target/
+dist/
+build/
+coverage/
+.vite/
+.cache/
+.turbo/
+*.tsbuildinfo
+# Local runtime data (portable package sources remain tracked)
+.osmium/
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+*.db
+*.db-wal
+*.db-shm
+# Secrets; examples are intentionally tracked
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials.json
+# Temporary files, logs and editor / OS metadata
+tmp/
+temp/
+*.tmp
+*.log
+*.bak
+*.swp
+*~
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
