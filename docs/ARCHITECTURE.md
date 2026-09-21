@@ -4,6 +4,8 @@
 
 現在の `PackageDocuments` は未検証のJSON文書集合、`PackageModel` は構造・意味検証を通過した読取り専用モデル。元のextensionsも保持する。モデル生成はファイルの存在や実際のsymlink安全性を証明しないため、filesystem adapterの検証完了前にinstall可能と扱わない。`prerequisite_order` は循環検証用の前提順序であり、Curriculumの順序や習熟推定を置換しない。
 
+Phase 2aで `osmium-package::load_source` を追加。Source inventory、portable path/containment/link/size検査、JSON/YAML parse、schema/意味検証、Markdown本文読込みを順に行う。Coreにはfilesystem依存を追加していない。診断文書名を実ファイル名に対応づける。返されるLoadedSourceはbuild用のsnapshotであり、未実装のinstallerの安全性や同時書換え耐性を保証しない。
+
 ## 責務と依存方向
 
 ```text

@@ -1,16 +1,17 @@
 [package]
-name = "osmium-core"
+name = "osmium-package"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
-serde.workspace = true
+osmium-core = { path = "../osmium-core" }
 serde_json.workspace = true
-jsonschema.workspace = true
-language-tags.workspace = true
-yaml-rust2.workspace = true
+unicode-normalization.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
 
 [lints]
 workspace = true

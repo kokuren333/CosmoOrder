@@ -1,6 +1,6 @@
 # Osmium Package Format（草案0.1）
 
-状態: 開発版0.1の構造Schemaと適合fixtureを実装。[Schema契約](../spec/v0.1/README.md)を参照。下記例は長期互換を保証した公開形式ではない。SourceのYAML読込み、意味検証、Distribution、Event永続化は後続Phaseで実装する。
+状態: 開発版0.1のSchema、SourceのJSON/YAML読込み、意味検証と適合fixtureを実装。[Schema契約](../spec/v0.1/README.md)を参照。下記例は長期互換を保証した公開形式ではない。Distribution、Event永続化は後続Phaseで実装する。
 
 ## SourceとDistribution
 

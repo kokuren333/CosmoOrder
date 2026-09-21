@@ -7,9 +7,15 @@
 | serde | 1.0.229 | MIT OR Apache-2.0 | 構造化した診断の入出力 |
 | serde_json | 1.0.151 | MIT OR Apache-2.0 | JSONの値とSchemaを扱う |
 | jsonschema | 0.56.0 | MIT | JSON Schema 2020-12による検証 |
+| yaml-rust2 | 0.13.0 | MIT OR Apache-2.0 | 制限付きevent parserでJSON値に変換、default features無効 |
+| language-tags | 0.3.2 | MIT OR Apache-2.0 | BCP 47構文、ネット照合なし |
+| unicode-normalization | 0.1.25 | MIT OR Apache-2.0 | source pathのNFC衝突検出 |
+| tempfile（testのみ） | 3.27.0 | MIT OR Apache-2.0 | 利用者データから分離したfilesystem試験 |
 
 crates.ioのmetadataと公式API資料を確認して選定。jsonschemaはdefault featuresを無効化し、HTTP/ファイル参照の自動取得を含めない。Packageから任意schemaを受理せず、固定bundle内のfragmentのみ参照する。serde_jsonのunbounded_depthは有効化しない。
 
 依存の利用可能性とnativeビルドの検証は、脆弱性がないことの証明ではない。アーカイブ/YAML/parser導入時には入力制限と悪意あるfixtureも追加する。Phase 1はfilesystem loaderを提供しないので、schemaがvalidという理由で外部教材を実行しない。
 
 参照: [jsonschema公式Rust API](https://docs.rs/jsonschema/0.56.0/jsonschema/)、[serde_json公式Rust API](https://docs.rs/serde_json/1.0.151/serde_json/)。
+
+Phase 2aの依存はcrates.io metadataおよび取得した公式crate sourceで確認した。YAMLは高水準loaderによるalias展開を使わず、event段階で拒否する。yaml-rust2のMarker列は実際には0始まりであり、Osmiumの1始まりへ補正する位置テストを追加した。

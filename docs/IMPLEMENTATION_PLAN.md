@@ -1,6 +1,6 @@
 # Osmium 実装計画
 
-更新日: 2026-09-22。状態: Phase 1完了、Phase 2aのCore意味検証・JSON解析を実装、filesystem loaderは作業中。
+更新日: 2026-09-22。状態: Phase 2aのSource loader・Core検証を実装。Phase 2bのCLIが次の作業。
 
 ## 1. 調査と要件の優先順位
 
@@ -119,6 +119,7 @@ Git管理から依存物、生成物、ログ、cache、秘密、ローカルDB�
 - Phase 1: Cargo workspaceと `osmium-core::schema`、自己完結したJSON Schema 2020-12 bundle、Concept/Objective/Curriculum/Resource/Assessment/LearningEvent、最小日本語教材、良/不正fixtures、構造診断を実装。変更先はCargo.toml/Cargo.lock、crates/osmium-core、spec/v0.1、examples/arithmetic、fixtures、READMEと関連設計文書。fmt、clippy（warnings拒否）、offline/locked test（6件）、offline/locked build成功。Rust nativeのMSVCビルドは利用可能。Tauri/WebView2は未検証。HTTP/file schema解決featureが無効であることをcargo treeで確認。コミット名は `feat: add package schema and offline validation foundation`（hashはGit履歴および完了報告を参照）。
 - Phase 1の制約: 構造validationのみ。YAML/JSON loaderの重複key拒否、参照・循環・path安全性、BCP 47構文、capability対応、実際のEvent整合、Distribution/GUIは後続。digest形状fixtureは真正なbuild結果ではない。Schemaを通るだけで外部教材をインストール可能とは判定しない。
 - Phase 2a（途中）: Coreの読取り専用PackageModel、重複ID、型付き参照、Concept requires循環、選択肢と正解、未知required capability、相対path字句規則を実装。JSONの4 MiB制限、重複キー拒否、実際のsyntax位置の診断も追加。変更先はcrates/osmium-coreのparsing/validationとintegration tests、関連文書。Phase全体は未完了で、YAML、filesystem containment、symlink/reparse、Unicode path衝突、BCP 47、ファイル存在検証が残る。19テスト（既存6＋新規13）を追加・実行し、2,048 Conceptの前提chainも確認。Rust incremental cacheのhardlink警告はfilesystem由来でcopy fallbackにより処理継続。コミット名 `feat: validate package semantics and reject ambiguous json`、hashはGit履歴と報告参照。
+- Phase 2a完了: `osmium-package::load_source`、制限付きYAML parser、BCP 47構文検証を追加。静的Sourceのcontainment、symlink/reparse（Windows junctionを実際に作成して試験）、NFC/case path衝突、file存在・拡張子・UTF-8、4 MiB/file・64 MiB/tree・4,096 entries・深度32を検証。YAMLの重複key/alias/anchor/tag/merge/multiple documents/深度超過も拒否。JSON/YAMLから同じモデルを構成し、optional extensionを保持。追加先はcrates/osmium-package、crates/osmium-core/src/yaml.rsとtests、Cargo依存、仕様文書。テスト合計33件、fmt/clippy/buildを検証。コミット名 `feat: load bounded local packages with json and yaml manifests`（hashは履歴・完了報告参照）。残制約: Unix実機未検証、悪意ある別processがSource親directoryを継続的に差替える競合の完全防御は未保証。Phase 3の隔離staging・再検証で配布物の安全性を確定する。CLI/ZIP/install/UIはまだ未実装。
 - Phase 2b以降: 未着手。各完了時に、実装内容・変更ファイル・検証結果・残課題・commit hashをここへ追記し、利用者にも簡潔に報告する。
 
 ## 8. 技術判断の参照

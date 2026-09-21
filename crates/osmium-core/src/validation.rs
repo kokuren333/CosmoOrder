@@ -137,6 +137,15 @@ pub fn validate_package(documents: PackageDocuments) -> Result<PackageModel, Vec
     // These accessors are safe after the fixed schemas have accepted every
     // document; invalid raw inputs never reach the semantic pass.
     let concepts = documents.concepts.as_array().unwrap();
+    if language_tags::LanguageTag::parse(documents.manifest["language"].as_str().unwrap()).is_err()
+    {
+        errors.push(error(
+            "manifest",
+            "/language".into(),
+            "OSM_LANGUAGE",
+            "language must be a syntactically well-formed BCP 47 tag",
+        ));
+    }
     let objectives = documents.objectives.as_array().unwrap();
     let resources = documents.resources.as_array().unwrap();
     let assessments = documents.assessments.as_array().unwrap();
