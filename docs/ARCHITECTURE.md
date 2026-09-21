@@ -1,6 +1,8 @@
 # Osmium Architecture
 
-状態: 最小v1の設計。Phase 1で `osmium-core::schema` の構造検証と診断DTOを実装済み。他の操作境界は後続Phaseで実装する。公開API保証ではない。
+状態: 最小v1の設計。`osmium-core::schema` の構造検証と診断DTO、`parsing::parse_json` の制限付きJSON解析、`validation::validate_package` の意味検証を実装済み。他の操作境界は後続Phaseで実装する。公開API保証ではない。
+
+現在の `PackageDocuments` は未検証のJSON文書集合、`PackageModel` は構造・意味検証を通過した読取り専用モデル。元のextensionsも保持する。モデル生成はファイルの存在や実際のsymlink安全性を証明しないため、filesystem adapterの検証完了前にinstall可能と扱わない。`prerequisite_order` は循環検証用の前提順序であり、Curriculumの順序や習熟推定を置換しない。
 
 ## 責務と依存方向
 

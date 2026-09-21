@@ -1,6 +1,6 @@
 # Osmium 実装計画
 
-更新日: 2026-09-22。状態: Phase 1の成果物・検証完了、Phase 2以降は未実装。
+更新日: 2026-09-22。状態: Phase 1完了、Phase 2aのCore意味検証・JSON解析を実装、filesystem loaderは作業中。
 
 ## 1. 調査と要件の優先順位
 
@@ -118,7 +118,8 @@ Git管理から依存物、生成物、ログ、cache、秘密、ローカルDB�
 - Phase 0: 全Markdown読了、Git初期化、技術環境確認、文書作成。ローカル文書リンク11件、新規文書のwhitespace、依存物・secret・DB除外と設定例/lockfileの非除外を検証し成功。コード未実装のためlint/typecheck/test/buildは未適用。元の設計ログは原文維持のためwhitespace修正対象外。所有者情報を記録しないfilesystemに対するGitの警告には、当該repositoryだけをコマンド単位のsafe.directoryで指定し、global設定は変更していない。初期commitは `docs: add initial implementation plan`（hashはコミット後の報告とGit履歴を参照）。
 - Phase 1: Cargo workspaceと `osmium-core::schema`、自己完結したJSON Schema 2020-12 bundle、Concept/Objective/Curriculum/Resource/Assessment/LearningEvent、最小日本語教材、良/不正fixtures、構造診断を実装。変更先はCargo.toml/Cargo.lock、crates/osmium-core、spec/v0.1、examples/arithmetic、fixtures、READMEと関連設計文書。fmt、clippy（warnings拒否）、offline/locked test（6件）、offline/locked build成功。Rust nativeのMSVCビルドは利用可能。Tauri/WebView2は未検証。HTTP/file schema解決featureが無効であることをcargo treeで確認。コミット名は `feat: add package schema and offline validation foundation`（hashはGit履歴および完了報告を参照）。
 - Phase 1の制約: 構造validationのみ。YAML/JSON loaderの重複key拒否、参照・循環・path安全性、BCP 47構文、capability対応、実際のEvent整合、Distribution/GUIは後続。digest形状fixtureは真正なbuild結果ではない。Schemaを通るだけで外部教材をインストール可能とは判定しない。
-- Phase 2以降: 未着手。各完了時に、実装内容・変更ファイル・検証結果・残課題・commit hashをここへ追記し、利用者にも簡潔に報告する。
+- Phase 2a（途中）: Coreの読取り専用PackageModel、重複ID、型付き参照、Concept requires循環、選択肢と正解、未知required capability、相対path字句規則を実装。JSONの4 MiB制限、重複キー拒否、実際のsyntax位置の診断も追加。変更先はcrates/osmium-coreのparsing/validationとintegration tests、関連文書。Phase全体は未完了で、YAML、filesystem containment、symlink/reparse、Unicode path衝突、BCP 47、ファイル存在検証が残る。19テスト（既存6＋新規13）を追加・実行し、2,048 Conceptの前提chainも確認。Rust incremental cacheのhardlink警告はfilesystem由来でcopy fallbackにより処理継続。コミット名 `feat: validate package semantics and reject ambiguous json`、hashはGit履歴と報告参照。
+- Phase 2b以降: 未着手。各完了時に、実装内容・変更ファイル・検証結果・残課題・commit hashをここへ追記し、利用者にも簡潔に報告する。
 
 ## 8. 技術判断の参照
 

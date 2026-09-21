@@ -19,7 +19,11 @@
 
 ## 構造検証と意味検証
 
-single_selectの正解は文字列、booleanの正解はboolean。未知response形式は拒否します。候補IDの一意性、正解の候補内存在、Entityのstable ID重複、参照先存在、graphの循環、capability対応、Event snapshotとの整合はPhase 2以降の意味検証で保証します。schema-validだけでインストール可能と判定してはいけません。
+single_selectの正解は文字列、booleanの正解はboolean。未知response形式は拒否します。候補IDの一意性、正解の候補内存在、Entityのstable ID重複、参照先存在、graphの循環、capability対応はCoreの意味検証で保証します。Event snapshotとの整合はStore導入時に追加します。schema-validだけでインストール可能と判定してはいけません。
+
+`parsing::parse_json` は入力metadataを4 MiBまでに制限し、入れ子やUnicode escapeを使った重複キー、余分なJSON document、不正UTF-8、過剰な深度を拒否します。JSON syntax診断には実際のline/columnを付けます。`validation::validate_package` は構造検証後に意味検証し、未知required capabilityを `OSM_CAPABILITY`、非対応schema版を `OSM_SCHEMA_VERSION`、参照切れを `OSM_REFERENCE`、循環を `OSM_CYCLE` として報告します。意味診断のfileは現時点では文書種別名であり、loaderで実ファイル名へ対応づけます。
+
+pathの字句検証ではdot segment、Windows device名、末尾dot/space等も拒否します。ただし実filesystemのsymlink/reparse pointやUnicode正規化衝突、参照fileの存在はまだ検証していません。追加capabilityの実装はないため、requiredはすべて非対応として明示拒否します。optionalの宣言とpayloadは保持します。
 
 `osmium-core::schema::validate_document`は入力を変更せず診断を返します。schemaは埋め込み済みで、Packageからschemaを渡すAPIはありません。jsonschema依存のHTTP/file解決機能も無効化しています。診断は最大100件、位置はJSON Pointerです。元ファイル位置を取得していないためline/columnはnullです。
 

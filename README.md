@@ -2,7 +2,7 @@
 
 Osmiumは、教材・概念・学習目標・問題・学習履歴をportableな形式で扱う、local-firstの学習Runtimeです。AIやHub、アカウントがなくても学習できることを基本にします。
 
-現在はPhase 1のSchema・検証基盤を実装しています。実行可能なアプリやCLIはまだありません。
+現在はPhase 2のCore読込み・意味検証を実装しています。実行可能なアプリやCLIはまだありません。
 
 ## 設計文書
 
@@ -31,7 +31,7 @@ cargo build --workspace
 
 初回はCargo依存を取得します。取得後は `--offline --locked` をCargoのclippy/test/buildへ指定できます。教材Schema検証そのものは外部ネットワークを使いません。
 
-[Schema](spec/v0.1/package.schema.json)と[適合性の説明](spec/v0.1/README.md)、[最小教材](examples/arithmetic/osmium.json)を用意しています。現在の検証は構造検証です。安全なファイル読込み・参照・循環の検証はPhase 2で追加します。
+[Schema](spec/v0.1/package.schema.json)と[適合性の説明](spec/v0.1/README.md)、[最小教材](examples/arithmetic/osmium.json)を用意しています。構造検証に加え、JSON重複キー・参照・循環・問題と正解の整合・非対応capabilityの検証を実装済みです。安全なfilesystem読込みとYAML入力は引き続きPhase 2で追加します。
 
 ## 開発の進め方
 
