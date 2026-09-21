@@ -1,0 +1,13 @@
+[
+  {
+    "id": "addition.lesson",
+    "type": "markdown",
+    "title": "1と1を合わせる",
+    "path": "content/introduction.md",
+    "teaches": [
+      "addition.basic"
+    ],
+    "creator": "Osmium example authors",
+    "attribution": "Original demonstration text; repository license not yet selected."
+  }
+]

@@ -2,7 +2,7 @@
 
 Osmiumは、教材・概念・学習目標・問題・学習履歴をportableな形式で扱う、local-firstの学習Runtimeです。AIやHub、アカウントがなくても学習できることを基本にします。
 
-現在は設計・実装計画の段階です。実行可能なアプリやCLIはまだありません。
+現在はPhase 1のSchema・検証基盤を実装しています。実行可能なアプリやCLIはまだありません。
 
 ## 設計文書
 
@@ -16,7 +16,22 @@ Osmiumは、教材・概念・学習目標・問題・学習履歴をportableな
 
 教材はMarkdown／YAML／JSON／assetsのファイルとして保存し、個人のLearning StateはSQLiteへ保存します。ConceptとLearningObjective、概念の前提関係とCurriculumの順序、回答の事実と推定習熟度をそれぞれ分けます。
 
-推奨構成はRust Core／CLI、Tauri 2、React／TypeScript／Viteです。バージョン固定と実行手順はPhase 1以降に追加します。Hubは将来Cloudflareで構築する独立した配布サービスです。
+推奨構成はRust Core／CLI、Tauri 2、React／TypeScript／Viteです。Rust依存はCargo.lockへ固定しています。Hubは将来Cloudflareで構築する独立した配布サービスです。
+
+## 現在の開発用検証
+
+Rust stable（開発確認環境1.98.1）とWindowsではMSVC build toolsが必要です。
+
+```sh
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+cargo build --workspace
+```
+
+初回はCargo依存を取得します。取得後は `--offline --locked` をCargoのclippy/test/buildへ指定できます。教材Schema検証そのものは外部ネットワークを使いません。
+
+[Schema](spec/v0.1/package.schema.json)と[適合性の説明](spec/v0.1/README.md)、[最小教材](examples/arithmetic/osmium.json)を用意しています。現在の検証は構造検証です。安全なファイル読込み・参照・循環の検証はPhase 2で追加します。
 
 ## 開発の進め方
 

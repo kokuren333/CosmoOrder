@@ -1,0 +1,22 @@
+[
+  {
+    "id": "addition.02",
+    "revision": "1",
+    "measures": [
+      "addition.basic"
+    ],
+    "stimulus": {
+      "markdown": "2 + 1 は 3 ですか？"
+    },
+    "response": {
+      "type": "boolean"
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "true"
+    },
+    "feedback": {
+      "markdown": "2に1を足すと3です。"
+    }
+  }
+]

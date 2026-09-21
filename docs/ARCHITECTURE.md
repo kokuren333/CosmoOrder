@@ -1,6 +1,6 @@
 # Osmium Architecture
 
-状態: 最小v1の実装前設計。公開API保証ではない。
+状態: 最小v1の設計。Phase 1で `osmium-core::schema` の構造検証と診断DTOを実装済み。他の操作境界は後続Phaseで実装する。公開API保証ではない。
 
 ## 責務と依存方向
 

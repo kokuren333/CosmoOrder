@@ -1,6 +1,6 @@
 # Osmium Package Format（草案0.1）
 
-状態: 実装前の形状案。正式JSON Schemaと適合fixtureはPhase 1で作成する。下記例は保証された公開形式ではない。
+状態: 開発版0.1の構造Schemaと適合fixtureを実装。[Schema契約](../spec/v0.1/README.md)を参照。下記例は長期互換を保証した公開形式ではない。SourceのYAML読込み、意味検証、Distribution、Event永続化は後続Phaseで実装する。
 
 ## SourceとDistribution
 

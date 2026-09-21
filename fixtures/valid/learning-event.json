@@ -1,0 +1,54 @@
+{
+  "event_schema_version": "0.1",
+  "event_id": "6e2b0864-2e66-4dd4-a02f-f57b59cfe8b1",
+  "device_id": "db48ee57-c6e2-4edc-b3b2-722ce8ac52d6",
+  "request_id": "d6ba7286-583e-4396-bbaf-7362a338be20",
+  "package_id": "org.example/arithmetic",
+  "package_version": "0.1.0",
+  "package_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "assessment_id": "addition.01",
+  "assessment_revision": "1",
+  "assessment_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "objective_ids": [
+    "addition.basic"
+  ],
+  "assessment_snapshot": {
+    "id": "addition.01",
+    "revision": "1",
+    "measures": [
+      "addition.basic"
+    ],
+    "stimulus": {
+      "markdown": "1 + 1 はいくつ？"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "1"
+        },
+        {
+          "id": "b",
+          "text": "2"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "b"
+    },
+    "feedback": {
+      "markdown": "1に1を足すと2です。"
+    }
+  },
+  "response": "b",
+  "score": 1,
+  "evaluator": {
+    "id": "org.osmium.exact.v1",
+    "version": "1"
+  },
+  "timestamp": "2026-09-22T00:00:00Z",
+  "duration_ms": null,
+  "hints_used": 0
+}

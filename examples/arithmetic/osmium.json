@@ -1,0 +1,19 @@
+{
+  "schema_version": "0.1",
+  "package_id": "org.example/arithmetic",
+  "package_version": "0.1.0",
+  "title": "足し算の基礎",
+  "language": "ja-JP",
+  "capabilities": {
+    "required": [],
+    "optional": []
+  },
+  "entities": {
+    "concepts": "entities/concepts.json",
+    "objectives": "entities/objectives.json",
+    "curricula": "entities/curricula.json",
+    "resources": "entities/resources.json",
+    "assessments": "entities/assessments.json"
+  },
+  "extensions": {}
+}
