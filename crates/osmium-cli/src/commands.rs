@@ -1,0 +1,235 @@
+//! One function per command. Each maps CLI arguments onto Core or Package
+//! operations and returns a serializable view; none re-implements validation.
+
+use crate::args::{Cli, Command};
+use crate::error::{Failure, target_diagnostic};
+use osmium_core::query::{self, EntityKind};
+use osmium_core::schema::Diagnostic;
+use osmium_core::validation::PackageModel;
+use osmium_package::init::{self, InitRequest};
+use osmium_package::load_source;
+use serde::Serialize;
+use std::path::{Path, PathBuf};
+
+/// Result of `validate`: identity plus entity counts of a valid package.
+#[derive(Debug, Serialize)]
+struct ValidateView {
+    schema_version: String,
+    package_id: String,
+    package_version: String,
+    total_entities: usize,
+    files_read: usize,
+}
+
+/// Result of `init`.
+#[derive(Debug, Serialize)]
+struct InitView {
+    package_id: String,
+    package_version: String,
+    schema_version: String,
+    language: String,
+    title: String,
+    directory: String,
+    created_files: Vec<String>,
+}
+
+pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failure> {
+    let value = match &cli.command {
+        Command::Lint { path } => {
+            let loaded = load(path)?;
+            let diagnostics = osmium_core::lint::lint(&loaded.model);
+            return Ok((
+                serde_json::json!({"finding_count": diagnostics.len(), "content_is_untrusted": true}),
+                diagnostics,
+            ));
+        }
+        Command::Init {
+            directory,
+            package_id,
+            language,
+        } => serde_json::to_value(init_command(
+            directory,
+            package_id.as_deref(),
+            language.as_deref(),
+        )?)
+        .map_err(internal_serialization)?,
+        Command::Validate { path } => {
+            let loaded = load(path)?;
+            serde_json::to_value(ValidateView {
+                schema_version: text(&loaded.model, "schema_version"),
+                package_id: text(&loaded.model, "package_id"),
+                package_version: text(&loaded.model, "package_version"),
+                // Reuse the Core view so `validate` and `inspect` can never
+                // disagree about how many entities a package holds.
+                total_entities: query::inspect(&loaded.model, 0).total_entities,
+                files_read: loaded.files.len(),
+            })
+            .map_err(internal_serialization)?
+        }
+        Command::Inspect { path, limit } => {
+            if *limit > query::MAX_PREREQUISITE_ORDER {
+                return Err(Failure::usage(
+                    "OSM_INSPECT_LIMIT",
+                    "inspect limit exceeds 64",
+                ));
+            }
+            let loaded = load(path)?;
+            serde_json::to_value(query::inspect(&loaded.model, *limit))
+                .map_err(internal_serialization)?
+        }
+        Command::Query {
+            path,
+            kind,
+            limit,
+            offset,
+        } => {
+            let loaded = load(path)?;
+            let kind = parse_kind(kind)?;
+            let view = query::query(&loaded.model, kind, *offset, *limit).map_err(option_value)?;
+            serde_json::to_value(view).map_err(internal_serialization)?
+        }
+        Command::Context {
+            path,
+            entity_id,
+            kind,
+            depth,
+            limit,
+        } => {
+            let loaded = load(path)?;
+            let kind = match kind {
+                Some(value) => parse_kind(value)?,
+                None => {
+                    query::resolve_target(&loaded.model, entity_id)
+                        .map_err(Failure::from_diagnostics)?
+                        .0
+                }
+            };
+            let view = query::context(&loaded.model, kind, entity_id, *depth, *limit)
+                .map_err(option_value)?;
+            serde_json::to_value(view).map_err(internal_serialization)?
+        }
+    };
+    Ok((value, Vec::new()))
+}
+
+/// Diagnostic codes that describe a rejected option value rather than a
+/// package defect. They are invocation mistakes, so they exit 2.
+const OPTION_VALUE_CODES: [&str; 3] = ["OSM_QUERY_LIMIT", "OSM_CONTEXT_DEPTH", "OSM_CONTEXT_LIMIT"];
+
+fn option_value(diagnostics: Vec<Diagnostic>) -> Failure {
+    if diagnostics
+        .iter()
+        .all(|diagnostic| OPTION_VALUE_CODES.contains(&diagnostic.code.as_str()))
+    {
+        // Keep the specific codes so a caller can tell the options apart, but
+        // report the invocation mistake rather than an invalid package.
+        Failure::new(diagnostics, crate::envelope::Exit::Usage)
+    } else {
+        Failure::from_diagnostics(diagnostics)
+    }
+}
+
+fn internal_serialization(error: serde_json::Error) -> Failure {
+    Failure::internal(
+        "OSM_OUTPUT",
+        format!("could not serialize the result: {error}"),
+    )
+}
+
+/// Load and fully validate a Source. A path that is not a readable directory
+/// is an invocation mistake, not an invalid package.
+fn load(path: &Path) -> Result<osmium_package::LoadedSource, Failure> {
+    let meta = std::fs::symlink_metadata(path).map_err(|error| {
+        Failure::new(
+            vec![target_diagnostic(
+                path,
+                &format!("cannot read the package path: {error}"),
+            )],
+            crate::envelope::Exit::Usage,
+        )
+    })?;
+    if meta.file_type().is_symlink() || !meta.is_dir() {
+        return Err(Failure::new(
+            vec![target_diagnostic(
+                path,
+                "the package path must be a regular directory",
+            )],
+            crate::envelope::Exit::Usage,
+        ));
+    }
+    load_source(path).map_err(Failure::from_diagnostics)
+}
+
+/// Reject a kind the CLI does not implement.
+///
+/// A bad option value is an invocation mistake, not an invalid package, so it
+/// is classified as usage even though Core reports it as a diagnostic.
+fn parse_kind(value: &str) -> Result<EntityKind, Failure> {
+    EntityKind::parse(value).ok_or_else(|| {
+        Failure::usage(
+            "OSM_QUERY_KIND",
+            format!(
+                "unknown entity kind: {value}; expected one of {}",
+                EntityKind::ALL
+                    .iter()
+                    .map(|kind| kind.name())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        )
+    })
+}
+
+fn text(model: &PackageModel, field: &str) -> String {
+    model.documents().manifest[field]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned()
+}
+
+fn init_command(
+    directory: &Path,
+    package_id: Option<&str>,
+    language: Option<&str>,
+) -> Result<InitView, Failure> {
+    let request = InitRequest {
+        directory: directory.to_path_buf(),
+        // An empty ID asks the package layer to derive one from the directory
+        // name, so that rule lives in exactly one place.
+        package_id: package_id.unwrap_or_default().to_owned(),
+        language: language.unwrap_or(init::SCAFFOLD_LANGUAGE).to_owned(),
+    };
+    let created_files = init::init_source(&request).map_err(|error| {
+        let diagnostic = Diagnostic {
+            code: error.code.to_owned(),
+            severity: "error".to_owned(),
+            file: Some(error.path.to_string_lossy().into_owned()),
+            line: None,
+            column: None,
+            path: String::new(),
+            message: error.message,
+            suggestions: Vec::new(),
+        };
+        // Invalid requests are usage failures; I/O and implementation errors
+        // retain the shared internal-failure status.
+        let exit = if matches!(
+            error.code,
+            "OSM_INIT_IO" | "OSM_INIT_INTERNAL" | "OSM_INIT_INVALID"
+        ) {
+            crate::envelope::Exit::Internal
+        } else {
+            crate::envelope::Exit::Usage
+        };
+        Failure::new(vec![diagnostic], exit)
+    })?;
+    let loaded = load(directory)?;
+    Ok(InitView {
+        package_id: text(&loaded.model, "package_id"),
+        package_version: text(&loaded.model, "package_version"),
+        schema_version: text(&loaded.model, "schema_version"),
+        language: text(&loaded.model, "language"),
+        title: text(&loaded.model, "title"),
+        directory: PathBuf::from(directory).to_string_lossy().into_owned(),
+        created_files,
+    })
+}

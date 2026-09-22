@@ -24,6 +24,8 @@ Application operationsはまずモジュール境界とし、必要性が出る�
 
 ## Entityと参照
 
+Phase 2bでは `osmium-core::query`（inspect/query/context）と `osmium-core::lint` を追加し、`osmium-cli` を引数・出力・exit statusのadapterとして実装。Source作成はPackage層の `init_source` が担い、全pathの事前検査、リンク親拒否、create_newによる上書き防止、生成後validationを行う。未知extensionはquery/contextでuntrusted dataとして扱い、lintは構造充足を教育品質と同一視しない。
+
 - Package: package ID、作品version、schema version、capabilities、内容一覧。
 - Concept: 学ぶ対象。安定IDとtitle、requiresを持つ。個人の習熟度を持たない。
 - LearningObjective: 何ができるか。Conceptを参照する。

@@ -1,6 +1,6 @@
 # Osmium 実装計画
 
-更新日: 2026-09-22。状態: Phase 2aのSource loader・Core検証を実装。Phase 2bのCLIが次の作業。
+更新日: 2026-09-22。状態: Phase 2bのCLI（`validate`/`lint`/`inspect`/`query`/`context`/`init`）を実装。Phase 3以降が次の作業。[Phase 2b引き継ぎメモ](PHASE2B_HANDOFF.md)は再開前の履歴資料。
 
 ## 1. 調査と要件の優先順位
 
@@ -120,7 +120,9 @@ Git管理から依存物、生成物、ログ、cache、秘密、ローカルDB�
 - Phase 1の制約: 構造validationのみ。YAML/JSON loaderの重複key拒否、参照・循環・path安全性、BCP 47構文、capability対応、実際のEvent整合、Distribution/GUIは後続。digest形状fixtureは真正なbuild結果ではない。Schemaを通るだけで外部教材をインストール可能とは判定しない。
 - Phase 2a（途中）: Coreの読取り専用PackageModel、重複ID、型付き参照、Concept requires循環、選択肢と正解、未知required capability、相対path字句規則を実装。JSONの4 MiB制限、重複キー拒否、実際のsyntax位置の診断も追加。変更先はcrates/osmium-coreのparsing/validationとintegration tests、関連文書。Phase全体は未完了で、YAML、filesystem containment、symlink/reparse、Unicode path衝突、BCP 47、ファイル存在検証が残る。19テスト（既存6＋新規13）を追加・実行し、2,048 Conceptの前提chainも確認。Rust incremental cacheのhardlink警告はfilesystem由来でcopy fallbackにより処理継続。コミット名 `feat: validate package semantics and reject ambiguous json`、hashはGit履歴と報告参照。
 - Phase 2a完了: `osmium-package::load_source`、制限付きYAML parser、BCP 47構文検証を追加。静的Sourceのcontainment、symlink/reparse（Windows junctionを実際に作成して試験）、NFC/case path衝突、file存在・拡張子・UTF-8、4 MiB/file・64 MiB/tree・4,096 entries・深度32を検証。YAMLの重複key/alias/anchor/tag/merge/multiple documents/深度超過も拒否。JSON/YAMLから同じモデルを構成し、optional extensionを保持。追加先はcrates/osmium-package、crates/osmium-core/src/yaml.rsとtests、Cargo依存、仕様文書。テスト合計33件、fmt/clippy/buildを検証。コミット名 `feat: load bounded local packages with json and yaml manifests`（hashは履歴・完了報告参照）。残制約: Unix実機未検証、悪意ある別processがSource親directoryを継続的に差替える競合の完全防御は未保証。Phase 3の隔離staging・再検証で配布物の安全性を確定する。CLI/ZIP/install/UIはまだ未実装。
-- Phase 2b以降: 未着手。各完了時に、実装内容・変更ファイル・検証結果・残課題・commit hashをここへ追記し、利用者にも簡潔に報告する。
+- Phase 2b（未コミット）: CLIの薄いadapter `crates/osmium-cli`（`osmium`バイナリ）を追加し、`validate`/`inspect`/`query`/`context`/`init` を実装。Coreへ純粋な意味ビュー `osmium-core::query`（inspect/query/context、上限 `MAX_QUERY_LIMIT`=256、`MAX_CONTEXT_NODES`=512、`MAX_CONTEXT_BYTES`=256KiB、`MAX_CONTEXT_DEPTH`=8）を、Packageへ非破壊scaffold `osmium-package::init` を追加。CLIは検証ロジックを一切持たず、引数解析・envelope整形・exit code決定のみを行う。stdoutは単一JSON envelope、stderrは診断1行、exit codeは0成功/1対象不正/2呼出し不正/3 I/O内部/4 schema・capability非互換。テスト合計70件、fmt/clippy/build成功。`osmium lint` とPhase 3以降は未実装。作業再開用の詳細は [Phase 2b引き継ぎメモ](PHASE2B_HANDOFF.md) を参照。残課題: `lint`未実装、distribution入力（ZIP/directory）のvalidateはPhase 3、Desktop未着手。
+- Phase 2b完了（Codex引継ぎ後）: DeepSeekの未コミット実装を読解し再検証。lintをCoreへ追加し、CLIはwarning付きの成功envelopeを返す。`--json`追加、inspect上限拒否、context対象およびDTO全体のbytes制限、initのID文法/既存YAML/リンク親拒否、create_newと生成後validation失敗時のfile rollback、I/O exit codeを修正。変更はcrates/osmium-core/query・lint、crates/osmium-package/init、crates/osmium-cliと文書。75件のworkspace testsと追加context境界テスト1件、clippy/fmt/buildを検証。実バイナリのstdoutを検証するprocess試験を含む。残課題はdistribution build/install、評価/永続化、Desktop、最終縦切り試験。悪意ある同時filesystem書換えの完全防御は依然保証しない。コミットhashはGit履歴と完了報告を参照。
+- Phase 3以降: 各完了時に、実装内容・変更ファイル・検証結果・残課題・commit hashをここへ追記し、利用者にも簡潔に報告する。利用者の最新指示に従い、動作するv1を最終検証した時点で開発を区切り、起動方法を提示する。
 
 ## 8. 技術判断の参照
 

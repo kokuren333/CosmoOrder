@@ -1,5 +1,7 @@
 //! Bounded source-package I/O. No package code is executed.
 
+pub mod init;
+
 use osmium_core::parsing::{MAX_DOCUMENT_BYTES, parse_json};
 use osmium_core::schema::{Diagnostic, DocumentKind, validate_document};
 use osmium_core::validation::{
