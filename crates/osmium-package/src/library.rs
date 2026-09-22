@@ -154,6 +154,28 @@ impl Library {
         &self.home
     }
 
+    /// Check a Runtime-owned file before handing its path to a storage adapter.
+    pub fn checked_data_file(&self, name: &str) -> Result<PathBuf, Vec<Diagnostic>> {
+        if name.contains('/') || osmium_core::validation::validate_relative_path(name).is_err() {
+            return Err(error(
+                "OSM_PATH",
+                "data file must have a portable single-component name",
+            ));
+        }
+        let path = self.home.join(name);
+        match fs::symlink_metadata(&path) {
+            Ok(meta) => {
+                reject_link(&meta, &path)?;
+                if !meta.is_file() {
+                    return Err(error("OSM_IO", "data file is not regular"));
+                }
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+            Err(e) => return Err(io_error(&path, e)),
+        }
+        Ok(path)
+    }
+
     /// Fully revalidate files before exposing metadata, also discovering any
     /// complete package renamed before a later database registration failed.
     pub fn packages(&self) -> Result<Vec<InstalledPackage>, Vec<Diagnostic>> {
@@ -222,6 +244,15 @@ impl Library {
 
     pub fn install(&mut self, input: &Path) -> Result<InstallReport, Vec<Diagnostic>> {
         let incoming = read_distribution(input)?;
+        self.install_distribution(incoming)
+    }
+
+    /// Install exactly this in-memory snapshot; revalidate public file values.
+    pub fn install_distribution(
+        &mut self,
+        incoming: Distribution,
+    ) -> Result<InstallReport, Vec<Diagnostic>> {
+        let incoming = crate::distribution::verify_files(incoming.files)?;
         let destination = self.home.join("library").join(&incoming.digest);
         let incoming_record = record(&incoming, destination.clone());
         let packages = self.packages()?;

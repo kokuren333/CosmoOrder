@@ -155,6 +155,87 @@ fn installed_package_survives_independent_cli_processes() {
 }
 
 #[test]
+fn offline_learning_vertical_slice_survives_cli_process_restart() {
+    let temp = tempfile::tempdir().unwrap();
+    let zip = temp.path().join("arithmetic.osmium");
+    let home = temp.path().join("home");
+    let source = source();
+    let invoke = |args: &[&str]| {
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_osmium"))
+            .arg("--home")
+            .arg(&home)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{args:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()["data"].clone()
+    };
+    invoke(&["validate", &path_of(&source)]);
+    invoke(&["lint", &path_of(&source)]);
+    invoke(&[
+        "build",
+        &path_of(&source),
+        "--output",
+        &zip.to_string_lossy(),
+    ]);
+    invoke(&["install", &zip.to_string_lossy()]);
+    let lesson = invoke(&["learn", "org.example/arithmetic"]);
+    assert_eq!(lesson["concepts"][0]["id"], "addition");
+    let resource = lesson["resources"][0]["id"].as_str().unwrap();
+    assert!(
+        !invoke(&["read", "org.example/arithmetic", resource])["markdown"]
+            .as_str()
+            .unwrap()
+            .is_empty()
+    );
+    let request = "6e2b0864-2e66-4dd4-a02f-f57b59cfe8b1";
+    let answer = [
+        "answer",
+        "org.example/arithmetic",
+        "addition.01",
+        "--response",
+        "\"b\"",
+        "--request-id",
+        request,
+    ];
+    let result = invoke(&answer);
+    assert_eq!(result["event"]["score"], 1);
+    assert_eq!(invoke(&answer)["replayed"], true);
+    invoke(&[
+        "answer",
+        "org.example/arithmetic",
+        "addition.01",
+        "--response",
+        "\"a\"",
+    ]);
+    let progress = invoke(&["progress", "org.example/arithmetic"]);
+    assert_eq!(progress[0]["attempts"], 2);
+    assert_eq!(progress[0]["accuracy"], 0.5);
+    assert_eq!(
+        invoke(&["history", "org.example/arithmetic"])
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_eq!(invoke(&["rebuild-progress"])["events_replayed"], 2);
+    assert_eq!(invoke(&["progress", "org.example/arithmetic"]), progress);
+    let export = temp.path().join("history.jsonl");
+    assert_eq!(
+        invoke(&["export-state", "--output", &export.to_string_lossy()])["events_exported"],
+        2
+    );
+    let backup = temp.path().join("backup.sqlite");
+    invoke(&["backup-state", "--output", &backup.to_string_lossy()]);
+    assert!(backup.exists());
+    assert!(home.join("state.sqlite").exists());
+}
+
+#[test]
 fn validate_reports_a_valid_source_as_success() {
     let directory = source();
     let outcome = run(&["osmium", "validate", &path_of(&directory)]);

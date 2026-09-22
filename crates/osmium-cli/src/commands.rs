@@ -36,14 +36,86 @@ struct InitView {
 pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failure> {
     let value = match &cli.command {
         Command::Install { path } => {
-            let mut library = library(cli)?;
+            let mut library = runtime(cli)?;
             serde_json::to_value(library.install(path).map_err(Failure::from_diagnostics)?)
                 .map_err(internal_serialization)?
         }
         Command::Packages => {
-            let library = library(cli)?;
+            let library = runtime(cli)?;
             serde_json::to_value(library.packages().map_err(Failure::from_diagnostics)?)
                 .map_err(internal_serialization)?
+        }
+        Command::Learn {
+            package_id,
+            package_version,
+        } => runtime(cli)?
+            .lesson(package_id, package_version.as_deref())
+            .map_err(Failure::from_diagnostics)?,
+        Command::Read {
+            package_id,
+            resource_id,
+            package_version,
+        } => runtime(cli)?
+            .resource(package_id, package_version.as_deref(), resource_id)
+            .map_err(Failure::from_diagnostics)?,
+        Command::Answer {
+            package_id,
+            assessment_id,
+            response,
+            package_version,
+            request_id,
+            duration_ms,
+            hints_used,
+        } => {
+            let response = osmium_core::parsing::parse_json(response.as_bytes(), "response")
+                .map_err(|e| Failure::new(vec![*e], crate::envelope::Exit::Usage))?;
+            let request = osmium_store::AttemptRequest {
+                assessment_id: assessment_id.clone(),
+                response,
+                request_id: request_id
+                    .clone()
+                    .unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
+                duration_ms: *duration_ms,
+                hints_used: *hints_used,
+            };
+            serde_json::to_value(
+                runtime(cli)?
+                    .answer(package_id, package_version.as_deref(), &request)
+                    .map_err(Failure::from_diagnostics)?,
+            )
+            .map_err(internal_serialization)?
+        }
+        Command::Progress {
+            package_id,
+            package_version,
+        } => serde_json::to_value(
+            runtime(cli)?
+                .progress(package_id, package_version.as_deref())
+                .map_err(Failure::from_diagnostics)?,
+        )
+        .map_err(internal_serialization)?,
+        Command::History {
+            package_id,
+            package_version,
+            limit,
+            offset,
+        } => serde_json::to_value(
+            runtime(cli)?
+                .history(package_id, package_version.as_deref(), *limit, *offset)
+                .map_err(Failure::from_diagnostics)?,
+        )
+        .map_err(internal_serialization)?,
+        Command::RebuildProgress => {
+            serde_json::json!({"events_replayed":runtime(cli)?.rebuild_progress().map_err(Failure::from_diagnostics)?})
+        }
+        Command::ExportState { output } => {
+            serde_json::json!({"events_exported":runtime(cli)?.export_state(output).map_err(Failure::from_diagnostics)?, "output":output})
+        }
+        Command::BackupState { output } => {
+            runtime(cli)?
+                .backup(output)
+                .map_err(Failure::from_diagnostics)?;
+            serde_json::json!({"output":output})
         }
         Command::Build {
             source,
@@ -217,12 +289,12 @@ fn text(model: &PackageModel, field: &str) -> String {
         .to_owned()
 }
 
-fn library(cli: &Cli) -> Result<osmium_package::library::Library, Failure> {
+fn runtime(cli: &Cli) -> Result<osmium_store::runtime::Runtime, Failure> {
     let home = match &cli.home {
         Some(path) => path.clone(),
         None => osmium_package::library::default_home().map_err(Failure::from_diagnostics)?,
     };
-    osmium_package::library::Library::open(&home).map_err(Failure::from_diagnostics)
+    osmium_store::runtime::Runtime::open(&home).map_err(Failure::from_diagnostics)
 }
 
 fn init_command(

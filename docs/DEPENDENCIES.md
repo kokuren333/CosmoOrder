@@ -14,6 +14,9 @@
 | sha2 | 0.11.0 | MIT OR Apache-2.0 | payload・manifest・archiveのSHA-256 |
 | zip | 6.0.0 | MIT | 配布archive、Stored/Deflateのみ有効 |
 | fs2 | 0.4.3 | MIT OR Apache-2.0 | Windows/Unixのプロセス間advisory file lock |
+| rusqlite | 0.40.2 | MIT | SQLiteのbundled buildとbackup API、default features無効 |
+| uuid | 1.26.1 | MIT OR Apache-2.0 | Event/device/request ID、v4生成 |
+| time | 0.3.45 | MIT OR Apache-2.0 | UTC時刻のRFC 3339表現 |
 
 crates.ioのmetadataと公式API資料を確認して選定。jsonschemaはdefault featuresを無効化し、HTTP/ファイル参照の自動取得を含めない。Packageから任意schemaを受理せず、固定bundle内のfragmentのみ参照する。serde_jsonのunbounded_depthは有効化しない。
 

@@ -1,6 +1,6 @@
 # Osmium 実装計画
 
-更新日: 2026-09-22。状態: Phase 3bのローカルinstall/listまで実装。Phase 4の採点とSQLiteを作業中。[Phase 2b引き継ぎメモ](PHASE2B_HANDOFF.md)は再開前の履歴資料。
+更新日: 2026-09-22。状態: CLIによる配布・導入・学習・SQLite保存まで実装。Phase 5のDesktopと最終受入れが次の作業。[Phase 2b引き継ぎメモ](PHASE2B_HANDOFF.md)は再開前の履歴資料。
 
 ## 1. 調査と要件の優先順位
 
@@ -127,7 +127,8 @@ Git管理から依存物、生成物、ログ、cache、秘密、ローカルDB�
 - Phase 3a完了: `osmium-package::distribution`とCLI build、distribution manifest schemaを追加。正規化JSON/LF Markdown、payload SHA-256、package/archive digest、再現可能なZIP、出力のstaging再検証、上書き拒否。全reader系CLIがdirectory/ZIP入力に対応。改ざん・欠落・余分なfile・危険path・重複ZIP名・展開サイズ超過・version非互換・optional extension保持を試験。変更先はpackage/CLI/Core schemaとspec、関連文書、Cargo依存。workspace 85 tests、fmt/clippy/build、および実CLIのZIP build→validateを検証。固定digest vectorを追加。残課題: install、SQLite、採点、Desktop。canonical profileは開発用の参照serializerを明記し、独立実装・他OS実測は今後の適合性課題（DD-007）。コミット名 `feat: build reproducible portable packages`、hashはGit履歴と完了報告参照。
 - Phase 3b完了: Package層のLibraryとCLI install/packages、--home/OSMIUM_HOME、WindowsのLOCALAPPDATA既定保存先を実装。OS file lock、stagingの再検証とrename、同内容の再導入、ID/version内容衝突拒否、複数version共存と明示選択、list/readのhash再検証を追加。変更先はosmium-package/library、CLI、Cargo依存と関連docs。93 testsを検証し、別CLIプロセスでのinstall→reinstall→packages、Windows junction拒否、staging I/O失敗、既存file破損時の非上書きを確認。SQLite metadata登録、採点とEvent、Desktopは次段階。コミット名 `feat: install verified packages into a locked local library`、hashは履歴と報告参照。
 - Phase 4a Core完了: `evaluation::evaluate`と2件の採点テストを追加。Golden全問題の正答/誤答、determinism、snapshot/feedback、Objective/Concept参照、無効回答の拒否とモデル非変更を検証。workspace合計95 tests、fmt/clippy/build成功。採点関数はI/Oを持たず、CLI answerとidempotency/Event保存はPhase 4bの共通application処理へ接続する。コミット名 `feat(core): add deterministic assessment evaluation`。
-- Phase 4b以降: 各完了時に、実装内容・変更ファイル・検証結果・残課題・commit hashをここへ追記し、利用者にも簡潔に報告する。利用者の最新指示に従い、動作するv1を最終検証した時点で開発を区切り、起動方法を提示する。
+- Phase 4b: `osmium-store`、SQLite migration 001、共通Runtime operations、CLI learn/read/answer/history/progress/rebuild-progress/export-state/backup-stateを追加。導入metadata同期、append-only eventsとattempts view、問題snapshot/hash、UUID idempotency、version別のObjective進捗、transaction rollback、JSONL/SQLite backupを実装。103 testsでCLI別process間のvalidate→lint→build→install→learn/read→answer→progress/history→rebuild/export/backup、履歴のUPDATE/DELETE拒否、失敗rollback、未知/破損DB保全、Package更新後の旧履歴保存を確認。Desktopはまだ未実装でv1完成ではない。commit前のfmt/clippy/buildを含む最終結果は完了報告と履歴を参照。
+- Phase 5以降: 各完了時に、実装内容・変更ファイル・検証結果・残課題・commit hashをここへ追記し、利用者にも簡潔に報告する。利用者の最新指示に従い、動作するv1を最終検証した時点で開発を区切り、起動方法を提示する。
 
 ## 8. 技術判断の参照
 

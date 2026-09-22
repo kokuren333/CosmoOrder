@@ -9,7 +9,8 @@ use osmium_core::schema::Diagnostic;
 
 /// Codes that mean "this build cannot read the package at all", which is a
 /// compatibility failure rather than a content mistake.
-const INCOMPATIBLE_CODES: [&str; 3] = [
+const INCOMPATIBLE_CODES: [&str; 4] = [
+    "OSM_STATE_VERSION",
     "OSM_SCHEMA_VERSION",
     "OSM_CAPABILITY",
     "OSM_CAPABILITY_CONFLICT",

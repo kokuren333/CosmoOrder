@@ -43,6 +43,62 @@ pub struct LegacyOutput {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    /// Display installed curriculum, concepts, objectives, resources and assessments.
+    Learn {
+        package_id: String,
+        #[arg(long)]
+        package_version: Option<String>,
+    },
+    /// Read an installed Markdown resource by its stable ID.
+    Read {
+        package_id: String,
+        resource_id: String,
+        #[arg(long)]
+        package_version: Option<String>,
+    },
+    /// Evaluate an answer and atomically append a learning event.
+    Answer {
+        package_id: String,
+        assessment_id: String,
+        #[arg(long)]
+        response: String,
+        #[arg(long)]
+        package_version: Option<String>,
+        #[arg(long)]
+        request_id: Option<String>,
+        #[arg(long)]
+        duration_ms: Option<u64>,
+        #[arg(long)]
+        hints_used: Option<u64>,
+    },
+    /// Show observed progress derived from learning events.
+    Progress {
+        package_id: String,
+        #[arg(long)]
+        package_version: Option<String>,
+    },
+    /// List recorded attempts, newest first.
+    History {
+        package_id: String,
+        #[arg(long)]
+        package_version: Option<String>,
+        #[arg(long, default_value_t = 16)]
+        limit: usize,
+        #[arg(long, default_value_t = 0)]
+        offset: usize,
+    },
+    /// Recalculate all progress from the append-only event log.
+    RebuildProgress,
+    /// Export the complete event log as versioned JSONL without overwriting.
+    ExportState {
+        #[arg(long)]
+        output: PathBuf,
+    },
+    /// Make a consistent SQLite backup without overwriting.
+    BackupState {
+        #[arg(long)]
+        output: PathBuf,
+    },
     /// Install a verified distribution into the local library.
     Install { path: PathBuf },
     /// List installed package versions after verifying their contents.

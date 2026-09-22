@@ -102,3 +102,7 @@ forkは新package ID、lineageで元ID/version/digestを記録する将来仕様
 event_schema_version、event_id、device_id、request_id、package ID/version/digest、assessment ID/revision/hash、Objective IDs、問題snapshot、response、score、evaluator ID/version、UTC timestamp、duration_ms、hints_usedを保存する。未計測値はnull。問題のsnapshotには採点に必要な宣言を含め、後の教材変更に影響されず解釈できるようにする。
 
 Learning Eventは利用者のデータであり、配布Packageに含めない。進捗はeventsから再生成し、教材の閲覧によって履歴を外部送信しない。
+
+実装したEventは`event_type: "assessment_attempt"`、`concept_ids`、`correct`も記録する。既存0.1 fixtureとの読込み互換性のため、schemaではこの3項目をoptionalとして追加する。snapshotのhash/ID/revision/measuresとresponse/scoreの整合をStoreで検証する。正答率はdigest/Objective単位の観測集計であり、異なる教材versionの進捗へ自動継承しない。
+
+state exportはUTF-8 JSONL。先頭は`record_type: "osmium-state"`、`export_version: "0.1"`、event schema version、device IDのheader。以降はsequence順の`{"record_type":"learning_event","event":{...}}`。本文Packageを含めない。import/同期/他端末との統合は未実装。SQLite backupはDB schema version 1の整合したコピーを作る。

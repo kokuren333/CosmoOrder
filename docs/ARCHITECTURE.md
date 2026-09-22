@@ -74,6 +74,12 @@ Phase 3bではPackage層の`library::Library`がfilesのinstall/list/readを実�
 
 eventsはUUIDのevent ID、device ID、schema versionを持ち、追記のみ。request IDを使い送信retryを二重学習と数えない。別の意図的な回答には新しいrequest IDを使う。SQLite transactionでeventとprojectionを更新し、失敗時に半端な記録を残さない。
 
+Phase 4bの`osmium-store::runtime::Runtime`をCLI/Desktop共通のapplication境界とする。Library lockを操作session中だけ持ち、Storeが導入metadataを再同期する。installは一度検証したメモリsnapshotを使い、DBに残る同ID/versionの旧digestとも照合する。StoreはSQLiteのapplication_idとuser_versionを確認して、空DBへの001 migrationだけを行う。未知版・別用途・破損DBは置換しない。将来版への自動migrationは未実装。
+
+`events`が正本でUPDATE/DELETE拒否triggerを持つ。`assessment_attempts`は同じeventsを読むview、`progress`はdigest/Objective単位のcache。request ID再送はpackage/item hash・response・duration・hintsを照合して元eventを返し、異なる要求への使い回しを拒否する。イベントとprojectionの書込みを1 transactionへまとめる。`rebuild-progress`はsequence順に全eventsを再生し、再生失敗時は元cacheへrollbackする。観測値はattempts/correct/accuracy/last score/time。version間で自動統合しない。
+
+`export-state`は1つの読込みtransactionからJSONLを書き、`backup-state`はSQLite backup APIで整合したDBを作る。両者とも一時fileから非上書きで公開する。historyは最大64件・8 MiBのページ。新規DB作成には移行前データがないためbackupは不要とし、将来の非空schema移行はbackup契約を実装するまで受理しない。個人データへの暗黙のネットワーク通信はない。
+
 projectionは試行数、正答数、最終回答時刻等から開始する。客観的な「習得保証」と表示しない。schema migrationは番号付きとし、migration前backup、rollback時の挙動、将来のschemaを開いた際の書込み拒否を試験する。DB破損時に空DBへ黙って置換しない。
 
 ## Renderingと権限

@@ -1,24 +1,18 @@
-﻿[package]
-name = "osmium-cli"
+[package]
+name = "osmium-store"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
-[[bin]]
-name = "osmium"
-path = "src/main.rs"
-
 [dependencies]
 osmium-core = { path = "../osmium-core" }
 osmium-package = { path = "../osmium-package" }
-osmium-store = { path = "../osmium-store" }
-uuid.workspace = true
-clap.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-
-[dev-dependencies]
+rusqlite.workspace = true
+uuid.workspace = true
+time.workspace = true
 tempfile.workspace = true
 
 [lints]

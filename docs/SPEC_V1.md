@@ -15,7 +15,7 @@
 
 ## CLI契約
 
-現在はinit/validate/lint/inspect/query/context/build/install/packagesを実装済み。reader系コマンドはSource directoryとdistribution directory/ZIPを対象とする。open/answer/history/progress/export-stateは後続Phase。
+現在はinit/validate/lint/inspect/query/context/build/install/packagesと、learn/read/answer/history/progress/rebuild-progress/export-state/backup-stateを実装済み。reader系の検証コマンドはSource directoryとdistribution directory/ZIPを対象とする。Desktop起動用openはPhase 5。
 
 | コマンド | 契約 |
 |---|---|
@@ -28,14 +28,18 @@
 | `osmium build <source> --output <path>` | distribution作成、検証失敗時は既存出力を壊さない |
 | `osmium install <path>` | ローカル導入、同一digestの再導入は冪等 |
 | `osmium packages` | 内容を再検証して導入済みID/version/digestと保存先を列挙 |
+| `osmium learn <package-id>` | 導入済み教材の全Entity metadataを表示 |
+| `osmium read <package-id> <resource-id>` | 検証済みResourceのMarkdown本文を取得 |
 | `osmium open <package-id>` | インストール済み教材をDesktopで開く。未導入・GUI未利用は明示エラー |
 | `osmium answer <package-id> <assessment-id> --response <json>` | Coreで評価しevent保存。version指定がなければ明確な選択規則を使う |
 | `osmium history <package-id>` / `progress <package-id>` | 保存履歴／derived progress取得 |
 | `osmium export-state --output <path>` | versioned JSONLによる履歴の可搬化 |
+| `osmium rebuild-progress` | 全eventsから進捗をtransaction内で再計算 |
+| `osmium backup-state --output <path>` | SQLite backup APIによる整合したDB保存、上書き拒否 |
 
 各コマンドは `--json` をサポートする。stdoutは単一JSON document、進捗ログはstderr。診断はcode/severity/file/line/column/path/message/suggestionsを持つ。位置を確定できないときはnull、位置を捏造しない。response envelopeは `output_version`, `ok`, `data`, `diagnostics` を持つ。stdoutをJSONと人間向け文章で混在させない。
 
-JSONが既定で、build以外では従来の `--output json` も受理する。buildの`--output`は保存先。失敗時のdataは省略、diagnosticsは常に配列。help/versionはexit 0でstderrに出し、stdoutへJSONを返す契約の例外とする。lintはwarningをdiagnosticsとstderrへ返してexit 0/ok=true。contextの返却DTOは最大256 KiB、単一対象が上限を超える場合も明示エラー。queryは最大256件、contextは最大512 entities/depth 8、inspect順序は最大64件。
+JSONが既定で、init/validate/lint/inspect/query/contextでは従来の `--output json` も受理する。build/export-state/backup-stateの`--output`は保存先。失敗時のdataは省略、diagnosticsは常に配列。help/versionはexit 0でstderrに出し、stdoutへJSONを返す契約の例外とする。lintはwarningをdiagnosticsとstderrへ返してexit 0/ok=true。contextの返却DTOは最大256 KiB、単一対象が上限を超える場合も明示エラー。queryは最大256件、contextは最大512 entities/depth 8、inspect順序は最大64件。
 
 exit codeは0成功、1検証・利用対象の不正、2呼出し方法の不正、3I/O・内部失敗、4schema/capability非互換。誤答は正常な回答処理なので0。command help/JSON mode/error優先順位はCLI integration testで固定する。mutationは可能なものにdry-runを設け、上書きの既定動作を拒否とする。
 

@@ -2,7 +2,7 @@
 
 Osmiumは、教材・概念・学習目標・問題・学習履歴をportableな形式で扱う、local-firstの学習Runtimeです。AIやHub、アカウントがなくても学習できることを基本にします。
 
-現在は教材作成・検証CLI、配布Packageのbuild、ローカルへのinstallまで実装済みです。学習アプリと履歴保存は後続Phaseです。
+現在は教材作成・配布・install・学習・履歴保存のCLIを実装済みです。Desktop UIと最終受入れ検証を作業中です。
 
 ## 設計文書
 
@@ -32,6 +32,13 @@ cargo run -p osmium-cli -- build examples/arithmetic --output arithmetic.osmium
 cargo run -p osmium-cli -- validate arithmetic.osmium --json
 cargo run -p osmium-cli -- install arithmetic.osmium --json
 cargo run -p osmium-cli -- packages --json
+cargo run -p osmium-cli -- learn org.example/arithmetic
+cargo run -p osmium-cli -- answer org.example/arithmetic addition.01 --response '"b"'
+cargo run -p osmium-cli -- progress org.example/arithmetic
+cargo run -p osmium-cli -- history org.example/arithmetic
+cargo run -p osmium-cli -- rebuild-progress
+cargo run -p osmium-cli -- export-state --output history.jsonl
+cargo run -p osmium-cli -- backup-state --output state-backup.sqlite
 cargo run -p osmium-cli -- init my-course --package-id org.example/my-course --language ja-JP
 ```
 
@@ -40,6 +47,8 @@ cargo run -p osmium-cli -- init my-course --package-id org.example/my-course --l
 Rust stable（開発確認環境1.98.1）とWindowsではMSVC build toolsが必要です。
 
 Windowsの既定保存先は`%LOCALAPPDATA%\Osmium`です。`--home <dir>`または`OSMIUM_HOME`で変更できます。教材は`library/<digest>/`へ保存し、同一ID/version/digestの再導入は成功扱いです。同一ID/versionで内容だけが異なるPackageは拒否します。既存教材を上書きするオプションはありません。保存済みファイルの破損も検出し、無断で修復・置換しません。
+
+履歴・導入metadata・進捗は同じ保存先の`state.sqlite`に保存します。回答の再送には同じ`--request-id <UUID>`を使うと二重記録を防げます。新しい回答では省略して新IDを生成できます。`--package-version`は複数versionを導入した場合に指定します。`learn`でResource IDを確認し、`read <package-id> <resource-id>`で本文を取得できます。進捗のaccuracyは観測された正答率であり、習得の保証ではありません。SQLiteバックアップには教材本文を含めないため、`library`も別途保持してください。
 
 ```sh
 cargo fmt --all --check

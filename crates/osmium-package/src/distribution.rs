@@ -92,7 +92,9 @@ fn invalid(message: impl Into<String>) -> Vec<Diagnostic> {
     diagnostic("manifest.json", "OSM_DISTRIBUTION", message)
 }
 
-fn verify_files(files: BTreeMap<String, Vec<u8>>) -> Result<Distribution, Vec<Diagnostic>> {
+pub(crate) fn verify_files(
+    files: BTreeMap<String, Vec<u8>>,
+) -> Result<Distribution, Vec<Diagnostic>> {
     if files.len() > MAX_SOURCE_FILES
         || files.values().map(|b| b.len() as u64).sum::<u64>() > MAX_SOURCE_BYTES
     {

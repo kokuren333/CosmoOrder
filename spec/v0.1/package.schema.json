@@ -558,6 +558,9 @@
     "learning_event": {
       "type": "object",
       "properties": {
+        "event_type": {"const": "assessment_attempt"},
+        "concept_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}, "minItems": 1, "maxItems": 10000, "uniqueItems": true},
+        "correct": {"type": "boolean"},
         "event_schema_version": {
           "const": "0.1"
         },

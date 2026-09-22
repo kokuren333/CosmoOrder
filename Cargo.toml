@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/osmium-cli", "crates/osmium-core", "crates/osmium-package"]
+members = ["crates/osmium-cli", "crates/osmium-core", "crates/osmium-package", "crates/osmium-store"]
 resolver = "3"
 
 [workspace.package]
@@ -18,6 +18,9 @@ language-tags = "0.3.2"
 tempfile = "3.27.0"
 sha2 = "0.11.0"
 fs2 = "0.4.3"
+rusqlite = { version = "0.40.2", default-features = false, features = ["bundled", "backup"] }
+uuid = { version = "1.26.1", features = ["v4"] }
+time = { version = "0.3.45", features = ["formatting"] }
 zip = { version = "6.0.0", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 yaml-rust2 = { version = "0.13.0", default-features = false }
 
