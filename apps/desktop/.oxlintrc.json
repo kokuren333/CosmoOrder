@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/oxlintrc.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "pedantic": "off"
+  },
+  "env": {
+    "browser": true,
+    "es2024": true
+  },
+  "rules": {
+    "no-console": "off",
+    "no-await-in-loop": "off"
+  }
+}

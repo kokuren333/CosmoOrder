@@ -1,6 +1,6 @@
 # Osmium 実装計画
 
-更新日: 2026-09-22。状態: CLIによる配布・導入・学習・SQLite保存まで実装。Phase 5のDesktopと最終受入れが次の作業。[Phase 2b引き継ぎメモ](PHASE2B_HANDOFF.md)は再開前の履歴資料。
+更新日: 2026-09-22。状態: CLIによる配布・導入・学習・SQLite保存に加え、Phase 5のDesktop Reader／学習UIと最終受入れまで実装・検証済み。Hub/MCP/AI Tutor/Cloud Syncは未着手。[Phase 2b引き継ぎメモ](PHASE2B_HANDOFF.md)は再開前の履歴資料。
 
 ## 1. 調査と要件の優先順位
 
@@ -128,6 +128,9 @@ Git管理から依存物、生成物、ログ、cache、秘密、ローカルDB�
 - Phase 3b完了: Package層のLibraryとCLI install/packages、--home/OSMIUM_HOME、WindowsのLOCALAPPDATA既定保存先を実装。OS file lock、stagingの再検証とrename、同内容の再導入、ID/version内容衝突拒否、複数version共存と明示選択、list/readのhash再検証を追加。変更先はosmium-package/library、CLI、Cargo依存と関連docs。93 testsを検証し、別CLIプロセスでのinstall→reinstall→packages、Windows junction拒否、staging I/O失敗、既存file破損時の非上書きを確認。SQLite metadata登録、採点とEvent、Desktopは次段階。コミット名 `feat: install verified packages into a locked local library`、hashは履歴と報告参照。
 - Phase 4a Core完了: `evaluation::evaluate`と2件の採点テストを追加。Golden全問題の正答/誤答、determinism、snapshot/feedback、Objective/Concept参照、無効回答の拒否とモデル非変更を検証。workspace合計95 tests、fmt/clippy/build成功。採点関数はI/Oを持たず、CLI answerとidempotency/Event保存はPhase 4bの共通application処理へ接続する。コミット名 `feat(core): add deterministic assessment evaluation`。
 - Phase 4b: `osmium-store`、SQLite migration 001、共通Runtime operations、CLI learn/read/answer/history/progress/rebuild-progress/export-state/backup-stateを追加。導入metadata同期、append-only eventsとattempts view、問題snapshot/hash、UUID idempotency、version別のObjective進捗、transaction rollback、JSONL/SQLite backupを実装。103 testsでCLI別process間のvalidate→lint→build→install→learn/read→answer→progress/history→rebuild/export/backup、履歴のUPDATE/DELETE拒否、失敗rollback、未知/破損DB保全、Package更新後の旧履歴保存を確認。Desktopはまだ未実装でv1完成ではない。commit前のfmt/clippy/buildを含む最終結果は完了報告と履歴を参照。
+- Phase 5a完了: `osmium-core::content` にrenderer非依存のcontent IR compilerを追加し、`apps/desktop`（Tauri 2 + React + TypeScript + Vite）をworkspaceへ追加。Tauri commandは既存の `osmium_store::runtime` と `osmium_core::content` を呼ぶだけで、検証・採点・version解決を再実装しない。raw HTMLは不活性なテキスト、危険schemeのlinkはlinkにせず、画像はalt textのみ、resource pathは検証済みdistribution file mapのキーに限る。Reader、Curriculum/Concept一覧、Assessment、Feedback、Progress、History、Installed Packagesを実装。`pulldown-cmark` 0.13.4をworkspace依存へ追加（network解決なし）。Rust側のcontent test 9件、frontend test 12件（typecheck/lint/build含む）を追加。
+- Phase 5b完了: Desktop学習UIを完成。回答→採点→feedback→LearningEvent保存→progress更新をGUIから実行でき、アプリを完全終了して再起動してもinstalled package・history・progressが復元されることを実測。`apps/desktop/e2e/desktop-e2e.mjs` がGolden Packageのvalidate/lint/build/installからDesktop起動・教材閲覧・回答・progress確認・終了・再起動・progress再確認までをChrome DevTools Protocolで実際に通し、webviewが外部network requestを一切行わないことも検証する（29 checks）。
+- Phase 6（v1最終受入れ）: `apps/desktop/src-tauri/tests/desktop.rs` に、windowなしでdesktop操作境界を通す受入れ試験を追加（install→lesson/resource→single_select/boolean採点→progress/history→別sessionでの復元→rebuild一致→version分離→resource containment）。v1のDesktop実装はここで区切り、Hub/MCP/AI Tutor/Cloud Syncへは進まない。
 - Phase 5以降: 各完了時に、実装内容・変更ファイル・検証結果・残課題・commit hashをここへ追記し、利用者にも簡潔に報告する。利用者の最新指示に従い、動作するv1を最終検証した時点で開発を区切り、起動方法を提示する。
 
 ## 8. 技術判断の参照

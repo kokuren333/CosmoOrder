@@ -2,7 +2,7 @@
 
 Osmiumは、教材・概念・学習目標・問題・学習履歴をportableな形式で扱う、local-firstの学習Runtimeです。AIやHub、アカウントがなくても学習できることを基本にします。
 
-現在は教材作成・配布・install・学習・履歴保存のCLIを実装済みです。Desktop UIと最終受入れ検証を作業中です。
+現在は教材作成・配布・install・学習・履歴保存のCLIと、Tauri 2 + ReactのDesktop Reader／学習UIまで実装済みです。Golden Packageでの最終受入れ（起動・閲覧・回答・再起動後のprogress復元・完全offline）を検証済みです。
 
 ## 設計文書
 
@@ -10,6 +10,7 @@ Osmiumは、教材・概念・学習目標・問題・学習履歴をportableな
 - [アーキテクチャ・Core API境界](docs/ARCHITECTURE.md)
 - [最小v1の範囲](docs/SPEC_V1.md)
 - [Package形式の草案](docs/PACKAGE_FORMAT.md)
+- [Desktopの起動・操作手順と制限](docs/DESKTOP.md)
 - [設計判断・未確定事項](docs/DESIGN_DECISIONS.md)
 - [将来の拡張](docs/ROADMAP.md)
 - [一次資料：設計セッション全文](osmium_session_codex_context.md)
