@@ -24,6 +24,8 @@ future Hub ── Registry HTTP adapter ── Package I/O
 
 Application operationsはまずモジュール境界とし、必要性が出るまで汎用plugin基盤や新しいcrateを増やさない。WASM対応は将来の適合試験事項であり、現段階で対応済みとはしない。
 
+Phase 4aの`osmium-core::evaluation::evaluate`は検証済みPackageModel、Assessment ID、JSON回答から純粋なEvaluationを返す。single_select/booleanをexact評価し、候補外・型違いを入力エラーにする。結果には問題snapshot、revision、Objective/Concept IDs、response、score、correct、feedback、評価器`org.osmium.exact.v1` version `1`を含む。時刻・UUID・DB書込みはこの関数へ持ち込まず、次のStore/application層で扱う。
+
 ## Entityと参照
 
 Phase 2bでは `osmium-core::query`（inspect/query/context）と `osmium-core::lint` を追加し、`osmium-cli` を引数・出力・exit statusのadapterとして実装。Source作成はPackage層の `init_source` が担い、全pathの事前検査、リンク親拒否、create_newによる上書き防止、生成後validationを行う。未知extensionはquery/contextでuntrusted dataとして扱い、lintは構造充足を教育品質と同一視しない。
