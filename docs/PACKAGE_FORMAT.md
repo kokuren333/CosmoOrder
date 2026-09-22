@@ -79,7 +79,13 @@ single_selectの回答はoption ID、booleanの回答はJSON boolean。正解も
 
 buildはmanifest以外の全payloadについて相対path/byte size/SHA-256をmanifestに記録し、manifestの正規化bytesからpackage digestを計算する。manifestへ自身のdigestを埋め込まない。ZIP transport digestは別値とし、意味上のpackage digestと区別する。hash一覧にない余分なfileも拒否する。
 
-Phase 3までにJSON key順、文字escape、数値制約、改行、UTF-8、ZIP entry順・timestamp・圧縮方式を規範化し、異なる実行環境でのfixtureを残す。単に「JSON.stringifyした」ことを汎用canonicalization保証と呼ばない。
+開発profile `osmium-json-0.1` はUTF-8（BOMなし）、再帰的にkeyをUnicode scalar順へ整列、配列順を維持、余分な空白なし、末尾LFを1つ付ける。文字列のquote/backslashと制御文字をJSON escapeし、非ASCIIとslashはそのまま保持する。Unicodeの文字列正規化はしない。整数は符号付き64-bitまたは符号なし64-bit、その他のJSON numberは有限binary64として扱い、serde_json 1.0.151のcompact出力を開発版の参照実装とする。整数と浮動小数点の`1`/`1.0`、`0`/`-0.0`は区別する。高精度十進値は文字列で持つ。これはRFC 8785準拠や言語横断の数値canonicalization保証ではない。依存更新時も固定vectorを維持し、byte規則変更時はprofile versionを上げる。独立仕様としての安定化は1.0前の課題とする（DD-007）。
+
+MarkdownのCRLFとCRはLFへ変換し、それ以外の空白や末尾改行は維持する。Sourceは変更しない。manifestは`distribution_version: "0.1"`、`canonicalization: "osmium-json-0.1"`、Source manifestを入れた`package`、pathをkeyとする`files`を持つ。各file recordは`size`と64桁小文字hexの`sha256`のみ。自己参照する`manifest.json`はfilesから除外し、hash未記載・未参照・欠落のfileを拒否する。
+
+buildのZIPはpath順、Stored（無圧縮）、固定DOS時刻1980-01-01 00:00:00、Unix permission 0644、directory entryなしで生成する。同じ参照実装ではarchive bytesも再現する。readerはStored/Deflateの通常の単一volume ZIPを受理し、ZIP64・暗号化・symlink・特殊file・重複pathを拒否する。ZIPは68 MiB以下、展開後64 MiB以下、各file4 MiB以下、4,096 files以下。archiveはメモリ内で検証し、任意pathへ展開しない。directory版にはSourceと同じ深度・entry数制限も適用する。異なるOSでの再現試験は未実施。
+
+buildは存在しない出力だけを許可し、親directoryを既存のものに限定する。一時出力の再検証後にrenameする。悪意ある別processによる親directory差替えやPOSIXでの出力先作成競合の完全防御は保証しない。hashは整合性チェックであり、発行者の認証ではない。
 
 ## 互換性とmigration
 

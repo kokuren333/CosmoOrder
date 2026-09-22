@@ -2,7 +2,7 @@
 
 `package.schema.json`はJSON Schema 2020-12の自己完結bundleです。rootはmanifest、各 `$defs` にconcept/objective/curriculum/resource/assessment、複数形のEntity配列、learning_eventを定義します。外部 `$ref` はありません。Rustを使わないvalidatorでも、同じbundleのroot `$ref` を対象定義に切り替えて利用できます。
 
-この形式は開発版です。Distributionのintegrity metadataはPhase 3で別schemaへ追加します。現時点のmanifestはSource用であり、ZIPの信頼性や学習Eventの真正性を保証しません。
+この形式は開発版です。Sourceは`manifest`、Distributionは`distribution_manifest`定義を選択します。DistributionはSource manifestを`package`に保持し、`files`に各payloadのsize/SHA-256を記録します。バイト規則とZIP profileは[Package形式](../../docs/PACKAGE_FORMAT.md#安定性hash)を参照。hash照合は作者の真正性や署名を保証しません。
 
 ## 文法と上限
 

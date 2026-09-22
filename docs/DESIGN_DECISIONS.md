@@ -50,6 +50,14 @@
 - 理由: 既存の設計方針を変える必然性がなく、GUIと意味論を切り離せる。環境にはRust/Nodeがある。
 - 将来への影響: Coreの純粋部分をI/Oから分離してWASMの余地を残す。native prerequisite失敗を理由に黙って別stackへ変更しない。
 
+## DD-007: 開発用canonical profile
+
+- 問題: 内容digestを安定させる必要がある一方、未知extensionsに任意のJSON数値が入り、汎用JSON serializerをRFC 8785準拠とは呼べない。
+- 選択肢: 外部JCS実装を追加／全小数を拒否／名前とversionのある開発profileを固定する。
+- 採用案: `osmium-json-0.1`を定義し、key順・LF・UTF-8と参照serializer、数値の範囲を明記する。Package digestとZIP digestを分離する。
+- 理由: 現在の入力モデルを維持し、byte変更を互換性境界として検出できる。未知extensionのJSON値は保持し、Sourceの記法保持とは区別する。
+- 将来への影響: stable 1.0前に別言語実装と数値適合vectorを拡充する。異なるcanonical profileを無断で同じdigest体系として扱わない。
+
 ## 未確定の判断
 
-Phase 1でschemaの詳細、ID文法、制限値、依存ライブラリを確定する。Phase 3でcanonical bytes/ZIP profile、Phase 4でDB migrationとprojection規則、Phase 5でIPC/CSPと実機accessibilityを確定する。公開ライセンス、署名・信頼、fork履歴移行、同期の競合規則は別途決める。将来機能のためだけに汎用plugin loaderを作らない。
+Phase 4でDB migrationとprojection規則、Phase 5でIPC/CSPと実機accessibilityを確定する。canonical profileの独立実装適合、公開ライセンス、署名・信頼、fork履歴移行、同期の競合規則は別途決める。将来機能のためだけに汎用plugin loaderを作らない。

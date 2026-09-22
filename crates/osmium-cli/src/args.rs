@@ -15,7 +15,7 @@ use std::path::PathBuf;
 pub struct Cli {
     /// Machine-readable output. JSON is the only supported format in this
     /// phase; the flag exists so scripts can state the contract explicitly.
-    #[arg(long, global = true, value_name = "FORMAT", default_value = "json")]
+    #[arg(long, value_name = "FORMAT", default_value = "json")]
     pub output: OutputFormat,
 
     /// Explicit JSON output (also the default).
@@ -31,11 +31,26 @@ pub enum OutputFormat {
     Json,
 }
 
+#[derive(Debug, clap::Args)]
+pub struct LegacyOutput {
+    /// JSON output; --json is the equivalent global flag.
+    #[arg(long = "output", value_enum)]
+    pub legacy_output: Option<OutputFormat>,
+}
+
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    /// Build a verified distribution directory or .osmium ZIP without overwriting.
+    Build {
+        source: PathBuf,
+        #[arg(long = "output")]
+        destination: PathBuf,
+    },
     /// Create a minimal, already-valid package Source. Existing files are
     /// never overwritten.
     Init {
+        #[command(flatten)]
+        format: LegacyOutput,
         /// Target directory. It is created when absent.
         #[arg(default_value = ".")]
         directory: PathBuf,
@@ -50,13 +65,21 @@ pub enum Command {
     /// Validate a Source: structure, semantics, safety and file existence.
     /// Nothing is written.
     Validate {
+        #[command(flatten)]
+        format: LegacyOutput,
         /// Package Source directory containing `osmium.json` or `osmium.yaml`.
         path: PathBuf,
     },
     /// Report structural coverage and metadata omissions, without quality scores.
-    Lint { path: PathBuf },
+    Lint {
+        path: PathBuf,
+        #[command(flatten)]
+        format: LegacyOutput,
+    },
     /// Report package metadata and entity counts.
     Inspect {
+        #[command(flatten)]
+        format: LegacyOutput,
         /// Package Source directory.
         path: PathBuf,
         /// Maximum number of prerequisite-ordered Concept IDs to report.
@@ -65,6 +88,8 @@ pub enum Command {
     },
     /// Page through one entity kind.
     Query {
+        #[command(flatten)]
+        format: LegacyOutput,
         /// Package Source directory.
         path: PathBuf,
         /// Entity kind: concept, objective, curriculum, resource, assessment.
@@ -79,6 +104,8 @@ pub enum Command {
     /// Return the bounded neighborhood of one entity: its objectives,
     /// prerequisites, resources and assessments.
     Context {
+        #[command(flatten)]
+        format: LegacyOutput,
         /// Package Source directory.
         path: PathBuf,
         /// Stable entity ID.

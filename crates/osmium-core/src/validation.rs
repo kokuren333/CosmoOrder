@@ -28,8 +28,8 @@ impl PackageDocuments {
             DocumentKind::Curricula => &self.curricula,
             DocumentKind::Resources => &self.resources,
             DocumentKind::Assessments => &self.assessments,
-            DocumentKind::LearningEvent => {
-                panic!("learning events are not package documents")
+            DocumentKind::LearningEvent | DocumentKind::DistributionManifest => {
+                panic!("not a source package document")
             }
         }
     }
@@ -122,7 +122,10 @@ pub fn validate_package(documents: PackageDocuments) -> Result<PackageModel, Vec
         )]);
     }
     for kind in DocumentKind::ALL {
-        if kind == DocumentKind::LearningEvent {
+        if matches!(
+            kind,
+            DocumentKind::LearningEvent | DocumentKind::DistributionManifest
+        ) {
             continue;
         }
         for mut diagnostic in validate_document(kind, documents.document(kind)) {

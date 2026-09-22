@@ -15,7 +15,7 @@
 
 ## CLI契約
 
-現在はinit/validate/lint/inspect/query/contextを実装済み。validateはSource directoryを対象とする。build/install/open/answer/history/progress/export-stateは後続Phase。
+現在はinit/validate/lint/inspect/query/context/buildを実装済み。reader系コマンドはSource directoryとdistribution directory/ZIPを対象とする。install/open/answer/history/progress/export-stateは後続Phase。
 
 | コマンド | 契約 |
 |---|---|
@@ -34,7 +34,7 @@
 
 各コマンドは `--json` をサポートする。stdoutは単一JSON document、進捗ログはstderr。診断はcode/severity/file/line/column/path/message/suggestionsを持つ。位置を確定できないときはnull、位置を捏造しない。response envelopeは `output_version`, `ok`, `data`, `diagnostics` を持つ。stdoutをJSONと人間向け文章で混在させない。
 
-Phase 2b実装ではJSONが既定で `--output json` も受理する。失敗時のdataは省略、diagnosticsは常に配列。help/versionはexit 0でstderrに出し、stdoutへJSONを返す契約の例外とする。lintはwarningをdiagnosticsとstderrへ返してexit 0/ok=true。contextの返却DTOは最大256 KiB、単一対象が上限を超える場合も明示エラー。queryは最大256件、contextは最大512 entities/depth 8、inspect順序は最大64件。
+JSONが既定で、build以外では従来の `--output json` も受理する。buildの`--output`は保存先。失敗時のdataは省略、diagnosticsは常に配列。help/versionはexit 0でstderrに出し、stdoutへJSONを返す契約の例外とする。lintはwarningをdiagnosticsとstderrへ返してexit 0/ok=true。contextの返却DTOは最大256 KiB、単一対象が上限を超える場合も明示エラー。queryは最大256件、contextは最大512 entities/depth 8、inspect順序は最大64件。
 
 exit codeは0成功、1検証・利用対象の不正、2呼出し方法の不正、3I/O・内部失敗、4schema/capability非互換。誤答は正常な回答処理なので0。command help/JSON mode/error優先順位はCLI integration testで固定する。mutationは可能なものにdry-runを設け、上書きの既定動作を拒否とする。
 

@@ -12,7 +12,7 @@ fn golden_source_and_event_validate() {
     assert!(validate_document(DocumentKind::Manifest, &manifest).is_empty());
     for kind in DocumentKind::ALL {
         let value = match kind {
-            DocumentKind::Manifest => continue,
+            DocumentKind::Manifest | DocumentKind::DistributionManifest => continue,
             DocumentKind::LearningEvent => read("fixtures/valid/learning-event.json"),
             _ => read(&format!(
                 "examples/arithmetic/entities/{}.json",

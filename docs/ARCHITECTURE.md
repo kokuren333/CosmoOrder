@@ -8,6 +8,8 @@ Phase 2aで `osmium-package::load_source` を追加。Source inventory、portabl
 
 ## 責務と依存方向
 
+Phase 3aの `osmium-package::distribution` はSource snapshotを正規化し、payloadのSHA-256一覧を持つmanifestを生成する。directoryとZIPの読込みは共通のschema/hash/inventory/意味検証へ収束する。ZIPは上限付きメモリで解析し、archiveが指定したpathへ直接展開しない。buildは保存先と同じ親の一時領域へ出力し、再検証後に公開する。未知の拡張値を実行しない。ファイル同時差替えの完全防御や電源断時のdirectory durabilityは保証しない。
+
 ```text
 CLI ───────────┐
 Desktop IPC ───┼── Application operations ── Core

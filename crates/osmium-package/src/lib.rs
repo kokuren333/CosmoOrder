@@ -1,5 +1,6 @@
 //! Bounded source-package I/O. No package code is executed.
 
+pub mod distribution;
 pub mod init;
 
 use osmium_core::parsing::{MAX_DOCUMENT_BYTES, parse_json};

@@ -35,7 +35,15 @@ struct InitView {
 
 pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failure> {
     let value = match &cli.command {
-        Command::Lint { path } => {
+        Command::Build {
+            source,
+            destination,
+        } => serde_json::to_value(
+            osmium_package::distribution::build(source, destination)
+                .map_err(Failure::from_diagnostics)?,
+        )
+        .map_err(internal_serialization)?,
+        Command::Lint { path, .. } => {
             let loaded = load(path)?;
             let diagnostics = osmium_core::lint::lint(&loaded.model);
             return Ok((
@@ -47,13 +55,14 @@ pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failur
             directory,
             package_id,
             language,
+            ..
         } => serde_json::to_value(init_command(
             directory,
             package_id.as_deref(),
             language.as_deref(),
         )?)
         .map_err(internal_serialization)?,
-        Command::Validate { path } => {
+        Command::Validate { path, .. } => {
             let loaded = load(path)?;
             serde_json::to_value(ValidateView {
                 schema_version: text(&loaded.model, "schema_version"),
@@ -66,7 +75,7 @@ pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failur
             })
             .map_err(internal_serialization)?
         }
-        Command::Inspect { path, limit } => {
+        Command::Inspect { path, limit, .. } => {
             if *limit > query::MAX_PREREQUISITE_ORDER {
                 return Err(Failure::usage(
                     "OSM_INSPECT_LIMIT",
@@ -82,6 +91,7 @@ pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failur
             kind,
             limit,
             offset,
+            ..
         } => {
             let loaded = load(path)?;
             let kind = parse_kind(kind)?;
@@ -94,6 +104,7 @@ pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failur
             kind,
             depth,
             limit,
+            ..
         } => {
             let loaded = load(path)?;
             let kind = match kind {
@@ -136,8 +147,8 @@ fn internal_serialization(error: serde_json::Error) -> Failure {
     )
 }
 
-/// Load and fully validate a Source. A path that is not a readable directory
-/// is an invocation mistake, not an invalid package.
+/// Load and fully validate Source, distribution directory, or ZIP.
+/// A missing input path is classified as an invocation mistake.
 fn load(path: &Path) -> Result<osmium_package::LoadedSource, Failure> {
     let meta = std::fs::symlink_metadata(path).map_err(|error| {
         Failure::new(
@@ -148,16 +159,25 @@ fn load(path: &Path) -> Result<osmium_package::LoadedSource, Failure> {
             crate::envelope::Exit::Usage,
         )
     })?;
-    if meta.file_type().is_symlink() || !meta.is_dir() {
+    if meta.file_type().is_symlink() {
         return Err(Failure::new(
             vec![target_diagnostic(
                 path,
-                "the package path must be a regular directory",
+                "the package path must not be a symbolic link",
             )],
             crate::envelope::Exit::Usage,
         ));
     }
-    load_source(path).map_err(Failure::from_diagnostics)
+    if meta.is_file() || path.join("manifest.json").exists() {
+        let distribution = osmium_package::distribution::read_distribution(path)
+            .map_err(Failure::from_diagnostics)?;
+        Ok(osmium_package::LoadedSource {
+            model: distribution.model,
+            files: distribution.files,
+        })
+    } else {
+        load_source(path).map_err(Failure::from_diagnostics)
+    }
 }
 
 /// Reject a kind the CLI does not implement.

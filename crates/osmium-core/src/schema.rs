@@ -10,6 +10,7 @@ pub const SCHEMA_JSON: &str = include_str!("../../../spec/v0.1/package.schema.js
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DocumentKind {
     Manifest,
+    DistributionManifest,
     Concepts,
     Objectives,
     Curricula,
@@ -19,8 +20,9 @@ pub enum DocumentKind {
 }
 
 impl DocumentKind {
-    pub const ALL: [Self; 7] = [
+    pub const ALL: [Self; 8] = [
         Self::Manifest,
+        Self::DistributionManifest,
         Self::Concepts,
         Self::Objectives,
         Self::Curricula,
@@ -32,6 +34,7 @@ impl DocumentKind {
     pub fn definition(self) -> &'static str {
         match self {
             Self::Manifest => "manifest",
+            Self::DistributionManifest => "distribution_manifest",
             Self::Concepts => "concepts",
             Self::Objectives => "objectives",
             Self::Curricula => "curricula",

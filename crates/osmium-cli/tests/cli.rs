@@ -205,7 +205,7 @@ fn an_unsupported_required_capability_is_an_incompatibility() {
 }
 
 #[test]
-fn a_missing_or_non_directory_path_is_a_usage_error() {
+fn missing_path_is_usage_error_and_non_archive_file_is_invalid() {
     let missing = run(&["osmium", "validate", "no-such-package-here"]);
     assert_eq!(missing.exit, Exit::Usage);
     assert_eq!(missing.exit.code(), 2);
@@ -215,8 +215,45 @@ fn a_missing_or_non_directory_path_is_a_usage_error() {
     let file = directory.path().join("osmium.json");
     fs::write(&file, "{}").unwrap();
     let not_a_directory = run(&["osmium", "validate", &file.to_string_lossy()]);
-    assert_eq!(not_a_directory.exit, Exit::Usage);
-    assert_eq!(codes(&not_a_directory), ["OSM_INVOCATION"]);
+    assert_eq!(not_a_directory.exit, Exit::Invalid);
+    assert_eq!(codes(&not_a_directory), ["OSM_DISTRIBUTION"]);
+}
+
+#[test]
+fn build_output_path_and_json_output_flag_work_with_distribution_readers() {
+    let source = source();
+    let output = tempfile::tempdir().unwrap();
+    for name in ["folder", "package.osmium"] {
+        let path = output.path().join(name).to_string_lossy().into_owned();
+        let built = run(&[
+            "osmium",
+            "build",
+            &path_of(&source),
+            "--output",
+            &path,
+            "--json",
+        ]);
+        assert_eq!(built.exit, Exit::Success, "{}", built.stderr);
+        assert_eq!(built.stdout["data"]["digest"].as_str().unwrap().len(), 64);
+        for command in ["validate", "inspect", "lint"] {
+            assert_eq!(
+                run(&["osmium", command, &path, "--json"]).exit,
+                Exit::Success
+            );
+        }
+        assert_eq!(
+            run(&["osmium", "query", &path, "concepts"]).exit,
+            Exit::Success
+        );
+        assert_eq!(
+            run(&["osmium", "context", &path, "addition.basic"]).exit,
+            Exit::Success
+        );
+        assert_eq!(
+            run(&["osmium", "build", &path_of(&source), "--output", &path]).exit,
+            Exit::Invalid
+        );
+    }
 }
 
 #[test]
