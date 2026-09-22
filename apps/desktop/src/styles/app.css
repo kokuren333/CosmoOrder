@@ -1,51 +1,58 @@
 /* Local assets only. em typography follows the application's text scale. */
 :root {
   color-scheme: light dark;
-  --bg: #f4f5f1;
-  --surface: #fff;
-  --surface-soft: #edf1eb;
-  --paper: #fffdf8;
-  --text: #202e29;
-  --muted: #5e6c64;
-  --border: #cbd4cd;
-  --accent: #24634c;
+  --bg: #f2f4f9;
+  --surface: #ffffff;
+  --surface-soft: #f3f4fb;
+  --paper: #ffffff;
+  --text: #1b2438;
+  --muted: #66728a;
+  --border: #d8deea;
+  --accent: #5b57e8;
+  --accent-strong: #4843cf;
+  --focus: #4338ca;
   --accent-text: #fff;
-  --accent-soft: #e5efe7;
-  --success: #245a38;
-  --success-bg: #e7f3e9;
-  --danger: #923b32;
-  --danger-bg: #fceee9;
-  --warning: #75500e;
-  --warning-bg: #fff3d9;
-  --radius: 1rem;
-  --shadow: 0 5px 24px #203e2b09;
+  --accent-soft: #eeedff;
+  --success: #176343;
+  --success-bg: #e6f6ed;
+  --danger: #a12d43;
+  --danger-bg: #fff0f1;
+  --warning: #75520b;
+  --warning-bg: #fff5dc;
+  --radius: 0.72rem;
+  --shadow: 0 8px 26px #2633550b;
   --space: 1rem;
-  --content-width: 72rem;
-  --reading-width: 46em;
+  --content-width: 96rem;
+  --reading-width: 50rem;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #141d19;
-    --surface: #1f2a24;
-    --surface-soft: #28372e;
-    --paper: #202923;
-    --text: #e8eee7;
-    --muted: #b0bfb4;
-    --border: #4b6152;
-    --accent: #acd8b9;
-    --accent-text: #143723;
-    --accent-soft: #304b39;
-    --success: #b0dfbb;
-    --success-bg: #25412e;
-    --danger: #ffc0b3;
-    --danger-bg: #4a2b27;
-    --warning: #f2ce8b;
-    --warning-bg: #493b22;
-    --shadow: 0 5px 24px #0002;
+    --bg: #0d1424;
+    --surface: #141e31;
+    --surface-soft: #1c2940;
+    --paper: #111a2b;
+    --text: #edf1fb;
+    --muted: #aab5c9;
+    --border: #303d56;
+    --accent: #a59bff;
+    --accent-strong: #c3bcff;
+    --focus: #c3bcff;
+    --accent-text: #15132c;
+    --accent-soft: #292b50;
+    --success: #9ce5bd;
+    --success-bg: #173a32;
+    --danger: #ffb8c2;
+    --danger-bg: #482a39;
+    --warning: #f5d48f;
+    --warning-bg: #45391f;
+    --shadow: 0 12px 30px #0003;
   }
 }
 * {
   box-sizing: border-box;
+}
+.app svg.lucide {
+  stroke-width: 1.9;
 }
 body {
   margin: 0;
@@ -99,10 +106,10 @@ button.ghost {
   background: transparent;
 }
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--focus);
   outline-offset: 4px;
 }
-main:focus:not(:focus-visible) {
+main:focus {
   outline: none;
 }
 h1,
@@ -158,11 +165,11 @@ p {
   align-items: center;
   flex-wrap: wrap;
   gap: 1em;
-  padding: 1.3em 0;
+  padding: 1.1em 0;
 }
 .brand {
   display: flex;
-  gap: 0.55em;
+  gap: 0.7em;
   align-items: center;
   font-size: 1.35em;
   font-weight: 700;
@@ -172,12 +179,28 @@ p {
 .brand-mark {
   display: grid;
   place-items: center;
-  width: 1.8em;
-  height: 1.8em;
-  background: var(--accent);
-  color: var(--accent-text);
-  border-radius: 0.5em 0.5em 0.5em 0;
-  font-family: Georgia, serif;
+  width: 2.2em;
+  height: 2.2em;
+  flex: 0 0 auto;
+  background: #111a2e;
+  border: 1px solid #303d56;
+  border-radius: 0.55em;
+}
+.brand-mark svg {
+  display: block;
+  width: 76%;
+  height: 76%;
+}
+.brand-copy {
+  display: grid;
+  line-height: 1.2;
+}
+.brand-copy small {
+  margin-top: 0.25em;
+  color: var(--muted);
+  font-size: 0.49em;
+  font-weight: 450;
+  letter-spacing: 0.01em;
 }
 .header-tools,
 .row {
@@ -197,6 +220,31 @@ p {
 .display-settings .row {
   margin-top: 0.6em;
 }
+.display-settings summary {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+}
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55em;
+}
+.icon-button svg,
+.app-nav svg,
+.reader-nav svg,
+.breadcrumb svg,
+.panel-head svg,
+.learning-link svg,
+.answer-action svg,
+.feedback h2 svg,
+.progress-summary svg,
+.history-head svg,
+.field > span svg,
+.stat > span svg {
+  flex: 0 0 auto;
+}
 [aria-pressed="true"] {
   background: var(--accent-soft);
   border-color: var(--accent);
@@ -205,16 +253,22 @@ p {
   display: flex;
   align-items: stretch;
   flex-wrap: wrap;
-  gap: 0.35em;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0.85em;
-  margin-bottom: 2.5em;
+  gap: 0.25em;
+  border: 1px solid var(--border);
+  border-radius: 0.72em;
+  background: var(--surface);
+  padding: 0.35em;
+  margin-bottom: 2.2em;
+  box-shadow: 0 2px 8px #24335108;
 }
 .app-nav button {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
   background: transparent;
   border-color: transparent;
   color: var(--muted);
-  font-size: 0.9em;
+  font-size: 0.88em;
   text-align: left;
 }
 .app-nav button[aria-current="page"] {
@@ -263,6 +317,7 @@ p {
 .library-card {
   background: var(--surface);
   border-radius: var(--radius);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow);
   padding: 1.6em;
   min-width: 0;
@@ -280,36 +335,45 @@ p {
   overflow: hidden;
 }
 .book-cover {
-  background: var(--accent-soft);
-  color: var(--accent);
-  padding: 1.6em 2em;
-  min-height: 9em;
-  position: relative;
+  background: linear-gradient(125deg, #eef0ff, #e4e5ff);
+  color: #4d49c5;
+  padding: 1.2em 1.5em;
+  min-height: 8em;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1em;
   overflow: hidden;
 }
+.book-cover > svg {
+  padding: 0.65em;
+  width: 3.1em;
+  height: 3.1em;
+  color: #504bdb;
+  background: #dcdcff;
+  border-radius: 0.65em;
+}
 .book-cover > span {
-  font-size: 0.65em;
-  letter-spacing: 0.2em;
+  font-size: 0.67em;
+  letter-spacing: 0.14em;
   display: block;
 }
 .book-cover strong {
-  font-family: Georgia, serif;
-  font-size: 3.2em;
-  line-height: 1.8;
-  font-weight: 400;
+  justify-self: end;
+  font-size: 1.35em;
+  font-weight: 650;
+  opacity: 0.65;
+  letter-spacing: 0.06em;
 }
-.book-cover i {
-  position: absolute;
-  width: 8em;
-  height: 8em;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  right: -1em;
-  top: 2em;
-  opacity: 0.35;
-  box-shadow:
-    0 0 0 1.5em var(--accent-soft),
-    0 0 0 calc(1.5em + 1px) currentColor;
+@media (prefers-color-scheme: dark) {
+  .book-cover {
+    background: linear-gradient(125deg, #22274c, #25213f);
+    color: #d7d2ff;
+  }
+  .book-cover > svg {
+    color: #b3a9ff;
+    background: #34345c;
+  }
 }
 .library-card-body {
   padding: 1.5em 1.8em;
@@ -345,7 +409,9 @@ dd {
   margin: 0.15em 0 0.65em;
 }
 .lesson-hero {
-  background: var(--accent-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
   padding: 2em;
   border-radius: var(--radius);
   display: flex;
@@ -368,7 +434,9 @@ dd {
   margin: 1.5em 0;
 }
 .field span {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
   font-size: 0.85em;
   color: var(--muted);
   margin-bottom: 0.4em;
@@ -440,7 +508,9 @@ dd {
   margin-top: 1.2em;
 }
 .learning-actions section {
-  background: var(--surface-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--accent-soft);
   padding: 1em;
   border-radius: 0.7em;
   min-width: 0;
@@ -457,6 +527,11 @@ dd {
   justify-content: space-between;
   text-align: left;
   color: var(--accent);
+}
+.learning-actions h5 {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
 }
 .question-preview {
   display: -webkit-box;
@@ -490,6 +565,7 @@ dd {
 }
 .reading-surface {
   background: var(--paper);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow);
   border-radius: var(--radius);
   padding: clamp(1rem, 4vw, 3rem);
@@ -510,6 +586,11 @@ dd {
 .reader-nav button {
   flex: 1 1 8em;
   font-size: 0.85em;
+}
+.reader-nav button > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
 }
 .reader-nav small {
   display: block;
@@ -571,6 +652,7 @@ dd {
 }
 .question-surface {
   background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: clamp(1rem, 4vw, 3rem);
   box-shadow: var(--shadow);
@@ -661,6 +743,9 @@ fieldset:disabled .option {
 }
 .feedback h2 {
   font-size: 1.5em;
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
 }
 .feedback p {
   margin-bottom: 0.8em;
@@ -679,6 +764,9 @@ fieldset:disabled .option {
 }
 .stat > span {
   font-size: 0.85em;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
 }
 .stat strong {
   display: block;
@@ -704,6 +792,11 @@ fieldset:disabled .option {
   justify-content: space-between;
   flex-wrap: wrap;
   margin: 1em 0;
+}
+.history-head time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
 }
 .accuracy {
   font-size: 1.8em;
@@ -771,6 +864,9 @@ meter::-webkit-meter-optimum-value {
 }
 @media (max-width: 38rem) {
   .local-label {
+    display: none;
+  }
+  .brand-copy small {
     display: none;
   }
   .app-nav {

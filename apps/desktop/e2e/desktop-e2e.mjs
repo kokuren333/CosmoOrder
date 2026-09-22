@@ -396,6 +396,27 @@ async function main() {
     (await app.text()).includes("学びのライブラリ"),
     "the application shows the packages panel",
   );
+  assert(
+    await app.evaluate(
+      'document.querySelector(".brand-mark svg path") !== null',
+    ),
+    "the header uses the custom Osmium crystal mark",
+  );
+  assert(
+    await app.evaluate(
+      'document.querySelectorAll(".app-nav svg.lucide").length === 4',
+    ),
+    "navigation uses Lucide icons",
+  );
+  assert(
+    await app.evaluate(
+      '(() => { const widths = [...document.querySelectorAll(".app-nav svg.lucide")].map((icon) => getComputedStyle(icon).getPropertyValue("stroke-width")); return widths.length === 4 && widths.every((width) => Number.parseFloat(width) === 1.9); })()',
+    ),
+    "navigation icon stroke weights are consistent",
+    await app.evaluate(
+      '[...document.querySelectorAll(".app-nav svg.lucide")].map((icon) => getComputedStyle(icon).getPropertyValue("stroke-width")).join(", ")',
+    ),
+  );
   await app.waitFor(
     '() => document.querySelector(".package:not(:disabled)") !== null',
     "the installed package in the list",
@@ -514,7 +535,7 @@ async function main() {
     GOLDEN_FEEDBACK,
   );
 
-  await app.clickText("次の問題 →", "next problem after feedback");
+  await app.clickText("次の問題", "next problem after feedback");
   await app.waitFor(
     '() => document.body.innerText.includes("2 + 1")',
     "boolean question",

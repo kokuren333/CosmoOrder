@@ -1,5 +1,12 @@
 import { useState } from "react";
 import {
+  ArrowRight,
+  BookOpenText,
+  ChevronRight,
+  ClipboardCheck,
+  Search,
+} from "lucide-react";
+import {
   outline,
   search,
   readingOrder,
@@ -74,7 +81,7 @@ export function Lesson({
               </div>
               <div className="learning-actions">
                 <section>
-                  <h5>読んで理解する</h5>
+                  <h5><BookOpenText size={16} aria-hidden="true" />読んで理解する</h5>
                   {resources.length === 0 ? (
                     <p className="meta">この目標の読み物はありません。</p>
                   ) : (
@@ -87,13 +94,13 @@ export function Lesson({
                         onClick={() => onOpenResource(resource.id)}
                       >
                         <span>{resource.title}</span>
-                        <span aria-hidden="true">→</span>
+                        <ChevronRight size={17} aria-hidden="true" />
                       </button>
                     ))
                   )}
                 </section>
                 <section>
-                  <h5>問題で確かめる</h5>
+                  <h5><ClipboardCheck size={16} aria-hidden="true" />問題で確かめる</h5>
                   {assessments.length === 0 ? (
                     <p className="meta">この目標の問題はありません。</p>
                   ) : (
@@ -108,7 +115,7 @@ export function Lesson({
                         <span className="question-preview">
                           {questionTitle(assessment.id)}
                         </span>
-                        <span aria-hidden="true">→</span>
+                        <ChevronRight size={17} aria-hidden="true" />
                       </button>
                     ))
                   )}
@@ -152,14 +159,14 @@ export function Lesson({
               disabled={busy}
               onClick={() => onOpenResource(first.id)}
             >
-              最初の教材を読む →
+              最初の教材を読む <ArrowRight size={17} aria-hidden="true" />
             </button>
             <p className="meta">目次に沿って表示しています</p>
           </div>
         ) : null}
       </header>
       <label className="field search-field">
-        <span>教材を検索</span>
+        <span><Search size={15} aria-hidden="true" />教材を検索</span>
         <input
           type="search"
           value={query}

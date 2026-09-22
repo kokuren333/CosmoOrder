@@ -1,5 +1,13 @@
 import type { ReactNode } from "react";
+import {
+  BookOpenText,
+  ChartNoAxesColumnIncreasing,
+  History,
+  Library,
+  Type,
+} from "lucide-react";
 import type { StatusView } from "../types.ts";
+import { BrandGem } from "./BrandGem.tsx";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
 
 export function AppShell({
@@ -40,15 +48,18 @@ export function AppShell({
           disabled={busy}
           aria-label="Osmium ライブラリへ"
         >
-          <span className="brand-mark" aria-hidden="true">
-            O
+          <span className="brand-mark">
+            <BrandGem />
           </span>
-          <span>Osmium</span>
+          <span className="brand-copy">
+            <span>Osmium</span>
+            <small>学びを、もっと身近に。</small>
+          </span>
         </button>
         <div className="header-tools">
           <span className="local-label">このデバイスで学ぶ</span>
           <details className="display-settings">
-            <summary>文字サイズ</summary>
+            <summary><Type size={15} aria-hidden="true" />文字サイズ</summary>
             <div className="row">
               {[1, 1.5, 2].map((value) => (
                 <button
@@ -69,6 +80,7 @@ export function AppShell({
           onClick={onLibrary}
           disabled={busy}
         >
+          <Library size={17} aria-hidden="true" />
           ライブラリ
         </button>
         <button
@@ -78,6 +90,7 @@ export function AppShell({
           onClick={onLesson}
           disabled={busy || title === null}
         >
+          <BookOpenText size={17} aria-hidden="true" />
           {title ?? "教材を選ぶ"}
         </button>
         <button
@@ -86,6 +99,7 @@ export function AppShell({
           onClick={onProgress}
           disabled={busy || title === null}
         >
+          <ChartNoAxesColumnIncreasing size={17} aria-hidden="true" />
           進捗
         </button>
         <button
@@ -94,6 +108,7 @@ export function AppShell({
           onClick={onHistory}
           disabled={busy || title === null}
         >
+          <History size={17} aria-hidden="true" />
           履歴
         </button>
       </nav>

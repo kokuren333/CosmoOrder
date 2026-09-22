@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, CircleCheck, CircleX, ArrowRight } from "lucide-react";
 import { Markdown } from "./Markdown.ts";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
 import type { Assessment, AttemptView, MarkdownView } from "../types.ts";
@@ -45,7 +46,7 @@ export function AssessmentView({
     <article className="assessment" aria-labelledby="assessment-heading">
       <div className="panel-head">
         <button className="ghost" onClick={onBack} disabled={busy}>
-          ← 目次へ
+          <ArrowLeft size={16} aria-hidden="true" />目次へ
         </button>
         <p className="meta">
           問題 {position} / {total}
@@ -125,6 +126,7 @@ export function AssessmentView({
             aria-labelledby="feedback-heading"
           >
             <h2 id="feedback-heading" ref={feedbackHeading} tabIndex={-1}>
+              {attempt.correct ? <CircleCheck size={22} aria-hidden="true" /> : <CircleX size={22} aria-hidden="true" />}
               {attempt.correct ? "正解" : "不正解"}
             </h2>
             <Markdown content={attempt.feedback_content.content} />
@@ -138,7 +140,7 @@ export function AssessmentView({
               disabled={busy}
               onClick={hasNext ? onNext : onShowProgress}
             >
-              {hasNext ? "次の問題 →" : "進捗を確認する →"}
+              {hasNext ? <>次の問題 <ArrowRight size={16} aria-hidden="true" /></> : <>進捗を確認する <ArrowRight size={16} aria-hidden="true" /></>}
             </button>
           </section>
         ) : null}

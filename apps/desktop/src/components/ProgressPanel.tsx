@@ -1,4 +1,5 @@
 import type { ObjectiveProgress } from "../types.ts";
+import { ArrowLeft, ChartNoAxesColumnIncreasing } from "lucide-react";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
 
 export function ProgressPanel({
@@ -25,12 +26,12 @@ export function ProgressPanel({
           <p className="lede">これまでの回答を、学習目標ごとに振り返ります。</p>
         </div>
         <button onClick={onBack} disabled={busy}>
-          目次へ
+          <ArrowLeft size={16} aria-hidden="true" />目次へ
         </button>
       </div>
       <div className="stats">
         <div className="stat">
-          <span>回答数（延べ）</span>
+          <span><ChartNoAxesColumnIncreasing size={16} aria-hidden="true" />回答数（延べ）</span>
           <strong>
             {totalAttempts}
             <small> 件</small>

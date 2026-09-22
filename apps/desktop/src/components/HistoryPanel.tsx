@@ -1,4 +1,5 @@
 import type { LearningEvent, MarkdownView } from "../types.ts";
+import { ArrowLeft, Clock3 } from "lucide-react";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
 
 export function HistoryPanel({
@@ -25,7 +26,7 @@ export function HistoryPanel({
           <p className="lede">一問ずつ積み重ねた、あなたの学び。</p>
         </div>
         <button onClick={onBack} disabled={busy}>
-          目次へ
+          <ArrowLeft size={16} aria-hidden="true" />目次へ
         </button>
       </div>
       {events.length === 0 ? (
@@ -46,6 +47,7 @@ export function HistoryPanel({
                   {event.correct ? "正解" : "不正解"}
                 </span>
                 <time className="meta" dateTime={event.timestamp}>
+                  <Clock3 size={14} aria-hidden="true" />
                   {new Date(event.timestamp).toLocaleString("ja-JP")}
                 </time>
               </div>

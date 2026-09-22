@@ -1,4 +1,5 @@
 import { Markdown } from "./Markdown.ts";
+import { ArrowLeft, ArrowRight, ListTree } from "lucide-react";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
 import type { Resource, ResourceView } from "../types.ts";
 
@@ -28,18 +29,18 @@ export function Reader({
         disabled={loading || previous === null}
         onClick={() => previous && onNavigate(previous.id)}
       >
-        <span>← 前の教材</span>
+        <span><ArrowLeft size={16} aria-hidden="true" />前の教材</span>
         <small>{previous?.title ?? "最初の教材です"}</small>
       </button>
       <button className="ghost" disabled={loading} onClick={onBack}>
-        目次へ
+        <ListTree size={16} aria-hidden="true" />目次へ
       </button>
       <button
         className="ghost"
         disabled={loading || next === null}
         onClick={() => next && onNavigate(next.id)}
       >
-        <span>次の教材 →</span>
+        <span>次の教材<ArrowRight size={16} aria-hidden="true" /></span>
         <small>{next?.title ?? "最後の教材です"}</small>
       </button>
     </nav>

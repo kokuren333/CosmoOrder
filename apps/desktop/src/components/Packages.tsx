@@ -1,4 +1,5 @@
 import type { PackageView } from "../types.ts";
+import { ArrowRight, BookOpen, RefreshCw } from "lucide-react";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
 
 export function PackageList({
@@ -22,12 +23,14 @@ export function PackageList({
           <h1 id="packages-heading">学びのライブラリ</h1>
           <p className="lede">手元の教材から、今日の学びを始めましょう。</p>
         </div>
-        <button onClick={onRefresh} disabled={busy}>
+        <button className="icon-button" onClick={onRefresh} disabled={busy}>
+          <RefreshCw size={16} aria-hidden="true" />
           再読み込み
         </button>
       </div>
       {packages.length === 0 ? (
         <div className="empty card">
+          <span className="empty-icon" aria-hidden="true"><BookOpen size={23} /></span>
           <h2>教材を迎える準備ができました</h2>
           <p>インストールした教材がここに並びます。</p>
           <DeveloperDetails label="教材の追加方法">
@@ -44,20 +47,20 @@ export function PackageList({
               key={`${item.package_id}@${item.package_version}`}
             >
               <div className="book-cover" aria-hidden="true">
-                <span>OSMIUM / LEARNING</span>
+                <BookOpen size={30} aria-hidden="true" />
+                <span>LEARNING COLLECTION</span>
                 <strong>{String(index + 1).padStart(2, "0")}</strong>
-                <i />
               </div>
               <div className="library-card-body">
                 <p className="meta">バージョン {item.package_version}</p>
                 <h2>{item.title}</h2>
                 <button
-                  className="package primary"
+                  className="package primary icon-button"
                   disabled={busy}
                   onClick={() => onSelect(item.package_id)}
                 >
                   {selected === item.package_id ? "教材に戻る" : "教材を開く"}
-                  <span aria-hidden="true"> →</span>
+                  <ArrowRight size={16} aria-hidden="true" />
                   <span className="sr-only">: {item.title}</span>
                 </button>
                 <DeveloperDetails>
