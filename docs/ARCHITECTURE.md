@@ -68,6 +68,8 @@ OS標準のユーザーデータ領域を既定とし、CLI/テストでは `OSM
 
 filesystemとDBは一つのtransactionにできない。stagingで検証を完了し、同じfilesystem内でrenameしてからDB登録する。起動時に孤立した導入物を検出・再検証して復旧し、導入失敗で既存教材を消さない。Source編集中の変更を読む危険には、stagingへコピーした内容を再検証・hashすることで対処する。
 
+Phase 3bではPackage層の`library::Library`がfilesのinstall/list/readを実装する。Library handleは`.library.lock`のOS排他lockを保有し、並行操作は待ち続けずI/O診断を返す。アプリは操作ごとにopen/dropする。全fileをstagingへcreate_new・syncし、再検証後にdigest directoryへrenameする。同一ID/versionで異なるdigestは拒否し、同一digestは冪等。listは全導入物を再検証し、DB登録前に中断された完全なdirectoryも検出できる。SQLite metadata登録はPhase 4で追加する。中断で残ったstagingはlibraryに表示せず、自動削除もしない。電源断durabilityと悪意ある別processのfilesystem差替えに対する完全保証はしない。
+
 eventsはUUIDのevent ID、device ID、schema versionを持ち、追記のみ。request IDを使い送信retryを二重学習と数えない。別の意図的な回答には新しいrequest IDを使う。SQLite transactionでeventとprojectionを更新し、失敗時に半端な記録を残さない。
 
 projectionは試行数、正答数、最終回答時刻等から開始する。客観的な「習得保証」と表示しない。schema migrationは番号付きとし、migration前backup、rollback時の挙動、将来のschemaを開いた際の書込み拒否を試験する。DB破損時に空DBへ黙って置換しない。

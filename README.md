@@ -2,7 +2,7 @@
 
 Osmiumは、教材・概念・学習目標・問題・学習履歴をportableな形式で扱う、local-firstの学習Runtimeです。AIやHub、アカウントがなくても学習できることを基本にします。
 
-現在は教材作成・検証CLIと配布Packageのbuildまで実装済みです。学習アプリ、install、履歴保存は後続Phaseです。
+現在は教材作成・検証CLI、配布Packageのbuild、ローカルへのinstallまで実装済みです。学習アプリと履歴保存は後続Phaseです。
 
 ## 設計文書
 
@@ -30,12 +30,16 @@ cargo run -p osmium-cli -- query examples/arithmetic objectives
 cargo run -p osmium-cli -- context examples/arithmetic addition.basic
 cargo run -p osmium-cli -- build examples/arithmetic --output arithmetic.osmium
 cargo run -p osmium-cli -- validate arithmetic.osmium --json
+cargo run -p osmium-cli -- install arithmetic.osmium --json
+cargo run -p osmium-cli -- packages --json
 cargo run -p osmium-cli -- init my-course --package-id org.example/my-course --language ja-JP
 ```
 
 通常の結果は単一JSONをstdoutへ返します。`lint`の警告は成功扱いです。`--json`を受理し、help/versionはstderrへ表示します。buildの`--output`は保存先です（拡張子`.osmium`ならZIP、その他はdirectory）。他コマンドでは従来の`--output json`も受理します。未対応capabilityはexit 4、対象不正は1、引数不正は2、I/O失敗は3です。`init`と`build`は既存の出力を上書きしません。build出力先の親directoryは事前に作成してください。
 
 Rust stable（開発確認環境1.98.1）とWindowsではMSVC build toolsが必要です。
+
+Windowsの既定保存先は`%LOCALAPPDATA%\Osmium`です。`--home <dir>`または`OSMIUM_HOME`で変更できます。教材は`library/<digest>/`へ保存し、同一ID/version/digestの再導入は成功扱いです。同一ID/versionで内容だけが異なるPackageは拒否します。既存教材を上書きするオプションはありません。保存済みファイルの破損も検出し、無断で修復・置換しません。
 
 ```sh
 cargo fmt --all --check
@@ -46,7 +50,7 @@ cargo build --workspace
 
 初回はCargo依存を取得します。取得後は `--offline --locked` をCargoのclippy/test/buildへ指定できます。教材Schema検証そのものは外部ネットワークを使いません。
 
-[Schema](spec/v0.1/package.schema.json)と[適合性の説明](spec/v0.1/README.md)、[最小教材](examples/arithmetic/osmium.json)を用意しています。JSON/YAML manifestの読込み、重複キー・参照・循環・問題と正解の整合・非対応capabilityの検証を実装済みです。`osmium_package::load_source` はファイルのサイズ・個数・path・symlink/reparse pointを検証し、参照された本文とmetadataを読み込みます。validate/inspect/query/context/lintは配布directoryとZIPも読み、hashとinventoryを照合します。installは後続Phaseです。
+[Schema](spec/v0.1/package.schema.json)と[適合性の説明](spec/v0.1/README.md)、[最小教材](examples/arithmetic/osmium.json)を用意しています。JSON/YAML manifestの読込み、重複キー・参照・循環・問題と正解の整合・非対応capabilityの検証を実装済みです。`osmium_package::load_source` はファイルのサイズ・個数・path・symlink/reparse pointを検証し、参照された本文とmetadataを読み込みます。validate/inspect/query/context/lintは配布directoryとZIPも読み、hashとinventoryを照合します。
 
 ## 開発の進め方
 

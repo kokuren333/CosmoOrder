@@ -2,6 +2,7 @@
 
 pub mod distribution;
 pub mod init;
+pub mod library;
 
 use osmium_core::parsing::{MAX_DOCUMENT_BYTES, parse_json};
 use osmium_core::schema::{Diagnostic, DocumentKind, validate_document};

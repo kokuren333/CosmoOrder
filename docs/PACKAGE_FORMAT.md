@@ -89,6 +89,8 @@ buildは存在しない出力だけを許可し、親directoryを既存のもの
 
 ## 互換性とmigration
 
+local libraryは`<home>/library/<package-digest>/`のimmutable directoryで管理する。installはdistributionのみを受理し、Sourceは先にbuildする。同一ID/version/digestは再利用、同一ID/versionの異なるdigestは拒否する。複数versionは共存でき、Runtimeの読込み時に複数候補があれば明示version指定を要求する。library上限は1,024 Package versions。`.library.lock`でOsmiumプロセスの操作を直列化し、lock競合はexit 3のI/O診断として再試行可能にする。stagingへ全fileを書いて再検証した後、libraryへ同一filesystemのrenameで公開する。教材本文はDBへ格納しない。
+
 開発版0.1は対応する完全なschema識別子のみ受理し、未知versionは明示拒否する。stable 1.0はconformanceを満たした時点でfreezeし、旧schema/fixturesを残す。breaking changeは新version＋変換器＋旧資料を残す方針とする。未実装のmigration commandを存在するように案内しない。
 
 未知core fieldは誤記防止のため拒否し、optionalな追加情報は `extensions` 内へ置く。unknown payloadは読み書き/buildで損失なく保存する（JSON値としての同等性。コメント・空白の同一性は保証しない）。未知required capabilityをoptionalへ勝手に落とさない。

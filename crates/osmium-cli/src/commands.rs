@@ -35,6 +35,16 @@ struct InitView {
 
 pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failure> {
     let value = match &cli.command {
+        Command::Install { path } => {
+            let mut library = library(cli)?;
+            serde_json::to_value(library.install(path).map_err(Failure::from_diagnostics)?)
+                .map_err(internal_serialization)?
+        }
+        Command::Packages => {
+            let library = library(cli)?;
+            serde_json::to_value(library.packages().map_err(Failure::from_diagnostics)?)
+                .map_err(internal_serialization)?
+        }
         Command::Build {
             source,
             destination,
@@ -205,6 +215,14 @@ fn text(model: &PackageModel, field: &str) -> String {
         .as_str()
         .unwrap_or_default()
         .to_owned()
+}
+
+fn library(cli: &Cli) -> Result<osmium_package::library::Library, Failure> {
+    let home = match &cli.home {
+        Some(path) => path.clone(),
+        None => osmium_package::library::default_home().map_err(Failure::from_diagnostics)?,
+    };
+    osmium_package::library::Library::open(&home).map_err(Failure::from_diagnostics)
 }
 
 fn init_command(

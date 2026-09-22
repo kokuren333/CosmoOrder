@@ -1,6 +1,6 @@
 # Osmium 実装計画
 
-更新日: 2026-09-22。状態: Phase 3aのdistribution build・directory/ZIP検証まで実装。Phase 3bのinstall以降が次の作業。[Phase 2b引き継ぎメモ](PHASE2B_HANDOFF.md)は再開前の履歴資料。
+更新日: 2026-09-22。状態: Phase 3bのローカルinstall/listまで実装。Phase 4の採点とSQLiteを作業中。[Phase 2b引き継ぎメモ](PHASE2B_HANDOFF.md)は再開前の履歴資料。
 
 ## 1. 調査と要件の優先順位
 
@@ -125,7 +125,8 @@ Git管理から依存物、生成物、ログ、cache、秘密、ローカルDB�
 - Phase 2b（未コミット）: CLIの薄いadapter `crates/osmium-cli`（`osmium`バイナリ）を追加し、`validate`/`inspect`/`query`/`context`/`init` を実装。Coreへ純粋な意味ビュー `osmium-core::query`（inspect/query/context、上限 `MAX_QUERY_LIMIT`=256、`MAX_CONTEXT_NODES`=512、`MAX_CONTEXT_BYTES`=256KiB、`MAX_CONTEXT_DEPTH`=8）を、Packageへ非破壊scaffold `osmium-package::init` を追加。CLIは検証ロジックを一切持たず、引数解析・envelope整形・exit code決定のみを行う。stdoutは単一JSON envelope、stderrは診断1行、exit codeは0成功/1対象不正/2呼出し不正/3 I/O内部/4 schema・capability非互換。テスト合計70件、fmt/clippy/build成功。`osmium lint` とPhase 3以降は未実装。作業再開用の詳細は [Phase 2b引き継ぎメモ](PHASE2B_HANDOFF.md) を参照。残課題: `lint`未実装、distribution入力（ZIP/directory）のvalidateはPhase 3、Desktop未着手。
 - Phase 2b完了（Codex引継ぎ後）: DeepSeekの未コミット実装を読解し再検証。lintをCoreへ追加し、CLIはwarning付きの成功envelopeを返す。`--json`追加、inspect上限拒否、context対象およびDTO全体のbytes制限、initのID文法/既存YAML/リンク親拒否、create_newと生成後validation失敗時のfile rollback、I/O exit codeを修正。変更はcrates/osmium-core/query・lint、crates/osmium-package/init、crates/osmium-cliと文書。75件のworkspace testsと追加context境界テスト1件、clippy/fmt/buildを検証。実バイナリのstdoutを検証するprocess試験を含む。残課題はdistribution build/install、評価/永続化、Desktop、最終縦切り試験。悪意ある同時filesystem書換えの完全防御は依然保証しない。コミットhashはGit履歴と完了報告を参照。
 - Phase 3a完了: `osmium-package::distribution`とCLI build、distribution manifest schemaを追加。正規化JSON/LF Markdown、payload SHA-256、package/archive digest、再現可能なZIP、出力のstaging再検証、上書き拒否。全reader系CLIがdirectory/ZIP入力に対応。改ざん・欠落・余分なfile・危険path・重複ZIP名・展開サイズ超過・version非互換・optional extension保持を試験。変更先はpackage/CLI/Core schemaとspec、関連文書、Cargo依存。workspace 85 tests、fmt/clippy/build、および実CLIのZIP build→validateを検証。固定digest vectorを追加。残課題: install、SQLite、採点、Desktop。canonical profileは開発用の参照serializerを明記し、独立実装・他OS実測は今後の適合性課題（DD-007）。コミット名 `feat: build reproducible portable packages`、hashはGit履歴と完了報告参照。
-- Phase 3b以降: 各完了時に、実装内容・変更ファイル・検証結果・残課題・commit hashをここへ追記し、利用者にも簡潔に報告する。利用者の最新指示に従い、動作するv1を最終検証した時点で開発を区切り、起動方法を提示する。
+- Phase 3b完了: Package層のLibraryとCLI install/packages、--home/OSMIUM_HOME、WindowsのLOCALAPPDATA既定保存先を実装。OS file lock、stagingの再検証とrename、同内容の再導入、ID/version内容衝突拒否、複数version共存と明示選択、list/readのhash再検証を追加。変更先はosmium-package/library、CLI、Cargo依存と関連docs。93 testsを検証し、別CLIプロセスでのinstall→reinstall→packages、Windows junction拒否、staging I/O失敗、既存file破損時の非上書きを確認。SQLite metadata登録、採点とEvent、Desktopは次段階。コミット名 `feat: install verified packages into a locked local library`、hashは履歴と報告参照。
+- Phase 4以降: 各完了時に、実装内容・変更ファイル・検証結果・残課題・commit hashをここへ追記し、利用者にも簡潔に報告する。利用者の最新指示に従い、動作するv1を最終検証した時点で開発を区切り、起動方法を提示する。
 
 ## 8. 技術判断の参照
 

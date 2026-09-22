@@ -13,6 +13,9 @@ use std::path::PathBuf;
                   stdout and human-readable lines to stderr."
 )]
 pub struct Cli {
+    /// Local package and learning-state directory (otherwise OSMIUM_HOME or OS default).
+    #[arg(long, global = true)]
+    pub home: Option<PathBuf>,
     /// Machine-readable output. JSON is the only supported format in this
     /// phase; the flag exists so scripts can state the contract explicitly.
     #[arg(long, value_name = "FORMAT", default_value = "json")]
@@ -40,6 +43,10 @@ pub struct LegacyOutput {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    /// Install a verified distribution into the local library.
+    Install { path: PathBuf },
+    /// List installed package versions after verifying their contents.
+    Packages,
     /// Build a verified distribution directory or .osmium ZIP without overwriting.
     Build {
         source: PathBuf,

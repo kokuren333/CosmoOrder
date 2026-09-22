@@ -17,6 +17,7 @@ unicode-normalization = "0.1.25"
 language-tags = "0.3.2"
 tempfile = "3.27.0"
 sha2 = "0.11.0"
+fs2 = "0.4.3"
 zip = { version = "6.0.0", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 yaml-rust2 = { version = "0.13.0", default-features = false }
 

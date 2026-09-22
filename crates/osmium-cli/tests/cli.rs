@@ -123,6 +123,38 @@ fn actual_binary_outputs_one_json_document() {
 }
 
 #[test]
+fn installed_package_survives_independent_cli_processes() {
+    let temp = tempfile::tempdir().unwrap();
+    let zip = temp.path().join("course.osmium");
+    let home = temp.path().join("home");
+    osmium_package::distribution::build(source().path(), &zip).unwrap();
+    let invoke = |args: &[&std::ffi::OsStr]| {
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_osmium"))
+            .arg("--home")
+            .arg(&home)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        serde_json::from_slice::<Value>(&output.stdout).unwrap()
+    };
+    let installed = invoke(&[std::ffi::OsStr::new("install"), zip.as_os_str()]);
+    assert_eq!(installed["data"]["already_installed"], false);
+    let repeated = invoke(&[std::ffi::OsStr::new("install"), zip.as_os_str()]);
+    assert_eq!(repeated["data"]["already_installed"], true);
+    let packages = invoke(&[std::ffi::OsStr::new("packages")]);
+    assert_eq!(packages["data"].as_array().unwrap().len(), 1);
+    assert_eq!(
+        packages["data"][0]["digest"],
+        installed["data"]["package"]["digest"]
+    );
+}
+
+#[test]
 fn validate_reports_a_valid_source_as_success() {
     let directory = source();
     let outcome = run(&["osmium", "validate", &path_of(&directory)]);

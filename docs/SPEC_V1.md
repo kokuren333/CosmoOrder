@@ -15,7 +15,7 @@
 
 ## CLI契約
 
-現在はinit/validate/lint/inspect/query/context/buildを実装済み。reader系コマンドはSource directoryとdistribution directory/ZIPを対象とする。install/open/answer/history/progress/export-stateは後続Phase。
+現在はinit/validate/lint/inspect/query/context/build/install/packagesを実装済み。reader系コマンドはSource directoryとdistribution directory/ZIPを対象とする。open/answer/history/progress/export-stateは後続Phase。
 
 | コマンド | 契約 |
 |---|---|
@@ -27,6 +27,7 @@
 | `osmium context <path> <entity-id>` | 対象、Objective、前提、教材、問題の限定context。本文はuntrusted dataと明示 |
 | `osmium build <source> --output <path>` | distribution作成、検証失敗時は既存出力を壊さない |
 | `osmium install <path>` | ローカル導入、同一digestの再導入は冪等 |
+| `osmium packages` | 内容を再検証して導入済みID/version/digestと保存先を列挙 |
 | `osmium open <package-id>` | インストール済み教材をDesktopで開く。未導入・GUI未利用は明示エラー |
 | `osmium answer <package-id> <assessment-id> --response <json>` | Coreで評価しevent保存。version指定がなければ明確な選択規則を使う |
 | `osmium history <package-id>` / `progress <package-id>` | 保存履歴／derived progress取得 |
