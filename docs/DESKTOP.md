@@ -11,7 +11,7 @@ apps/desktop/
   src/                 # React renderer（表示と操作のみ）
     client.ts          # Tauri command への唯一の経路。fetch/絶対path/動的loadなし
     outline.ts         # Package宣言の読み取り専用ビュー（順序や正誤は決めない）
-    components/        # Packages / Lesson / Reader / Assessment / Progress / History
+    components/        # AppShell / DeveloperDetails / Library / Lesson / Reader / Assessment / Progress / History
   src-tauri/
     src/commands.rs    # command層。runtime + content IR を呼ぶだけ
     src/lib.rs         # window生成、data root決定、command登録
@@ -65,29 +65,32 @@ Cargoの再ビルド対象として登録しているため、rendererを編集�
 ```
 
 `OSMIUM_HOME` を設定すると切り替わります。CLIの `--home` と同じ解決規則です。Desktopは
-起動時に `OSMIUM_HOME` を読み、未設定なら上記既定を使います。起動中のwindowには
-データrootとDB pathが表示されます。
+起動時に `OSMIUM_HOME` を読み、未設定なら上記既定を使います。データrootとDB pathは
+画面下部の「実行環境の詳細」を開くと確認できます。
 
 ## 教材を開いて問題を解く手順
 
-1. **Installed Packages**: 起動直後の一覧から対象Packageを選びます。一覧は導入済み
+1. **ライブラリ**: 起動直後の教材カードから対象Packageを選びます。一覧は導入済み
    Packageを再検証してから表示します。0件の場合は先にCLIでinstallしてください。
 2. **Curriculum / Concept**: 選択したPackageのCurriculum、Concept、Objectiveが表示され
-   ます。Objectiveごとに「読む: <Resource>」「解く: <Assessment>」が出ます。
-3. **Resource / Markdown reader**: 「読む」で本文を表示します。「前へ」「次へ」で
+   ます。テーマ内の学習目標ごとに「読んで理解する」「問題で確かめる」が関連づけられます。
+   「最初の教材を読む」は目次の先頭を開きます。推薦・習得判定は行いません。
+3. **教材を読む**: 教材名を選ぶと本文を表示します。本文の上下にある「前の教材」「次の教材」で
    パッケージ宣言順に移動できます。Package由来のHTMLは実行されず、literal textとして
    表示されます。外部URLはリンク表示のみで自動取得しません。
-4. **Assessment**: 「解く」で問題を表示します。`single_select` はradio、`boolean` は
-   はい/いいえで回答します。採点はRustの評価器 `org.osmium.exact.v1` v1 が行い、
-   結果とfeedbackが表示されます。
+4. **問題で確かめる**: 問題文を選ぶと問題を表示します。`single_select` と `boolean` は
+   いずれも回答カードを選択し、「採点する」で送信します。採点はRustの評価器
+   `org.osmium.exact.v1` v1 が行い、結果とfeedbackが表示されます。採点後に次問へ進めます。
 5. **LearningEvent / Progress**: 回答ごとにappend-only eventが保存され、progressが
    更新されます。「進捗」でObjective単位の試行数・正答数・正答率・最終回答時刻、
-   「履歴」で直近のeventを確認できます。
+   「履歴」で問題文・正誤・日時を確認できます。概要の回答数と正答数はObjective別の
+   観測値を合算した延べ件数です。内部IDや回答のraw値は詳細、進捗の再構築はメンテナンス内にあります。
 6. **再起動**: windowを閉じてプロセスを終了し、再度起動すると installed package、
    history、progress がそのまま復元されます。同じ `request_id` を再利用しない限り、
    再回答は新しいeventとして記録されます。
 
-文字サイズはヘッダーの「文字 100% / 150% / 200%」で切り替えられます。keyboard操作、
+画面上部の共通ナビゲーションからライブラリ・現在の教材・進捗・履歴へ移動できます。
+文字サイズはヘッダーの「文字サイズ」を開き、100% / 150% / 200%に切り替えられます。keyboard操作、
 focus表示、`prefers-reduced-motion`、`prefers-color-scheme` に対応しています。
 
 ## Golden Package の build と install
@@ -126,13 +129,17 @@ npm test
 npm run build
 
 # 実アプリのE2E（Windows、WebView2が必要）
-npm run e2e -- --home "$env:TEMP\osmium-e2e" --app "..\..\target\debug\osmium-desktop.exe"
+$e2eHome = Join-Path $env:TEMP ("osmium-e2e-" + [guid]::NewGuid().ToString())
+npm run e2e -- --home $e2eHome --app "..\..\target\debug\osmium-desktop.exe"
 ```
 
 E2EはGolden Packageの validate/lint/build/install、Desktop起動、installed package表示、
 Curriculum/Concept閲覧、Markdown本文表示、回答と採点、feedback、progress、history、
 完全終了、再起動後の復元までを実際のwindowで確認します。同時にwebviewが
 `tauri.localhost` 以外のnetwork requestを出していないことも検証します。
+`--home` は新規または空のディレクトリを指定してください。既存データを含む場合は拒否します。
+選択カードとキーボード、真偽式、技術情報のdisclosure、light/darkと100/150/200%の
+横幅も検証し、`<home>/screenshots/` に表示確認用PNGを保存します。
 
 ## v1での制限
 

@@ -1,161 +1,243 @@
-import type { ReactElement } from "react";
 import { useState } from "react";
-import { outline, search } from "../outline.ts";
+import {
+  outline,
+  search,
+  readingOrder,
+  resourcesForObjective,
+  assessmentsForObjective,
+} from "../outline.ts";
+import type { ConceptNode } from "../outline.ts";
 import type { LessonView, ObjectiveProgress } from "../types.ts";
+import { DeveloperDetails } from "./DeveloperDetails.tsx";
 
-/** Curriculum / concept / objective navigation for one package. */
 export function Lesson({
   lesson,
   progress,
   onOpenResource,
   onOpenAssessment,
-  onShowProgress,
-  onShowHistory,
+  busy,
 }: {
   lesson: LessonView;
   progress: ObjectiveProgress[];
-  onOpenResource: (resourceId: string) => void;
-  onOpenAssessment: (assessmentId: string) => void;
-  onShowProgress: () => void;
-  onShowHistory: () => void;
-}): ReactElement {
+  busy: boolean;
+  onOpenResource: (id: string) => void;
+  onOpenAssessment: (id: string) => void;
+}) {
   const [query, setQuery] = useState("");
   const view = outline(lesson);
   const found = search(lesson, query);
-  const progressById = new Map(progress.map((item) => [item.objective_id, item]));
-
-  const conceptSections = [
-    ...view.curricula.flatMap((curriculum) => curriculum.concepts),
-    ...view.unlisted_concepts,
-  ];
-
-  return (
-    <section className="panel" aria-labelledby="lesson-heading">
-      <div className="panel-head">
-        <h2 id="lesson-heading">{lesson.manifest.title}</h2>
-        <div className="row">
-          <button type="button" aria-label="進捗を表示" onClick={onShowProgress}>
-            進捗
-          </button>
-          <button type="button" aria-label="履歴を表示" onClick={onShowHistory}>
-            履歴
-          </button>
+  const first = readingOrder(lesson)[0];
+  const progressById = new Map(
+    progress.map((item) => [item.objective_id, item]),
+  );
+  const questionTitle = (id: string) => lesson.stimuli[id]?.text || "練習問題";
+  const conceptCard = (node: ConceptNode, index: number) => (
+    <article className="concept card" key={node.concept.id}>
+      <div className="concept-head">
+        <span className="chapter-number" aria-hidden="true">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <div>
+          <p className="eyebrow">学ぶテーマ</p>
+          <h3>{node.concept.title}</h3>
+          {node.concept.requires.length > 0 ? (
+            <p className="meta">
+              前提となるテーマ:{" "}
+              {node.concept.requires
+                .map(
+                  (id) =>
+                    lesson.concepts.find((c) => c.id === id)?.title ??
+                    "未指定のテーマ",
+                )
+                .join("、")}
+            </p>
+          ) : null}
         </div>
       </div>
-      <p className="meta">
-        {lesson.package_id} · version {lesson.package_version} · language{" "}
-        {lesson.manifest.language} · digest {lesson.digest.slice(0, 16)}…
-      </p>
-
-      <label className="field">
+      <ul className="objective-list">
+        {node.objectives.map((objective) => {
+          const observed = progressById.get(objective.id);
+          const resources = resourcesForObjective(lesson, objective.id);
+          const assessments = assessmentsForObjective(lesson, objective.id);
+          return (
+            <li key={objective.id}>
+              <div className="objective">
+                <div>
+                  <p className="eyebrow">学習目標</p>
+                  <h4>{objective.description}</h4>
+                </div>
+                <span className="badge">
+                  {!observed || observed.attempts === 0
+                    ? "まだ回答なし"
+                    : `${observed.correct}/${observed.attempts} 正答`}
+                </span>
+              </div>
+              <div className="learning-actions">
+                <section>
+                  <h5>読んで理解する</h5>
+                  {resources.length === 0 ? (
+                    <p className="meta">この目標の読み物はありません。</p>
+                  ) : (
+                    resources.map((resource) => (
+                      <button
+                        className="learning-link"
+                        key={resource.id}
+                        disabled={busy}
+                        aria-label={`教材を開く:${resource.title}`}
+                        onClick={() => onOpenResource(resource.id)}
+                      >
+                        <span>{resource.title}</span>
+                        <span aria-hidden="true">→</span>
+                      </button>
+                    ))
+                  )}
+                </section>
+                <section>
+                  <h5>問題で確かめる</h5>
+                  {assessments.length === 0 ? (
+                    <p className="meta">この目標の問題はありません。</p>
+                  ) : (
+                    assessments.map((assessment) => (
+                      <button
+                        className="learning-link"
+                        key={assessment.id}
+                        disabled={busy}
+                        aria-label={`問題を開く:${questionTitle(assessment.id)}`}
+                        onClick={() => onOpenAssessment(assessment.id)}
+                      >
+                        <span className="question-preview">
+                          {questionTitle(assessment.id)}
+                        </span>
+                        <span aria-hidden="true">→</span>
+                      </button>
+                    ))
+                  )}
+                </section>
+              </div>
+              <DeveloperDetails>
+                <dl>
+                  <dt>Objective ID</dt>
+                  <dd>{objective.id}</dd>
+                </dl>
+              </DeveloperDetails>
+            </li>
+          );
+        })}
+      </ul>
+      <DeveloperDetails>
+        <dl>
+          <dt>Concept ID</dt>
+          <dd>{node.concept.id}</dd>
+          <dt>Requires</dt>
+          <dd>{node.concept.requires.join(", ") || "—"}</dd>
+        </dl>
+      </DeveloperDetails>
+    </article>
+  );
+  return (
+    <section aria-labelledby="lesson-heading">
+      <header className="lesson-hero">
+        <div>
+          <p className="eyebrow">LEARNING PATH</p>
+          <h1 id="lesson-heading">{lesson.manifest.title}</h1>
+          <p className="meta">
+            {lesson.manifest.language} · バージョン {lesson.package_version}
+          </p>
+          <p>読んで、確かめて。ひとつずつ学びを重ねましょう。</p>
+        </div>
+        {first ? (
+          <div>
+            <button
+              className="primary"
+              disabled={busy}
+              onClick={() => onOpenResource(first.id)}
+            >
+              最初の教材を読む →
+            </button>
+            <p className="meta">目次に沿って表示しています</p>
+          </div>
+        ) : null}
+      </header>
+      <label className="field search-field">
         <span>教材を検索</span>
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="concept / resource / assessment ID"
+          placeholder="テーマ・教材名・ID"
         />
       </label>
       {query.trim() !== "" ? (
-        <div className="search-results" aria-live="polite">
+        <div className="search-results card" aria-live="polite">
+          <h2>検索結果</h2>
           <p>
-            {found.resources.length + found.concepts.length + found.assessments.length} 件
+            {found.resources.length +
+              found.concepts.length +
+              found.assessments.length}{" "}
+            件
           </p>
           <ul>
             {found.concepts.map((concept) => (
-              <li key={`c-${concept.id}`}>
-                Concept: {concept.title} <code>{concept.id}</code>
-              </li>
+              <li key={`c-${concept.id}`}>{concept.title}</li>
             ))}
             {found.resources.map((resource) => (
               <li key={`r-${resource.id}`}>
-                <button type="button" onClick={() => onOpenResource(resource.id)}>
-                  Resource: {resource.title}
+                <button
+                  disabled={busy}
+                  onClick={() => onOpenResource(resource.id)}
+                >
+                  {resource.title}
                 </button>
               </li>
             ))}
             {found.assessments.map((assessment) => (
               <li key={`a-${assessment.id}`}>
-                <button type="button" onClick={() => onOpenAssessment(assessment.id)}>
-                  Assessment: {assessment.id}
+                <button
+                  disabled={busy}
+                  onClick={() => onOpenAssessment(assessment.id)}
+                >
+                  {questionTitle(assessment.id)}
                 </button>
               </li>
             ))}
           </ul>
         </div>
       ) : null}
-
       {view.curricula.map((node) => (
-        <article className="curriculum" key={node.curriculum.id}>
-          <h3>{node.curriculum.title}</h3>
-          <p className="meta">
-            curriculum <code>{node.curriculum.id}</code> · {node.concepts.length} concept
-          </p>
+        <section className="curriculum" key={node.curriculum.id}>
+          <div className="section-heading">
+            <p className="eyebrow">カリキュラム</p>
+            <h2>{node.curriculum.title}</h2>
+            <p className="meta">{node.concepts.length} のテーマ</p>
+          </div>
+          {node.concepts.map(conceptCard)}
           {node.orphan_objectives.length > 0 ? (
             <p className="warning">
-              Concept を特定できない objective: {node.orphan_objectives.length} 件
+              テーマを特定できない学習目標が {node.orphan_objectives.length}{" "}
+              件あります。
             </p>
           ) : null}
-        </article>
+          <DeveloperDetails>
+            <p>Curriculum ID: {node.curriculum.id}</p>
+          </DeveloperDetails>
+        </section>
       ))}
-
-      {conceptSections.map((node) => (
-        <article className="concept" key={node.concept.id}>
-          <h3>{node.concept.title}</h3>
-          <p className="meta">
-            concept <code>{node.concept.id}</code>
-            {node.concept.requires.length > 0
-              ? ` · requires ${node.concept.requires.join(", ")}`
-              : ""}
-          </p>
-          <ul className="objective-list">
-            {node.objectives.map((objective) => {
-              const item = progressById.get(objective.id);
-              return (
-                <li key={objective.id}>
-                  <div className="objective">
-                    <span className="objective-text">{objective.description}</span>
-                    <span className="objective-id">
-                      <code>{objective.id}</code>
-                    </span>
-                    <span className="objective-progress">
-                      {item === undefined || item.attempts === 0
-                        ? "未挑戦"
-                        : `${item.correct}/${item.attempts} 正答`}
-                    </span>
-                  </div>
-                  <div className="row">
-                    {node.resources
-                      .filter((resource) => resource.teaches.includes(objective.id))
-                      .map((resource) => (
-                        <button
-                          type="button"
-                          key={resource.id}
-                          aria-label={`教材を開く:${resource.title}`}
-                          onClick={() => onOpenResource(resource.id)}
-                        >
-                          読む: {resource.title}
-                        </button>
-                      ))}
-                    {node.assessments
-                      .filter((assessment) => assessment.measures.includes(objective.id))
-                      .map((assessment) => (
-                        <button
-                          type="button"
-                          key={assessment.id}
-                          aria-label={`問題を開く:${assessment.id}`}
-                          onClick={() => onOpenAssessment(assessment.id)}
-                        >
-                          解く: {assessment.id}
-                        </button>
-                      ))}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </article>
-      ))}
+      {view.unlisted_concepts.length > 0 ? (
+        <section className="curriculum">
+          <h2>その他のテーマ</h2>
+          {view.unlisted_concepts.map(conceptCard)}
+        </section>
+      ) : null}
+      <DeveloperDetails label="教材の技術情報">
+        <dl>
+          <dt>Package ID</dt>
+          <dd>{lesson.package_id}</dd>
+          <dt>Schema</dt>
+          <dd>{lesson.manifest.schema_version}</dd>
+          <dt>Digest</dt>
+          <dd>{lesson.digest}</dd>
+        </dl>
+      </DeveloperDetails>
     </section>
   );
 }

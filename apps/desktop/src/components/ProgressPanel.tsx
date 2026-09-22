@@ -1,138 +1,112 @@
-import type { ReactElement } from "react";
-import type { LearningEvent, ObjectiveProgress } from "../types.ts";
+import type { ObjectiveProgress } from "../types.ts";
+import { DeveloperDetails } from "./DeveloperDetails.tsx";
 
-/** Progress and history as the store projects them. Nothing is recomputed here. */
 export function ProgressPanel({
   progress,
   objectives,
   onRebuild,
-  onShowHistory,
   onBack,
   busy,
 }: {
   progress: ObjectiveProgress[];
   objectives: Map<string, string>;
   onRebuild: () => void;
-  onShowHistory: () => void;
   onBack: () => void;
   busy: boolean;
-}): ReactElement {
+}) {
   const totalAttempts = progress.reduce((sum, item) => sum + item.attempts, 0);
   const totalCorrect = progress.reduce((sum, item) => sum + item.correct, 0);
   return (
-    <section className="panel" aria-labelledby="progress-heading">
+    <section aria-labelledby="progress-heading">
       <div className="panel-head">
-        <h2 id="progress-heading">進捗</h2>
-        <div className="row">
-          <button type="button" onClick={onBack}>
-            目次へ
-          </button>
-          <button type="button" aria-label="履歴を表示" onClick={onShowHistory}>
-            履歴
-          </button>
-          <button type="button" onClick={onRebuild} disabled={busy}>
-            イベントから再構築
-          </button>
+        <div>
+          <p className="eyebrow">YOUR PROGRESS</p>
+          <h1 id="progress-heading">学びの進捗</h1>
+          <p className="lede">これまでの回答を、学習目標ごとに振り返ります。</p>
+        </div>
+        <button onClick={onBack} disabled={busy}>
+          目次へ
+        </button>
+      </div>
+      <div className="stats">
+        <div className="stat">
+          <span>回答数（延べ）</span>
+          <strong>
+            {totalAttempts}
+            <small> 件</small>
+          </strong>
+        </div>
+        <div className="stat">
+          <span>正答数（延べ）</span>
+          <strong>
+            {totalCorrect}
+            <small> 件</small>
+          </strong>
         </div>
       </div>
       <p className="meta">
-        回答 {totalAttempts} 件 · 正答 {totalCorrect} 件
+        学習目標ごとの観測値の合計です。複数の目標に対応する回答は、それぞれに数えられます。
       </p>
-      <table className="progress-table">
-        <caption>Objectiveごとの観測値</caption>
-        <thead>
-          <tr>
-            <th scope="col">Objective</th>
-            <th scope="col">試行</th>
-            <th scope="col">正答</th>
-            <th scope="col">正答率</th>
-            <th scope="col">最終回答</th>
-          </tr>
-        </thead>
-        <tbody>
-          {progress.map((item) => (
-            <tr key={item.objective_id}>
-              <th scope="row">
-                {objectives.get(item.objective_id) ?? item.objective_id}
-                <br />
-                <code>{item.objective_id}</code>
-              </th>
-              <td>{item.attempts}</td>
-              <td>{item.correct}</td>
-              <td>{item.accuracy === null ? "—" : `${Math.round(item.accuracy * 100)}%`}</td>
-              <td>{item.last_timestamp ?? "—"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="meta">
-        観測値は保存済みイベントの集計です。習得の保証ではありません。
-      </p>
-    </section>
-  );
-}
-
-/** Recent learning events, newest first. */
-export function HistoryPanel({
-  events,
-  objectives,
-  onLoadMore,
-  onShowProgress,
-  onBack,
-  busy,
-}: {
-  events: LearningEvent[];
-  objectives: Map<string, string>;
-  onLoadMore: () => void;
-  onShowProgress: () => void;
-  onBack: () => void;
-  busy: boolean;
-}): ReactElement {
-  return (
-    <section className="panel" aria-labelledby="history-heading">
-      <div className="panel-head">
-        <h2 id="history-heading">履歴</h2>
-        <div className="row">
-          <button type="button" onClick={onBack}>
-            目次へ
-          </button>
-          <button type="button" aria-label="進捗を表示" onClick={onShowProgress}>
-            進捗
-          </button>
-          <button type="button" onClick={onLoadMore} disabled={busy}>
-            さらに読み込む
-          </button>
-        </div>
-      </div>
-      {events.length === 0 ? (
-        <p className="empty">まだ学習イベントがありません。</p>
+      <h2 className="section-heading">学習目標ごとの記録</h2>
+      {progress.length === 0 ? (
+        <p className="empty card">
+          まだ進捗の記録がありません。問題に回答すると、ここで振り返れます。
+        </p>
       ) : (
-        <ol className="history-list">
-          {events.map((event) => (
-            <li key={event.event_id}>
-              <div className={event.correct ? "badge correct" : "badge incorrect"}>
-                {event.correct ? "正解" : "不正解"}
+        <ul className="progress-list">
+          {progress.map((item) => (
+            <li className="card" key={item.objective_id}>
+              <h3>{objectives.get(item.objective_id) ?? "学習目標"}</h3>
+              <div className="progress-summary">
+                <strong className="accuracy">
+                  {item.accuracy === null
+                    ? "—"
+                    : `${Math.round(item.accuracy * 100)}%`}
+                  <small> 正答率</small>
+                </strong>
+                <span>
+                  {item.correct}/{item.attempts} 正答
+                </span>
               </div>
-              <div>
-                <p>
-                  <code>{event.assessment_id}</code> · revision {event.assessment_revision} ·
-                  score {event.score}
-                </p>
-                <p className="meta">
-                  {event.timestamp} · 回答 {JSON.stringify(event.response)} · package{" "}
-                  {event.package_id}@{event.package_version}
-                </p>
-                <p className="meta">
-                  objective:{" "}
-                  {event.objective_ids
-                    .map((id) => objectives.get(id) ?? id)
-                    .join(", ")}
-                </p>
-              </div>
+              {item.accuracy !== null ? (
+                <meter
+                  min={0}
+                  max={1}
+                  value={item.accuracy}
+                  aria-label={`${objectives.get(item.objective_id) ?? "学習目標"}の正答率`}
+                >
+                  {Math.round(item.accuracy * 100)}%
+                </meter>
+              ) : (
+                <p className="meta">まだ回答なし</p>
+              )}
+              <p className="meta">
+                最終回答:{" "}
+                {item.last_timestamp ? (
+                  <time dateTime={item.last_timestamp}>
+                    {new Date(item.last_timestamp).toLocaleString("ja-JP")}
+                  </time>
+                ) : (
+                  "—"
+                )}
+              </p>
+              <DeveloperDetails>
+                <p>Objective ID: {item.objective_id}</p>
+                <p>Last score: {item.last_score ?? "—"}</p>
+              </DeveloperDetails>
             </li>
           ))}
-        </ol>
+        </ul>
       )}
+      <p className="meta">
+        保存済みの回答を集計した記録です。習得を保証するものではありません。
+      </p>
+      <DeveloperDetails label="メンテナンス">
+        <p>保存済みイベントから進捗表示を再構築します。</p>
+        <button onClick={onRebuild} disabled={busy}>
+          イベントから再構築
+        </button>
+      </DeveloperDetails>
     </section>
   );
 }

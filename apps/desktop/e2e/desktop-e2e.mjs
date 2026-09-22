@@ -14,7 +14,7 @@
 // Exit code 0 means every step passed.
 
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -46,6 +46,7 @@ const debugUrl = `http://127.0.0.1:${options.port}`;
 const PACKAGE_ID = "org.example/arithmetic";
 
 const steps = [];
+const runningApps = new Set();
 function pass(name, detail = "") {
   steps.push(name);
   console.log(`PASS ${name}${detail === "" ? "" : `: ${detail}`}`);
@@ -74,13 +75,19 @@ function cli(args, { expectSuccess = true } = {}) {
   } catch {
     payload = null;
   }
-  return { status: result.status, stdout: result.stdout, stderr: result.stderr, payload };
+  return {
+    status: result.status,
+    stdout: result.stdout,
+    stderr: result.stderr,
+    payload,
+  };
 }
 
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 
 class App {
   constructor() {
+    runningApps.add(this);
     this.child = null;
     this.socket = null;
     this.nextId = 1;
@@ -93,7 +100,11 @@ class App {
 
   async start() {
     this.child = spawn(appPath, [], {
-      env: { ...process.env, OSMIUM_HOME: home, OSMIUM_DEBUG_PORT: String(options.port) },
+      env: {
+        ...process.env,
+        OSMIUM_HOME: home,
+        OSMIUM_DEBUG_PORT: String(options.port),
+      },
       stdio: ["ignore", "pipe", "pipe"],
     });
     this.child.stderr.on("data", (chunk) => {
@@ -110,7 +121,9 @@ class App {
   async waitForTarget() {
     for (let attempt = 0; attempt < 80; attempt += 1) {
       if (this.exited !== undefined) {
-        throw new Error(`the application exited with code ${this.exited}: ${this.stderr}`);
+        throw new Error(
+          `the application exited with code ${this.exited}: ${this.stderr}`,
+        );
       }
       try {
         const response = await fetch(`${debugUrl}/json/list`);
@@ -137,7 +150,9 @@ class App {
       } else if (message.method === "Network.requestWillBeSent") {
         this.requests.push(message.params.request.url);
       } else if (message.method === "Runtime.exceptionThrown") {
-        this.consoleErrors.push(JSON.stringify(message.params.exceptionDetails));
+        this.consoleErrors.push(
+          JSON.stringify(message.params.exceptionDetails),
+        );
       }
     });
     await new Promise((done, reject) => {
@@ -164,7 +179,9 @@ class App {
       awaitPromise: true,
     });
     if (response.result?.exceptionDetails !== undefined) {
-      throw new Error(`page exception: ${JSON.stringify(response.result.exceptionDetails)}`);
+      throw new Error(
+        `page exception: ${JSON.stringify(response.result.exceptionDetails)}`,
+      );
     }
     return response.result?.result?.value;
   }
@@ -178,7 +195,9 @@ class App {
       if ((await this.evaluate(`(${predicate})()`)) === true) return;
       await sleep(250);
     }
-    throw new Error(`timed out waiting for ${description}. Body was:\n${await this.text()}`);
+    throw new Error(
+      `timed out waiting for ${description}. Body was:\n${await this.text()}`,
+    );
   }
 
   waitForSelector(selector, description) {
@@ -191,13 +210,18 @@ class App {
   /** Click the first element matching a CSS selector. */
   async click(selector, description) {
     await this.waitForSelector(selector, description);
+    await this.waitFor(
+      `() => !document.querySelector(${JSON.stringify(selector)}).matches(":disabled")`,
+      `${description} is ready`,
+    );
     const clicked = await this.evaluate(`(() => {
       const element = document.querySelector(${JSON.stringify(selector)});
       if (element === null) return false;
       element.click();
       return true;
     })()`);
-    if (clicked !== true) fail(`click ${description}`, `no element for ${selector}`);
+    if (clicked !== true)
+      fail(`click ${description}`, `no element for ${selector}`);
   }
 
   /** Click the first button whose exact label matches. */
@@ -216,6 +240,7 @@ class App {
   }
 
   async stop() {
+    runningApps.delete(this);
     try {
       this.socket?.close();
     } catch {
@@ -223,13 +248,17 @@ class App {
     }
     if (this.child !== null) {
       // The webview keeps a child process tree, so kill the whole tree.
-      spawnSync("taskkill", ["/PID", String(this.child.pid), "/T", "/F"], { stdio: "ignore" });
+      spawnSync("taskkill", ["/PID", String(this.child.pid), "/T", "/F"], {
+        stdio: "ignore",
+      });
       this.child = null;
     }
     for (let attempt = 0; attempt < 60; attempt += 1) {
       await sleep(250);
       try {
-        await fetch(`${debugUrl}/json/version`, { signal: AbortSignal.timeout(500) });
+        await fetch(`${debugUrl}/json/version`, {
+          signal: AbortSignal.timeout(500),
+        });
       } catch {
         return;
       }
@@ -241,15 +270,83 @@ class App {
 const GOLDEN_MARKER = "全部で2個になります";
 const GOLDEN_STIMULUS = "1 + 1";
 const GOLDEN_FEEDBACK = "1に1を足すと2です";
-const GOLDEN_OBJECTIVE = "addition.basic";
+const GOLDEN_OBJECTIVE = "小さな整数の足し算ができる";
+
+// Exercise every page at the supported text sizes and both system themes.
+// Captures are local QA artifacts; no app behavior or package content is injected.
+async function checkPresentation(app, name) {
+  const directory = join(home, "screenshots");
+  mkdirSync(directory, { recursive: true });
+  for (const theme of ["light", "dark"]) {
+    await app.send("Emulation.setEmulatedMedia", {
+      features: [
+        { name: "prefers-color-scheme", value: theme },
+        { name: "prefers-reduced-motion", value: "reduce" },
+      ],
+    });
+    await app.evaluate(
+      'document.querySelector(".display-settings").open = true',
+    );
+    for (const scale of [100, 150, 200]) {
+      await app.clickText(`文字 ${scale}%`, "text scale");
+      await app.waitFor(
+        `() => document.querySelector(".app").style.fontSize === "${scale / 100}rem"`,
+        "updated scale",
+      );
+      assert(
+        await app.evaluate(
+          "document.documentElement.scrollWidth <= window.innerWidth + 1",
+        ),
+        `${name}: ${theme} ${scale}% fits the window`,
+      );
+      if (
+        (theme === "light" && scale === 100) ||
+        (theme === "dark" && scale === 200)
+      ) {
+        await app.evaluate(
+          'document.querySelector(".display-settings").open = false',
+        );
+        const metrics = await app.send("Page.getLayoutMetrics");
+        const size = metrics.result.cssContentSize;
+        const screenshot = await app.send("Page.captureScreenshot", {
+          captureBeyondViewport: true,
+          clip: {
+            x: 0,
+            y: 0,
+            width: size.width,
+            height: size.height,
+            scale: 1,
+          },
+        });
+        writeFileSync(
+          join(directory, `${name}-${theme}-${scale}.png`),
+          Buffer.from(screenshot.result.data, "base64"),
+        );
+        await app.evaluate(
+          'document.querySelector(".display-settings").open = true',
+        );
+      }
+    }
+  }
+  await app.clickText("文字 100%", "restore text size");
+  await app.evaluate(
+    'document.querySelector(".display-settings").open = false',
+  );
+  await app.send("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-color-scheme", value: "light" }],
+  });
+}
 
 async function main() {
   console.log("# Osmium desktop end-to-end acceptance");
   console.log(`data root: ${home}`);
   console.log(`application: ${appPath}`);
 
-  if (!existsSync(appPath)) fail("application binary", `${appPath} does not exist`);
-  rmSync(home, { recursive: true, force: true });
+  if (!existsSync(appPath))
+    fail("application binary", `${appPath} does not exist`);
+  if (existsSync(home) && readdirSync(home).length !== 0) {
+    fail("isolated test data", "--home must be a new or empty directory");
+  }
   mkdirSync(home, { recursive: true });
 
   // 1. Golden package: validate, lint, build and install, all offline.
@@ -264,16 +361,27 @@ async function main() {
   );
 
   const linted = cli(["lint", source, "--json"]);
-  assert(linted.payload?.ok === true, "CLI lint accepts the Golden source", `findings ${linted.payload?.data?.finding_count}`);
+  assert(
+    linted.payload?.ok === true,
+    "CLI lint accepts the Golden source",
+    `findings ${linted.payload?.data?.finding_count}`,
+  );
 
   const built = cli(["build", source, "--output", archive]);
-  assert(built.payload?.ok === true, "CLI build produces a portable archive", built.payload?.data?.digest?.slice(0, 16) ?? "");
+  assert(
+    built.payload?.ok === true,
+    "CLI build produces a portable archive",
+    built.payload?.data?.digest?.slice(0, 16) ?? "",
+  );
 
   const archiveValidated = cli(["validate", archive, "--json"]);
   assert(archiveValidated.payload?.ok === true, "the built archive validates");
 
   const installed = cli(["install", archive, "--json"]);
-  assert(installed.payload?.ok === true, "CLI install adds the package to the library");
+  assert(
+    installed.payload?.ok === true,
+    "CLI install adds the package to the library",
+  );
 
   const listed = cli(["packages", "--json"]);
   assert(
@@ -284,19 +392,50 @@ async function main() {
   // 2. Start the application and confirm it renders the installed package.
   const app = new App();
   await app.start();
-  assert((await app.text()).includes("インストール済みパッケージ"), "the application shows the packages panel");
+  assert(
+    (await app.text()).includes("学びのライブラリ"),
+    "the application shows the packages panel",
+  );
   await app.waitFor(
-    `() => document.body.innerText.includes(${JSON.stringify(PACKAGE_ID)})`,
+    '() => document.querySelector(".package:not(:disabled)") !== null',
     "the installed package in the list",
   );
   pass("the installed package is listed in the UI", PACKAGE_ID);
+
+  assert(
+    !(await app.text()).includes(PACKAGE_ID),
+    "library metadata is collapsed",
+  );
+  await app.click(".library-card summary", "library details");
+  assert(
+    (await app.text()).includes(PACKAGE_ID),
+    "library details expose package metadata",
+  );
+  await app.click(".library-card summary", "close library details");
+  await checkPresentation(app, "library");
 
   // 3. Open the package, then the curriculum and concept.
   await app.click(".package", "the installed package");
   await app.waitForSelector("#lesson-heading", "the lesson panel");
   const lessonText = await app.text();
-  assert(lessonText.includes("足し算"), "the curriculum / concept view renders", "concept 足し算");
-  assert(lessonText.includes(GOLDEN_OBJECTIVE), "the objective is listed", GOLDEN_OBJECTIVE);
+  assert(
+    lessonText.includes("足し算"),
+    "the curriculum / concept view renders",
+    "concept 足し算",
+  );
+  assert(
+    lessonText.includes(GOLDEN_OBJECTIVE),
+    "the objective is listed",
+    GOLDEN_OBJECTIVE,
+  );
+
+  assert(
+    await app.evaluate(
+      'document.querySelector(".app-nav [aria-current=page]").getAttribute("aria-label") === "目次を表示"',
+    ),
+    "shell identifies current course",
+  );
+  await checkPresentation(app, "curriculum");
 
   // 4. Read the Markdown resource.
   await app.click('button[aria-label^="教材を開く"]', "the lesson resource");
@@ -306,8 +445,18 @@ async function main() {
     "the Markdown body",
   );
   const readerText = await app.text();
-  assert(readerText.includes(GOLDEN_MARKER), "the Markdown lesson body is readable", GOLDEN_MARKER);
+  assert(
+    readerText.includes(GOLDEN_MARKER),
+    "the Markdown lesson body is readable",
+    GOLDEN_MARKER,
+  );
   assert(readerText.includes("足し算"), "the lesson heading is rendered");
+
+  assert(
+    await app.evaluate('document.querySelectorAll(".reader-nav").length === 2'),
+    "reader has navigation before and after content",
+  );
+  await checkPresentation(app, "reader");
 
   // 5. Answer the assessment. The reader and the outline are separate panels,
   //    so the outline has to be shown again before an item can be opened.
@@ -321,29 +470,130 @@ async function main() {
   );
   pass("the assessment stimulus renders", GOLDEN_STIMULUS);
 
-  await app.click('input[type="radio"][value="b"]', "the correct option");
+  assert(
+    await app.evaluate(
+      'document.querySelector("button[type=submit]").disabled',
+    ),
+    "grading requires a selection",
+  );
+  await app.click(
+    '.option:has(input[value="b"]) .option-text',
+    "the correct option card text",
+  );
+  assert(
+    await app.evaluate(
+      'document.querySelector("input[value=b]").checked && document.querySelector(".option.selected") !== null',
+    ),
+    "clicking an option card selects its radio",
+  );
+  await checkPresentation(app, "assessment");
   await app.click('button[type="submit"]', "the grade button");
   await app.waitFor(
     `() => document.body.innerText.includes(${JSON.stringify(GOLDEN_FEEDBACK)})`,
     "the graded feedback",
   );
   const graded = await app.text();
-  assert(graded.includes("正解"), "deterministic grading reports the answer as correct");
-  assert(graded.includes("org.osmium.exact.v1"), "the evaluation engine version is shown", "org.osmium.exact.v1");
-  assert(graded.includes(GOLDEN_FEEDBACK), "the feedback is rendered from the package", GOLDEN_FEEDBACK);
+  assert(
+    graded.includes("正解"),
+    "deterministic grading reports the answer as correct",
+  );
+  assert(
+    !graded.includes("org.osmium.exact.v1"),
+    "evaluation metadata is collapsed",
+  );
+  await app.click(".assessment summary", "assessment details");
+  assert(
+    (await app.text()).includes("org.osmium.exact.v1"),
+    "evaluation engine is available in details",
+  );
+  await app.click(".assessment summary", "close assessment details");
+  await checkPresentation(app, "feedback");
+  assert(
+    graded.includes(GOLDEN_FEEDBACK),
+    "the feedback is rendered from the package",
+    GOLDEN_FEEDBACK,
+  );
+
+  await app.clickText("次の問題 →", "next problem after feedback");
+  await app.waitFor(
+    '() => document.body.innerText.includes("2 + 1")',
+    "boolean question",
+  );
+  assert(
+    await app.evaluate(
+      'document.querySelectorAll("input[type=radio]:checked").length === 0 && document.querySelector("button[type=submit]").disabled',
+    ),
+    "next problem clears the previous selection",
+  );
+  await app.click('.option:has(input[value="true"])', "boolean answer card");
+  assert(
+    await app.evaluate('document.querySelector("input[value=true]").checked'),
+    "boolean shares the selection card interaction",
+  );
+  // Keyboard arrows move within the native radio group, and Space selects it.
+  await app.evaluate('document.querySelector("input[value=true]").focus()');
+  await app.send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "ArrowRight",
+    code: "ArrowRight",
+    windowsVirtualKeyCode: 39,
+  });
+  await app.send("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "ArrowRight",
+    code: "ArrowRight",
+    windowsVirtualKeyCode: 39,
+  });
+  assert(
+    await app.evaluate('document.querySelector("input[value=false]").checked'),
+    "keyboard can change the radio selection",
+  );
+  await app.click('button[type="submit"]', "grade boolean answer");
+  await app.waitFor(
+    '() => document.querySelector(".feedback.incorrect") !== null',
+    "boolean feedback",
+  );
+  assert(
+    (await app.text()).includes("不正解"),
+    "incorrect grading shows its result",
+  );
+  await checkPresentation(app, "incorrect-feedback");
+  pass("boolean grading reports the incorrect selection");
 
   // 6. Progress and history reflect the saved event. Both panels are reachable
   //    from the graded item as well as from the outline.
   await app.click('button[aria-label="進捗を表示"]', "the progress button");
   await app.waitForSelector("#progress-heading", "the progress panel");
   const progressText = await app.text();
-  assert(progressText.includes(GOLDEN_OBJECTIVE), "progress lists the measured objective", GOLDEN_OBJECTIVE);
-  assert(progressText.includes("100%"), "progress counts one correct attempt", "100%");
+  assert(
+    progressText.includes(GOLDEN_OBJECTIVE),
+    "progress lists the measured objective",
+    GOLDEN_OBJECTIVE,
+  );
+  assert(
+    progressText.includes("50%"),
+    "progress counts correct attempts",
+    "50%",
+  );
 
+  assert(
+    !progressText.includes("イベントから再構築"),
+    "maintenance is collapsed",
+  );
+  await checkPresentation(app, "progress");
   await app.click('button[aria-label="履歴を表示"]', "the history button");
   await app.waitForSelector("#history-heading", "the history panel");
-  await app.waitFor('() => document.body.innerText.includes("addition.01")', "the learning event");
+  await app.waitFor(
+    '() => document.querySelectorAll(".history-list > li").length === 2',
+    "the learning event",
+  );
   pass("the learning event is recorded in the history");
+
+  assert(
+    !(await app.text()).includes("addition.01"),
+    "history emphasizes the question rather than its ID",
+  );
+  await checkPresentation(app, "history");
 
   // 7. Offline proof: only local assets and the IPC channel were requested.
   const external = app.requests.filter(
@@ -354,8 +604,16 @@ async function main() {
       !url.startsWith("data:") &&
       !url.startsWith("blob:"),
   );
-  assert(external.length === 0, "the application performs no network request", `${app.requests.length} requests, all local`);
-  assert(app.consoleErrors.length === 0, "the webview logged no error", app.consoleErrors.join(" | "));
+  assert(
+    external.length === 0,
+    "the application performs no network request",
+    `${app.requests.length} requests, all local`,
+  );
+  assert(
+    app.consoleErrors.length === 0,
+    "the webview logged no error",
+    app.consoleErrors.join(" | "),
+  );
 
   // 8. Fully stop, then restart and confirm the state survived.
   await app.stop();
@@ -363,34 +621,67 @@ async function main() {
 
   const afterShutdown = cli(["history", PACKAGE_ID, "--json"]);
   assert(
-    Array.isArray(afterShutdown.payload?.data) && afterShutdown.payload.data.length === 1,
-    "the event log holds one attempt after shutdown",
+    Array.isArray(afterShutdown.payload?.data) &&
+      afterShutdown.payload.data.length === 2,
+    "the event log holds two attempts after shutdown",
   );
 
   const restarted = new App();
   await restarted.start();
   await restarted.waitFor(
-    `() => document.body.innerText.includes(${JSON.stringify(PACKAGE_ID)})`,
+    '() => document.querySelector(".package:not(:disabled)") !== null',
     "the installed package after restart",
   );
   pass("the installed package is still listed after restart", PACKAGE_ID);
 
   await restarted.click(".package", "the installed package after restart");
-  await restarted.waitForSelector("#lesson-heading", "the lesson panel after restart");
+  await restarted.waitForSelector(
+    "#lesson-heading",
+    "the lesson panel after restart",
+  );
   const restartedLesson = await restarted.text();
-  assert(restartedLesson.includes("1/1 正答"), "progress is restored on the lesson view", "1/1 正答");
+  assert(
+    restartedLesson.includes("1/2 正答"),
+    "progress is restored on the lesson view",
+    "1/2 正答",
+  );
 
-  await restarted.click('button[aria-label="進捗を表示"]', "the progress button after restart");
-  await restarted.waitForSelector("#progress-heading", "the progress panel after restart");
+  await restarted.click(
+    'button[aria-label="進捗を表示"]',
+    "the progress button after restart",
+  );
+  await restarted.waitForSelector(
+    "#progress-heading",
+    "the progress panel after restart",
+  );
   const restartedProgress = await restarted.text();
-  assert(restartedProgress.includes(GOLDEN_OBJECTIVE), "the objective survives the restart");
-  assert(restartedProgress.includes("100%"), "the projected accuracy survives the restart", "100%");
+  assert(
+    restartedProgress.includes(GOLDEN_OBJECTIVE),
+    "the objective survives the restart",
+  );
+  assert(
+    restartedProgress.includes("50%"),
+    "the projected accuracy survives the restart",
+    "50%",
+  );
 
   await restarted.clickText("目次へ", "back to the outline after restart");
-  await restarted.waitForSelector("#lesson-heading", "the outline after restart");
-  await restarted.click('button[aria-label="履歴を表示"]', "the history button after restart");
-  await restarted.waitForSelector("#history-heading", "the history panel after restart");
-  await restarted.waitFor('() => document.body.innerText.includes("addition.01")', "the learning event after restart");
+  await restarted.waitForSelector(
+    "#lesson-heading",
+    "the outline after restart",
+  );
+  await restarted.click(
+    'button[aria-label="履歴を表示"]',
+    "the history button after restart",
+  );
+  await restarted.waitForSelector(
+    "#history-heading",
+    "the history panel after restart",
+  );
+  await restarted.waitFor(
+    '() => document.querySelectorAll(".history-list > li").length === 2',
+    "the learning event after restart",
+  );
   pass("the learning event survives the restart");
 
   await restarted.stop();
@@ -399,7 +690,8 @@ async function main() {
   console.log(`\n${steps.length} checks passed.`);
 }
 
-main().catch((error) => {
+main().catch(async (error) => {
+  for (const app of runningApps) await app.stop();
   console.error(`\nEND-TO-END FAILURE: ${error?.message ?? String(error)}`);
   process.exitCode = 1;
 });
