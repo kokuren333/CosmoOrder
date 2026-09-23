@@ -37,6 +37,9 @@ export function Lesson({
   const view = outline(lesson);
   const found = search(lesson, query);
   const first = readingOrder(lesson)[0];
+  const contentLanguage = lesson.manifest.language.toLowerCase().startsWith("ja")
+    ? tr("日本語", "Japanese")
+    : lesson.manifest.language;
   const progressById = new Map(
     progress.map((item) => [item.objective_id, item]),
   );
@@ -48,11 +51,11 @@ export function Lesson({
           {String(index + 1).padStart(2, "0")}
         </span>
         <div>
-          <p className="eyebrow">CONCEPT · {tr("学ぶテーマ", "Topic")}</p>
+          <p className="eyebrow">{tr("テーマ · 学ぶ内容", "CONCEPT · Topic")}</p>
           <h3>{node.concept.title}</h3>
           {node.concept.requires.length > 0 ? (
             <p className="meta">
-              {tr("前提となるConcepts:", "Prerequisite concepts:")}{" "}
+              {tr("前提となるテーマ:", "Prerequisite concepts:")}{" "}
               {node.concept.requires
                 .map(
                   (id) =>
@@ -73,7 +76,7 @@ export function Lesson({
             <li key={objective.id}>
               <div className="objective">
                 <div>
-                  <p className="eyebrow">OBJECTIVE · {tr("学習目標", "Learning objective")}</p>
+                  <p className="eyebrow">{tr("学習目標", "OBJECTIVE · Learning objective")}</p>
                   <h4>{objective.description}</h4>
                 </div>
                 <span className="badge">
@@ -84,7 +87,7 @@ export function Lesson({
               </div>
               <div className="learning-actions">
                 <section>
-                  <h5><BookOpenText size={16} aria-hidden="true" />RESOURCE · {tr("読む", "Read")}</h5>
+                  <h5><BookOpenText size={16} aria-hidden="true" />{tr("教材 · 読む", "RESOURCE · Read")}</h5>
                   {resources.length === 0 ? (
                     <p className="meta">{tr("関連するResourceはありません。", "No related resources.")}</p>
                   ) : (
@@ -103,7 +106,7 @@ export function Lesson({
                   )}
                 </section>
                 <section>
-                  <h5><ClipboardCheck size={16} aria-hidden="true" />ASSESSMENT · {tr("確かめる", "Check")}</h5>
+                  <h5><ClipboardCheck size={16} aria-hidden="true" />{tr("問題 · 確かめる", "ASSESSMENT · Check")}</h5>
                   {assessments.length === 0 ? (
                     <p className="meta">{tr("関連するAssessmentはありません。", "No related assessments.")}</p>
                   ) : (
@@ -148,11 +151,13 @@ export function Lesson({
     <section aria-labelledby="lesson-heading">
       <header className="lesson-hero">
         <div>
-          <p className="eyebrow">PACKAGE OVERVIEW</p>
+          <p className="eyebrow">{tr("教材の概要", "PACKAGE OVERVIEW")}</p>
           <h1 id="lesson-heading">{lesson.manifest.title}</h1>
-          <p className="meta">{lesson.manifest.language} · {tr("バージョン", "Version")} {lesson.package_version}</p>
-          <p className="meta">{lesson.concepts.length} Concepts · {lesson.objectives.length} Objectives · {lesson.resources.length} Resources · {lesson.assessments.length} Assessments</p>
-          <p>{tr("Concept → Objective → Resource / Assessmentの関係", "Concept → Objective → Resource / Assessment relationships")}</p>
+          <p className="meta">{contentLanguage} · {tr("バージョン", "Version")} {lesson.package_version}</p>
+          <p className="meta">
+            {lesson.concepts.length} {tr("テーマ", "Concepts")} · {lesson.objectives.length} {tr("学習目標", "Objectives")} · {lesson.resources.length} {tr("教材", "Resources")} · {lesson.assessments.length} {tr("問題", "Assessments")}
+          </p>
+          <p>{tr("テーマ → 学習目標 → 教材・問題のつながり", "Concept → Objective → Resource / Assessment relationships")}</p>
         </div>
         {first ? (
           <div>
@@ -173,7 +178,7 @@ export function Lesson({
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder={tr("テーマ・教材名・ID", "Concept, title, or ID")}
+          placeholder={tr("テーマ・教材名・識別子", "Concept, title, or ID")}
         />
       </label>
       {query.trim() !== "" ? (
@@ -217,12 +222,12 @@ export function Lesson({
           <div className="section-heading">
             <p className="eyebrow">{tr("カリキュラム", "Curriculum")}</p>
             <h2>{node.curriculum.title}</h2>
-            <p className="meta">{node.concepts.length} {tr("Concepts", "concepts")}</p>
+            <p className="meta">{node.concepts.length} {tr("テーマ", "concepts")}</p>
           </div>
           {node.concepts.map(conceptCard)}
           {node.orphan_objectives.length > 0 ? (
             <p className="warning">
-              {tr("Concept未指定のObjective:", "Objectives without a concept:")} {node.orphan_objectives.length}
+              {tr("テーマ未指定の学習目標:", "Objectives without a concept:")} {node.orphan_objectives.length}
             </p>
           ) : null}
           <DeveloperDetails>
@@ -232,7 +237,7 @@ export function Lesson({
       ))}
       {view.unlisted_concepts.length > 0 ? (
         <section className="curriculum">
-          <h2>{tr("その他のConcepts", "Other concepts")}</h2>
+          <h2>{tr("カリキュラム外のテーマ", "Other concepts")}</h2>
           {view.unlisted_concepts.map(conceptCard)}
         </section>
       ) : null}

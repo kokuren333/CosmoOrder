@@ -577,6 +577,37 @@ dd {
   max-width: var(--reading-width);
   margin: auto;
 }
+.resource-references {
+  margin: 1em 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper);
+  padding: 0.85em 1em;
+}
+.resource-references summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 650;
+}
+.resource-references ul {
+  display: grid;
+  gap: 0.85em;
+  list-style: none;
+  padding: 0;
+  margin: 1em 0 0;
+}
+.resource-references li {
+  min-width: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75em;
+}
+.resource-references h3,
+.resource-references p {
+  margin: 0.35em 0;
+}
+.resource-references h3 { font-size: 1em; }
+.resource-references p { color: var(--muted); font-size: 0.9em; }
+.source-locator { overflow-wrap: anywhere; }
 .reading-surface {
   background: var(--paper);
   border: 1px solid var(--border);

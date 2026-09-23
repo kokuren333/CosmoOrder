@@ -24,9 +24,9 @@ export function ProgressPanel({
     <section aria-labelledby="progress-heading">
       <div className="panel-head">
         <div>
-          <p className="eyebrow">YOUR PROGRESS</p>
+          <p className="eyebrow">{tr("学習記録", "YOUR PROGRESS")}</p>
           <h1 id="progress-heading">{tr("進捗", "Progress")}</h1>
-          <p className="lede">{tr("Objectiveごとの回答記録です。", "Answer records by objective.")}</p>
+          <p className="lede">{tr("学習目標ごとの回答記録です。", "Answer records by objective.")}</p>
         </div>
         <button onClick={onBack} disabled={busy}>
           <ArrowLeft size={16} aria-hidden="true" />{tr("目次へ", "Back to contents")}
@@ -49,9 +49,9 @@ export function ProgressPanel({
         </div>
       </div>
       <p className="meta">
-        {tr("複数Objectiveに対応する回答は、それぞれに集計されます。", "Attempts measuring multiple objectives are counted for each objective.")}
+        {tr("複数の学習目標に対応する回答は、それぞれに集計されます。", "Attempts measuring multiple objectives are counted for each objective.")}
       </p>
-      <h2 className="section-heading">{tr("Objectiveごとの記録", "Records by objective")}</h2>
+      <h2 className="section-heading">{tr("学習目標ごとの記録", "Records by objective")}</h2>
       {progress.length === 0 ? (
         <p className="empty card">
           {tr("記録はまだありません。問題に回答すると、ここに表示されます。", "No records yet. Answer a question to see progress here.")}

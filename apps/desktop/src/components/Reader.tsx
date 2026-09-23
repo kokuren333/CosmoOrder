@@ -1,6 +1,7 @@
 import { Markdown } from "./Markdown.ts";
 import { ArrowLeft, ArrowRight, ListTree } from "lucide-react";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
+import { ResourceReferences } from "./ResourceReferences.tsx";
 import type { Resource, ResourceView } from "../types.ts";
 import { localize, useUiLanguage } from "../i18n.ts";
 
@@ -55,12 +56,12 @@ export function Reader({
           {courseTitle}
         </button>
         <span aria-hidden="true">/</span>
-        <span>{tr("Resource", "Resource")}</span>
+        <span>{tr("教材", "Resource")}</span>
       </div>
       {navigation("本文の前の教材ナビゲーション")}
       <div className="reading-surface">
         <header>
-          <p className="eyebrow">READ & UNDERSTAND</p>
+          <p className="eyebrow">{tr("読んで理解する", "READ & UNDERSTAND")}</p>
           <h1 id="reader-heading">{resource.title}</h1>
           {resource.creator !== undefined ? (
           <p className="meta">{tr("作成:", "Created by:")} {resource.creator}</p>
@@ -92,6 +93,7 @@ export function Reader({
           ) : null}
         </DeveloperDetails>
       </div>
+      <ResourceReferences sources={view?.sources ?? []} />
       {navigation("本文の後の教材ナビゲーション")}
     </article>
   );

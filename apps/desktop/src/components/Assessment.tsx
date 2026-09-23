@@ -56,7 +56,7 @@ export function AssessmentView({
         </p>
       </div>
       <div className="question-surface">
-        <p className="eyebrow">PRACTICE</p>
+        <p className="eyebrow">{tr("演習", "PRACTICE")}</p>
         <h1 id="assessment-heading">{tr("問題で確かめる", "Assessment")}</h1>
         <div className="stimulus">
           {stimulus === null ? (

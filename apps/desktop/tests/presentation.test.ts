@@ -41,8 +41,8 @@ test("technical metadata is present in a closed native disclosure", async () => 
     }),
   );
   assert.match(html, /<h2>教材の名前<\/h2>/);
-  assert.match(html, /<dt>Concepts<\/dt><dd>5<\/dd>/);
-  assert.match(html, /<dt>Assessments<\/dt><dd>12<\/dd>/);
+  assert.match(html, /<dt>テーマ<\/dt><dd>5<\/dd>/);
+  assert.match(html, /<dt>問題<\/dt><dd>12<\/dd>/);
   assert.match(
     html,
     /<details class="developer-details"><summary>技術情報<\/summary>.*private-id.*private-digest/s,
@@ -67,11 +67,50 @@ test("lesson exposes package hierarchy with absent optional metadata", async () 
   const html = renderToStaticMarkup(createElement(Lesson, {
     lesson, progress: [], busy: false, onOpenResource: noop, onOpenAssessment: noop,
   }));
-  assert.match(html, /CONCEPT · 学ぶテーマ/);
-  assert.match(html, /OBJECTIVE · 学習目標/);
-  assert.match(html, /RESOURCE · 読む/);
-  assert.match(html, /ASSESSMENT · 確かめる/);
+  assert.match(html, /テーマ · 学ぶ内容/);
+  assert.match(html, /<p class="eyebrow">学習目標<\/p>/);
+  assert.match(html, /教材 · 読む/);
+  assert.match(html, /問題 · 確かめる/);
   assert.match(html, /<h1 id="lesson-heading">Sample<\/h1>/);
+});
+
+test("resource references show public and attribution metadata without navigation or private leakage", async () => {
+  const { ResourceReferences } = (await server.ssrLoadModule(
+    "/src/components/ResourceReferences.tsx",
+  )) as typeof import("../src/components/ResourceReferences.tsx");
+  const sources = [
+    {
+      id: "public",
+      title: "公開資料",
+      visibility: "public" as const,
+      citation: "公的機関. 資料名。",
+      locator: "https://example.org/public",
+    },
+    {
+      id: "credit",
+      title: "謝辞のみの資料",
+      visibility: "attribution_only" as const,
+      citation: "発行元. 指針名。",
+      locator: "https://example.org/must-not-display",
+    },
+    {
+      id: "private",
+      title: "PRIVATE_SENTINEL",
+      visibility: "private",
+      citation: "private citation",
+      locator: "C:/private/file.pdf",
+    },
+  ] as unknown as import("../src/types.ts").ResourceSource[];
+  const html = renderToStaticMarkup(createElement(ResourceReferences, { sources }));
+  assert.match(html, /<summary>参考資料<\/summary>/);
+  assert.match(html, /公開資料/);
+  assert.match(html, /公的機関\. 資料名。/);
+  assert.match(html, /https:\/\/example\.org\/public/);
+  assert.match(html, /謝辞のみの資料/);
+  assert.match(html, /発行元\. 指針名。/);
+  assert.doesNotMatch(html, /must-not-display|PRIVATE_SENTINEL|C:\/private/);
+  assert.doesNotMatch(html, /<a\b/);
+  assert.equal(renderToStaticMarkup(createElement(ResourceReferences, { sources: [] })), "");
 });
 
 test("empty library still offers the install path", async () => {
@@ -81,7 +120,7 @@ test("empty library still offers the install path", async () => {
   const html = renderToStaticMarkup(createElement(PackageList, {
     packages: [], selected: null, busy: false, onSelect: noop, onRefresh: noop,
   }));
-  assert.match(html, /Packageがありません/);
+  assert.match(html, /教材がありません/);
   assert.match(html, /osmium install/);
   assert.match(html, /osmium install/);
 });

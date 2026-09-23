@@ -141,6 +141,21 @@ pub struct ResourceView {
     pub resource: Value,
     pub content: Content,
     pub content_is_untrusted: bool,
+    pub sources: Vec<ResourceSourceView>,
+}
+
+/// A source selected for this Resource, with visibility already applied by
+/// the shared Runtime before it crosses the Desktop IPC boundary.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResourceSourceView {
+    pub id: String,
+    pub title: String,
+    pub visibility: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub citation: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub locator: Option<String>,
 }
 
 /// The outcome of one graded attempt, straight from the evaluation engine.
@@ -163,6 +178,30 @@ fn object_string(value: &Value, field: &str) -> String {
         .and_then(Value::as_str)
         .unwrap_or_default()
         .to_owned()
+}
+
+fn resource_source_views(sources: &Value) -> Vec<ResourceSourceView> {
+    sources
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|source| {
+            let visibility = source["visibility"].as_str()?;
+            if visibility != "public" && visibility != "attribution_only" {
+                return None;
+            }
+            Some(ResourceSourceView {
+                id: object_string(source, "id"),
+                title: object_string(source, "title"),
+                visibility: visibility.to_owned(),
+                citation: source["citation"].as_str().map(str::to_owned),
+                // attribution_only records never carry a locator to UI.
+                locator: (visibility == "public")
+                    .then(|| source["locator"].as_str().map(str::to_owned))
+                    .flatten(),
+            })
+        })
+        .collect()
 }
 
 #[tauri::command]
@@ -251,6 +290,7 @@ pub fn read_resource(
         resource: view["resource"].clone(),
         content,
         content_is_untrusted: true,
+        sources: resource_source_views(&view["sources"]),
     })
 }
 
@@ -379,7 +419,7 @@ pub fn backup_state(desktop: State<'_, Desktop>, output: String) -> CommandResul
 
 #[cfg(test)]
 mod content_view_tests {
-    use super::ContentView;
+    use super::{ContentView, resource_source_views};
 
     #[test]
     fn desktop_content_dto_contains_ir_and_derived_text_but_not_markdown_source() {
@@ -388,5 +428,21 @@ mod content_view_tests {
         assert_eq!(value["text"], "Title\nA typed paragraph.");
         assert!(value["content"]["blocks"].is_array());
         assert!(value.get("markdown").is_none());
+    }
+
+    #[test]
+    fn resource_source_dto_respects_visibility_and_drops_attribution_locator() {
+        let raw = serde_json::json!([
+            {"id":"public","title":"公開資料","visibility":"public","citation":"機関. 資料名。","locator":"https://example.org/public"},
+            {"id":"credit","title":"謝辞のみ","visibility":"attribution_only","citation":"発行元. 指針名。","locator":"https://example.org/private-locator"},
+            {"id":"private","title":"LEAK_SENTINEL","visibility":"private","citation":"private citation","locator":"C:/private/file.pdf"}
+        ]);
+        let projected = serde_json::to_value(resource_source_views(&raw)).expect("source DTOs");
+        assert_eq!(projected.as_array().unwrap().len(), 2);
+        assert_eq!(projected[0]["locator"], "https://example.org/public");
+        assert_eq!(projected[1]["citation"], "発行元. 指針名。");
+        assert!(projected[1].get("locator").is_none());
+        assert!(!projected.to_string().contains("LEAK_SENTINEL"));
+        assert!(!projected.to_string().contains("private-locator"));
     }
 }

@@ -150,6 +150,16 @@ export interface ResourceView {
   resource: Resource;
   content: Content;
   content_is_untrusted: boolean;
+  sources: ResourceSource[];
+}
+
+/** Source metadata already projected by Runtime to learner-visible fields. */
+export interface ResourceSource {
+  id: string;
+  title: string;
+  visibility: "public" | "attribution_only";
+  citation?: string;
+  locator?: string;
 }
 
 export interface ObjectiveProgress {

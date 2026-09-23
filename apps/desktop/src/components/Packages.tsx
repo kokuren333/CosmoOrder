@@ -22,9 +22,9 @@ export function PackageList({
     <section className="library" aria-labelledby="packages-heading">
       <div className="panel-head">
         <div>
-          <p className="eyebrow">YOUR LIBRARY</p>
+          <p className="eyebrow">{tr("学習ライブラリ", "YOUR LIBRARY")}</p>
           <h1 id="packages-heading">{tr("ライブラリ", "Library")}</h1>
-          <p className="lede">{tr("構造化教材Packageとその内容・学習目標を確認できます。", "Browse structured learning packages, their content, and objectives.")}</p>
+          <p className="lede">{tr("教材パッケージと、その内容・学習目標を確認できます。", "Browse structured learning packages, their content, and objectives.")}</p>
         </div>
         <button className="icon-button" onClick={onRefresh} disabled={busy}>
           <RefreshCw size={16} aria-hidden="true" />
@@ -34,7 +34,7 @@ export function PackageList({
       {packages.length === 0 ? (
         <div className="empty card">
           <span className="empty-icon" aria-hidden="true"><BookOpen size={23} /></span>
-          <h2>{tr("Packageがありません", "No packages installed")}</h2>
+          <h2>{tr("教材がありません", "No packages installed")}</h2>
           <p>{tr("osmium installで追加した教材がここに表示されます。", "Packages installed with osmium install will appear here.")}</p>
           <DeveloperDetails label={tr("教材の追加方法", "Add a package")}>
             <p>
@@ -51,7 +51,7 @@ export function PackageList({
             >
               <div className="book-cover" aria-hidden="true">
                 <BookOpen size={30} aria-hidden="true" />
-                <span>LEARNING COLLECTION</span>
+                <span>{tr("学習教材", "LEARNING COLLECTION")}</span>
                 <strong>{String(index + 1).padStart(2, "0")}</strong>
               </div>
               <div className="library-card-body">
@@ -59,12 +59,12 @@ export function PackageList({
                 <h2>{item.title}</h2>
                 <dl className="package-counts" aria-label={tr(`${item.title}の構成`, `Contents of ${item.title}`)}>
                   {([
-                    ["concepts", "Concepts"],
-                    ["objectives", "Objectives"],
-                    ["resources", "Resources"],
-                    ["assessments", "Assessments"],
-                  ] as const).map(([key, label]) => (
-                    <div key={key}><dt>{label}</dt><dd>{item.entity_counts[key] ?? 0}</dd></div>
+                    ["concepts", "テーマ", "Concepts"],
+                    ["objectives", "学習目標", "Objectives"],
+                    ["resources", "教材", "Resources"],
+                    ["assessments", "問題", "Assessments"],
+                  ] as const).map(([key, ja, en]) => (
+                    <div key={key}><dt>{tr(ja, en)}</dt><dd>{item.entity_counts[key] ?? 0}</dd></div>
                   ))}
                 </dl>
                 <button

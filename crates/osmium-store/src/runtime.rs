@@ -30,9 +30,8 @@ impl Runtime {
         resource_id: &str,
     ) -> Result<Value> {
         let package = self.read(package_id, version)?;
-        let resource = package
-            .model
-            .documents()
+        let documents = package.model.documents();
+        let resource = documents
             .resources
             .as_array()
             .unwrap()
@@ -41,8 +40,43 @@ impl Runtime {
             .ok_or_else(|| crate::failure("OSM_RESOURCE", "resource does not exist"))?;
         let markdown = std::str::from_utf8(&package.files[resource["path"].as_str().unwrap()])
             .map_err(crate::db)?;
+        let source_ids = resource["source_ids"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .collect::<std::collections::BTreeSet<_>>();
+        // Project only learner-safe, resource-linked source metadata. Private
+        // source records are removed here as a second boundary after build.
+        let sources = documents.manifest["sources"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|source| {
+                source["visibility"] == "public" || source["visibility"] == "attribution_only"
+            })
+            .filter(|source| {
+                source["id"]
+                    .as_str()
+                    .is_some_and(|id| source_ids.contains(id))
+            })
+            .map(|source| {
+                let mut projected = serde_json::Map::new();
+                for field in ["id", "title", "citation", "visibility"] {
+                    if let Some(value) = source.get(field) {
+                        projected.insert(field.to_owned(), value.clone());
+                    }
+                }
+                if source["visibility"] == "public"
+                    && let Some(locator) = source.get("locator")
+                {
+                    projected.insert("locator".to_owned(), locator.clone());
+                }
+                Value::Object(projected)
+            })
+            .collect::<Vec<_>>();
         Ok(
-            serde_json::json!({"resource":resource, "markdown":markdown, "content_is_untrusted":true}),
+            serde_json::json!({"resource":resource, "markdown":markdown, "sources":sources, "content_is_untrusted":true}),
         )
     }
     pub fn open(home: &Path) -> Result<Self> {
