@@ -379,8 +379,22 @@ p {
   padding: 1.5em 1.8em;
 }
 .library-card-body h2 {
-  margin-bottom: 1.1em;
+  margin-bottom: 0.7em;
 }
+.package-counts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5em;
+  margin: 0 0 1.2em;
+}
+.package-counts > div {
+  background: var(--surface-soft);
+  border-radius: 0.5em;
+  padding: 0.5em 0.7em;
+  min-width: 0;
+}
+.package-counts dt { margin: 0; color: var(--muted); font-size: 0.75em; }
+.package-counts dd { margin: 0; font-size: 1.15em; font-weight: 650; }
 .developer-details {
   margin-top: 1.25em;
   font-size: 0.8em;
@@ -599,6 +613,8 @@ dd {
   margin-top: 0.35em;
 }
 .markdown {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 1.05em;
   line-height: 1.95;
   overflow-wrap: anywhere;
@@ -645,6 +661,35 @@ dd {
 }
 .md-link {
   color: var(--accent);
+}
+.code-frame,
+.table-scroll {
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+.code-frame .md-pre { padding-top: 2.6em; white-space: pre; }
+.code-copy {
+  position: absolute;
+  inset: 0.45em 0.55em auto auto;
+  z-index: 1;
+}
+.markdown table { border-collapse: collapse; min-width: 100%; }
+.markdown th, .markdown td { border: 1px solid var(--border); padding: 0.45em 0.65em; text-align: start; }
+.markdown th { background: var(--surface-soft); }
+.markdown .katex-display { max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 0.25em 0; }
+.markdown .katex { color: inherit; }
+@media (prefers-color-scheme: dark) {
+  .markdown .hljs { color: #e6edf3; background: #0d1117; }
+  .markdown .hljs-comment, .markdown .hljs-quote { color: #8b949e; }
+  .markdown .hljs-keyword, .markdown .hljs-selector-tag { color: #ff7b72; }
+  .markdown .hljs-string, .markdown .hljs-attr { color: #a5d6ff; }
+  .markdown .hljs-title, .markdown .hljs-function { color: #d2a8ff; }
+}
+@media (max-width: 38rem) {
+  .markdown { overflow-wrap: anywhere; }
+  .markdown .katex-display { text-align: start; }
 }
 .assessment {
   max-width: 48em;

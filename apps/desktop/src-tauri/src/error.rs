@@ -15,6 +15,10 @@ pub struct ErrorView {
     pub file: Option<String>,
     pub path: String,
     pub suggestions: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub entity_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub entity_id: Option<String>,
 }
 
 /// A command failure: a non-empty list of diagnostics.
@@ -41,6 +45,8 @@ impl CommandError {
                 file: None,
                 path: String::new(),
                 suggestions: Vec::new(),
+                entity_type: None,
+                entity_id: None,
             }],
         }
     }
@@ -70,6 +76,8 @@ impl From<ErrorView> for Diagnostic {
             path: view.path,
             message: view.message,
             suggestions: view.suggestions,
+            entity_type: None,
+            entity_id: None,
         }
     }
 }
@@ -82,6 +90,8 @@ impl From<Diagnostic> for ErrorView {
             file: diagnostic.file,
             path: diagnostic.path,
             suggestions: diagnostic.suggestions,
+            entity_type: diagnostic.entity_type,
+            entity_id: diagnostic.entity_id,
         }
     }
 }

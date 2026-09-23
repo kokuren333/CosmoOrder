@@ -71,7 +71,7 @@ export function Reader({
         ) : view === null ? (
           <p className="empty">本文を読み込めませんでした。</p>
         ) : (
-          <Markdown content={view.content} />
+          <Markdown markdown={view.markdown} />
         )}
         <DeveloperDetails>
           <dl>

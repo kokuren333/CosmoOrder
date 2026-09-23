@@ -40,6 +40,8 @@ export interface ErrorView {
   file: string | null;
   path: string;
   suggestions: string[];
+  entity_type?: string;
+  entity_id?: string;
 }
 
 export interface CommandError {
@@ -58,6 +60,7 @@ export interface PackageView {
   package_version: string;
   schema_version: string;
   title: string;
+  entity_counts: Record<string, number>;
   digest: string;
   selected_version: string;
 }
@@ -99,6 +102,7 @@ export interface Resource {
   path: string;
   teaches: string[];
   creator?: string;
+  license?: string;
   attribution?: string;
 }
 
