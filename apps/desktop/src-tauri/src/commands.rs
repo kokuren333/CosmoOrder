@@ -91,6 +91,7 @@ pub struct PackageView {
     pub package_version: String,
     pub schema_version: String,
     pub title: String,
+    pub entity_counts: std::collections::BTreeMap<String, usize>,
     pub digest: String,
     pub selected_version: String,
 }
@@ -192,6 +193,7 @@ pub fn list_packages(desktop: State<'_, Desktop>) -> CommandResult<Vec<PackageVi
             package_version: package.package_version,
             schema_version: package.schema_version,
             title: package.title,
+            entity_counts: package.entity_counts,
             digest: package.digest,
         })
         .collect())

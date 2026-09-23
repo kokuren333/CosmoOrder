@@ -76,6 +76,8 @@ pub fn parse_json(bytes: &[u8], file: &str) -> Result<Value, Box<Diagnostic>> {
         return Err(Box::new(Diagnostic {
             code: "OSM_INPUT_LIMIT".into(),
             severity: "error".into(),
+            entity_type: None,
+            entity_id: None,
             file: Some(file.into()),
             line: None,
             column: None,
@@ -90,6 +92,8 @@ pub fn parse_json(bytes: &[u8], file: &str) -> Result<Value, Box<Diagnostic>> {
             Box::new(Diagnostic {
                 code: "OSM_JSON".into(),
                 severity: "error".into(),
+                entity_type: None,
+                entity_id: None,
                 file: Some(file.into()),
                 line: Some(error.line()),
                 column: Some(error.column()),

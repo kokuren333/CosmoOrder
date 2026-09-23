@@ -31,6 +31,10 @@ fn zip_directory_reinstall_and_reopen_keep_identical_files() {
     let first = library.install(&zip).unwrap();
     assert!(!first.already_installed);
     assert!(first.package.path.is_dir());
+    assert_eq!(first.package.entity_counts["concepts"], 1);
+    assert_eq!(first.package.entity_counts["objectives"], 1);
+    assert_eq!(first.package.entity_counts["resources"], 1);
+    assert_eq!(first.package.entity_counts["assessments"], 2);
     assert!(library.install(&directory).unwrap().already_installed);
     assert_eq!(library.packages().unwrap().len(), 1);
     assert_eq!(fs::read_dir(home.join("staging")).unwrap().count(), 0);

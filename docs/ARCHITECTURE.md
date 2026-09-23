@@ -4,7 +4,7 @@
 
 現在の `PackageDocuments` は未検証のJSON文書集合、`PackageModel` は構造・意味検証を通過した読取り専用モデル。元のextensionsも保持する。モデル生成はファイルの存在や実際のsymlink安全性を証明しないため、filesystem adapterの検証完了前にinstall可能と扱わない。`prerequisite_order` は循環検証用の前提順序であり、Curriculumの順序や習熟推定を置換しない。
 
-Phase 2aで `osmium-package::load_source` を追加。Source inventory、portable path/containment/link/size検査、JSON/YAML parse、schema/意味検証、Markdown本文読込みを順に行う。Coreにはfilesystem依存を追加していない。診断文書名を実ファイル名に対応づける。返されるLoadedSourceはbuild用のsnapshotであり、未実装のinstallerの安全性や同時書換え耐性を保証しない。
+Phase 2aで `osmium-package::load_source` を追加。Source inventory、portable path/containment/link/size検査、JSON/YAML parse、schema/意味検証、Markdown本文読込みを順に行う。Coreにはfilesystem依存を追加していない。診断文書名を実ファイル名に対応づける。返されるLoadedSourceはbuild用のsnapshotである。installerは後のPhaseで実装済みだが、悪意ある同時書換えへの完全な耐性は保証しない。
 
 ## 責務と依存方向
 
@@ -90,4 +90,4 @@ CommonMark本文とmetadataを保持し、content IRは再生成できる中間�
 
 ## 将来の接続点
 
-Evaluator、ResourceProvider、Renderer、MasteryEngine、CurriculumEngine、Registry、Importer/Exporterは責務として分ける。保存形式に必要なextensions/capabilitiesだけ最初から作り、動的コードloadは実装しない。AIやMCPは外部クライアント、同期はevent identityを利用する別サービス、公式HubはCloudflare実装である。Hubへ学習履歴を送る経路を最小v1に作らない。
+Evaluator、ResourceProvider、Renderer、将来のMasteryEngine、CurriculumEngine、Registry、Importer/Exporterは責務として分ける。保存形式に必要なextensions/capabilitiesだけ最初から作り、動的コードloadは実装しない。AIやMCPは将来の外部クライアント、同期はevent identityを利用する別サービスの候補とする。Hubは未実装で運用先も未決定。Hubへ学習履歴を送る経路を最小v1に作らない。

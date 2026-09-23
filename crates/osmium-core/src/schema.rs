@@ -49,6 +49,10 @@ impl DocumentKind {
 pub struct Diagnostic {
     pub code: String,
     pub severity: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entity_type: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entity_id: Option<String>,
     pub file: Option<String>,
     pub line: Option<usize>,
     pub column: Option<usize>,
@@ -88,6 +92,8 @@ pub fn validate_document(kind: DocumentKind, document: &Value) -> Vec<Diagnostic
         .map(|error| Diagnostic {
             code: "OSM_SCHEMA".into(),
             severity: "error".into(),
+            entity_type: None,
+            entity_id: None,
             file: None,
             line: None,
             column: None,

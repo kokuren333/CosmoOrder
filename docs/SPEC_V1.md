@@ -1,6 +1,6 @@
 # 最小v1仕様
 
-状態: 開発草案。これは今回実装する範囲であり、設計ログの広いv1全機能が完成したという意味ではない。
+状態: historical design draft。現在の実装状況はREADME、`AUTHORING_LINT.md`、`DESKTOP.md`を参照。
 
 ## 必須機能
 
@@ -15,7 +15,7 @@
 
 ## CLI契約
 
-現在はinit/validate/lint/inspect/query/context/build/install/packagesと、learn/read/answer/history/progress/rebuild-progress/export-state/backup-stateを実装済み。reader系の検証コマンドはSource directoryとdistribution directory/ZIPを対象とする。Desktop起動用openはPhase 5。
+現在はinit/validate/lint/inspect/query/context/build/install/packagesと、learn/read/answer/history/progress/rebuild-progress/export-state/backup-stateを実装済み。reader系の検証コマンドはSource directoryとdistribution directory/ZIPを対象とする。DesktopはTauriアプリとして起動する。下表の`osmium open`は設計案であり、CLIには未実装。
 
 | コマンド | 契約 |
 |---|---|
@@ -30,7 +30,7 @@
 | `osmium packages` | 内容を再検証して導入済みID/version/digestと保存先を列挙 |
 | `osmium learn <package-id>` | 導入済み教材の全Entity metadataを表示 |
 | `osmium read <package-id> <resource-id>` | 検証済みResourceのMarkdown本文を取得 |
-| `osmium open <package-id>` | インストール済み教材をDesktopで開く。未導入・GUI未利用は明示エラー |
+| `osmium open <package-id>` | 将来案。現在のCLIには未実装 |
 | `osmium answer <package-id> <assessment-id> --response <json>` | Coreで評価しevent保存。version指定がなければ明確な選択規則を使う |
 | `osmium history <package-id>` / `progress <package-id>` | 保存履歴／derived progress取得 |
 | `osmium export-state --output <path>` | versioned JSONLによる履歴の可搬化 |

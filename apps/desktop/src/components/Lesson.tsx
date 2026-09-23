@@ -45,7 +45,7 @@ export function Lesson({
           {String(index + 1).padStart(2, "0")}
         </span>
         <div>
-          <p className="eyebrow">学ぶテーマ</p>
+          <p className="eyebrow">CONCEPT · 学ぶテーマ</p>
           <h3>{node.concept.title}</h3>
           {node.concept.requires.length > 0 ? (
             <p className="meta">
@@ -70,7 +70,7 @@ export function Lesson({
             <li key={objective.id}>
               <div className="objective">
                 <div>
-                  <p className="eyebrow">学習目標</p>
+                  <p className="eyebrow">OBJECTIVE · 学習目標</p>
                   <h4>{objective.description}</h4>
                 </div>
                 <span className="badge">
@@ -81,7 +81,7 @@ export function Lesson({
               </div>
               <div className="learning-actions">
                 <section>
-                  <h5><BookOpenText size={16} aria-hidden="true" />読んで理解する</h5>
+                  <h5><BookOpenText size={16} aria-hidden="true" />RESOURCE · 読んで理解する</h5>
                   {resources.length === 0 ? (
                     <p className="meta">この目標の読み物はありません。</p>
                   ) : (
@@ -100,7 +100,7 @@ export function Lesson({
                   )}
                 </section>
                 <section>
-                  <h5><ClipboardCheck size={16} aria-hidden="true" />問題で確かめる</h5>
+                  <h5><ClipboardCheck size={16} aria-hidden="true" />ASSESSMENT · 問題で確かめる</h5>
                   {assessments.length === 0 ? (
                     <p className="meta">この目標の問題はありません。</p>
                   ) : (
@@ -145,12 +145,13 @@ export function Lesson({
     <section aria-labelledby="lesson-heading">
       <header className="lesson-hero">
         <div>
-          <p className="eyebrow">LEARNING PATH</p>
+          <p className="eyebrow">PACKAGE OVERVIEW</p>
           <h1 id="lesson-heading">{lesson.manifest.title}</h1>
           <p className="meta">
             {lesson.manifest.language} · バージョン {lesson.package_version}
           </p>
-          <p>読んで、確かめて。ひとつずつ学びを重ねましょう。</p>
+          <p className="meta">{lesson.concepts.length} Concepts · {lesson.objectives.length} Objectives · {lesson.resources.length} Resources · {lesson.assessments.length} Assessments</p>
+          <p>Concept → Objective → Resource / Assessment の関係を確認できます。</p>
         </div>
         {first ? (
           <div>
@@ -243,6 +244,8 @@ export function Lesson({
           <dd>{lesson.manifest.schema_version}</dd>
           <dt>Digest</dt>
           <dd>{lesson.digest}</dd>
+          {lesson.resources.some((resource) => resource.creator) ? <><dt>Resource creators</dt><dd>{[...new Set(lesson.resources.map((resource) => resource.creator).filter(Boolean))].join(", ")}</dd></> : null}
+          {lesson.resources.some((resource) => resource.license) ? <><dt>Resource licenses</dt><dd>{[...new Set(lesson.resources.map((resource) => resource.license).filter(Boolean))].join(", ")}</dd></> : null}
         </dl>
       </DeveloperDetails>
     </section>

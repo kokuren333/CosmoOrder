@@ -422,6 +422,10 @@ async function main() {
     "the installed package in the list",
   );
   pass("the installed package is listed in the UI", PACKAGE_ID);
+  assert(
+    await app.evaluate('(() => { const text = document.querySelector(".package-counts")?.innerText ?? ""; return ["Concepts", "Objectives", "Resources", "Assessments"].every((label) => text.includes(label)); })()'),
+    "the library card shows all four package counts",
+  );
 
   assert(
     !(await app.text()).includes(PACKAGE_ID),
@@ -448,6 +452,10 @@ async function main() {
     lessonText.includes(GOLDEN_OBJECTIVE),
     "the objective is listed",
     GOLDEN_OBJECTIVE,
+  );
+  assert(
+    ["CONCEPT", "OBJECTIVE", "RESOURCE", "ASSESSMENT"].every((label) => lessonText.includes(label)),
+    "the lesson shows the authored package hierarchy",
   );
 
   assert(

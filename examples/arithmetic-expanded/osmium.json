@@ -1,0 +1,19 @@
+{
+  "schema_version": "0.1",
+  "package_id": "org.example/arithmetic-expanded",
+  "package_version": "0.1.0",
+  "title": "Basic Arithmetic: Reusable Learning Package",
+  "language": "en-US",
+  "capabilities": {
+    "required": [],
+    "optional": []
+  },
+  "entities": {
+    "concepts": "entities/concepts.json",
+    "objectives": "entities/objectives.json",
+    "curricula": "entities/curricula.json",
+    "resources": "entities/resources.json",
+    "assessments": "entities/assessments.json"
+  },
+  "extensions": {}
+}

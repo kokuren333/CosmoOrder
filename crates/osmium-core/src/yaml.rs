@@ -74,6 +74,8 @@ pub fn parse_yaml(bytes: &[u8], file: &str) -> Result<Value, Box<Diagnostic>> {
         Box::new(Diagnostic {
             code: "OSM_YAML".into(),
             severity: "error".into(),
+            entity_type: None,
+            entity_id: None,
             file: Some(file.into()),
             line: mark.map(|m| m.line()),
             // yaml-rust2 emits zero-based columns (covered by position tests).

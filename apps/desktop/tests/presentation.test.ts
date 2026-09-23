@@ -27,6 +27,7 @@ test("technical metadata is present in a closed native disclosure", async () => 
         {
           package_id: "private-id",
           title: "教材の名前",
+          entity_counts: { concepts: 5, objectives: 9, resources: 4, assessments: 12, curricula: 1 },
           package_version: "1.0",
           schema_version: "0.1",
           digest: "private-digest",
@@ -40,11 +41,48 @@ test("technical metadata is present in a closed native disclosure", async () => 
     }),
   );
   assert.match(html, /<h2>教材の名前<\/h2>/);
+  assert.match(html, /<dt>Concepts<\/dt><dd>5<\/dd>/);
+  assert.match(html, /<dt>Assessments<\/dt><dd>12<\/dd>/);
   assert.match(
     html,
     /<details class="developer-details"><summary>技術情報<\/summary>.*private-id.*private-digest/s,
   );
   assert.doesNotMatch(html, /<details[^>]*\bopen\b/);
+});
+
+test("lesson exposes package hierarchy with absent optional metadata", async () => {
+  const { Lesson } = (await server.ssrLoadModule(
+    "/src/components/Lesson.tsx",
+  )) as typeof import("../src/components/Lesson.tsx");
+  const lesson = {
+    package_id: "org.example/sample", package_version: "0.1.0", digest: "abc",
+    manifest: { schema_version: "0.1", package_id: "org.example/sample", package_version: "0.1.0", title: "Sample", language: "en-US", capabilities: { required: [], optional: [] }, entities: {}, extensions: {} },
+    concepts: [{ id: "count", title: "Counting", requires: [] }],
+    objectives: [{ id: "count.basic", concept: "count", description: "Count objects" }],
+    curricula: [{ id: "intro", title: "Intro", objectives: ["count.basic"] }],
+    resources: [{ id: "lesson", type: "markdown", title: "Read counting", path: "content/a.md", teaches: ["count.basic"] }],
+    assessments: [{ id: "check", revision: "1", measures: ["count.basic"], stimulus: { markdown: "How many?" }, response: { type: "boolean" as const }, evaluation: { type: "exact", answer: true }, feedback: { markdown: "Yes" } }],
+    stimuli: { check: { markdown: "How many?", text: "How many?", content: { blocks: [] } } },
+  };
+  const html = renderToStaticMarkup(createElement(Lesson, {
+    lesson, progress: [], busy: false, onOpenResource: noop, onOpenAssessment: noop,
+  }));
+  assert.match(html, /CONCEPT · 学ぶテーマ/);
+  assert.match(html, /OBJECTIVE · 学習目標/);
+  assert.match(html, /RESOURCE · 読んで理解する/);
+  assert.match(html, /ASSESSMENT · 問題で確かめる/);
+  assert.match(html, /<h1 id="lesson-heading">Sample<\/h1>/);
+});
+
+test("empty library still offers the install path", async () => {
+  const { PackageList } = (await server.ssrLoadModule(
+    "/src/components/Packages.tsx",
+  )) as typeof import("../src/components/Packages.tsx");
+  const html = renderToStaticMarkup(createElement(PackageList, {
+    packages: [], selected: null, busy: false, onSelect: noop, onRefresh: noop,
+  }));
+  assert.match(html, /インストールした教材がここに並びます/);
+  assert.match(html, /osmium install/);
 });
 
 test("shell marks the current learning context and disables course navigation without a lesson", async () => {
@@ -62,16 +100,22 @@ test("shell marks the current learning context and disables course navigation wi
     onLesson: noop,
     onProgress: noop,
     onHistory: noop,
+    language: "ja" as const,
+    onLanguage: noop,
     children: "本文",
   };
   const html = renderToStaticMarkup(createElement(AppShell, props));
   assert.match(html, /aria-label="目次を表示" aria-current="page"/);
   assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
   assert.match(html, /aria-pressed="true">文字 200%/);
+  const english = renderToStaticMarkup(createElement(AppShell, { ...props, language: "en" as const }));
+  assert.match(english, /Skip to content/);
+  assert.match(english, /Library/);
+  assert.match(english, /Stored on this device/);
   const empty = renderToStaticMarkup(
     createElement(AppShell, { ...props, section: "packages", title: null }),
   );
-  assert.match(empty, /aria-label="進捗を表示" disabled=""/);
+  assert.match(empty, /aria-label="進捗" disabled=""/);
 });
 
 test("progress renders observed accuracy and hides maintenance; missing accuracy stays missing", async () => {

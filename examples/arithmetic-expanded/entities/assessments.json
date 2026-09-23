@@ -1,0 +1,126 @@
+[
+  {
+    "id": "counting.check",
+    "revision": "1",
+    "measures": [
+      "counting.forward",
+      "counting.compare"
+    ],
+    "stimulus": {
+      "markdown": "Which is larger: 7 or 5?"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "7"
+        },
+        {
+          "id": "b",
+          "text": "5"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "Review the corresponding resource and count each group carefully."
+    }
+  },
+  {
+    "id": "addition.check",
+    "revision": "1",
+    "measures": [
+      "addition.basic",
+      "addition.carry"
+    ],
+    "stimulus": {
+      "markdown": "What is 8 + 5?"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "13"
+        },
+        {
+          "id": "b",
+          "text": "12"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "Review the corresponding resource and count each group carefully."
+    }
+  },
+  {
+    "id": "subtraction.check",
+    "revision": "1",
+    "measures": [
+      "subtraction.basic"
+    ],
+    "stimulus": {
+      "markdown": "What is 9 - 4?"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "5"
+        },
+        {
+          "id": "b",
+          "text": "6"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "Review the corresponding resource and count each group carefully."
+    }
+  },
+  {
+    "id": "groups.check",
+    "revision": "1",
+    "measures": [
+      "multiplication.groups",
+      "multiplication.facts",
+      "division.share"
+    ],
+    "stimulus": {
+      "markdown": "How many objects are in 3 groups of 2?"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "6"
+        },
+        {
+          "id": "b",
+          "text": "5"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "Review the corresponding resource and count each group carefully."
+    }
+  }
+]

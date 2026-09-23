@@ -31,6 +31,8 @@ fn failure(code: &str, message: &str) -> Vec<Diagnostic> {
     vec![Diagnostic {
         code: code.into(),
         severity: "error".into(),
+        entity_type: None,
+        entity_id: None,
         file: None,
         line: None,
         column: None,

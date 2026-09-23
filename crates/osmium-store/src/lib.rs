@@ -24,6 +24,8 @@ fn failure(code: &str, message: impl ToString) -> Vec<Diagnostic> {
     vec![Diagnostic {
         code: code.into(),
         severity: "error".into(),
+        entity_type: None,
+        entity_id: None,
         file: Some("state.sqlite".into()),
         line: None,
         column: None,

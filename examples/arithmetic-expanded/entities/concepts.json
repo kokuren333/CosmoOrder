@@ -1,0 +1,35 @@
+[
+  {
+    "id": "counting",
+    "title": "Counting",
+    "requires": []
+  },
+  {
+    "id": "addition",
+    "title": "Addition",
+    "requires": [
+      "counting"
+    ]
+  },
+  {
+    "id": "subtraction",
+    "title": "Subtraction",
+    "requires": [
+      "addition"
+    ]
+  },
+  {
+    "id": "multiplication",
+    "title": "Multiplication",
+    "requires": [
+      "addition"
+    ]
+  },
+  {
+    "id": "division",
+    "title": "Division",
+    "requires": [
+      "multiplication"
+    ]
+  }
+]

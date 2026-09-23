@@ -1,6 +1,6 @@
 # Osmium 実装計画
 
-更新日: 2026-09-22。状態: CLIによる配布・導入・学習・SQLite保存に加え、Phase 5のDesktop Reader／学習UIと最終受入れまで実装・検証済み。Hub/MCP/AI Tutor/Cloud Syncは未着手。[Phase 2b引き継ぎメモ](PHASE2B_HANDOFF.md)は再開前の履歴資料。
+更新日: 2026-09-23。状態: CLIによる配布・導入・学習・SQLite保存に加え、Phase 5のDesktop Reader／学習UIと最終受入れまで実装・検証済み。Hub/MCP/AI Tutor/Cloud Syncは未着手。以下のPhase別記録は作業時点の履歴であり、現在のauthoring/lint契約は[AUTHORING_LINT.md](AUTHORING_LINT.md)を参照。[Phase 2b引き継ぎメモ](PHASE2B_HANDOFF.md)も再開前の履歴資料。
 
 ## 1. 調査と要件の優先順位
 

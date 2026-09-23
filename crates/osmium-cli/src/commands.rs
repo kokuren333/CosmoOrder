@@ -313,6 +313,8 @@ fn init_command(
         let diagnostic = Diagnostic {
             code: error.code.to_owned(),
             severity: "error".to_owned(),
+            entity_type: None,
+            entity_id: None,
             file: Some(error.path.to_string_lossy().into_owned()),
             line: None,
             column: None,

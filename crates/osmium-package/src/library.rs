@@ -19,6 +19,8 @@ pub struct InstalledPackage {
     pub package_version: String,
     pub schema_version: String,
     pub title: String,
+    /// Pure Core summary of the validated package contents.
+    pub entity_counts: std::collections::BTreeMap<String, usize>,
     pub digest: String,
     pub path: PathBuf,
 }
@@ -107,6 +109,9 @@ fn record(package: &Distribution, path: PathBuf) -> InstalledPackage {
         package_version: manifest["package_version"].as_str().unwrap().into(),
         schema_version: manifest["schema_version"].as_str().unwrap().into(),
         title: manifest["title"].as_str().unwrap().into(),
+        entity_counts: osmium_core::query::inspect(&package.model, 0)
+            .manifest
+            .entity_counts,
         digest: package.digest.clone(),
         path,
     }

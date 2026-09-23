@@ -86,6 +86,8 @@ pub fn diagnostic(code: &str, message: impl Into<String>) -> Diagnostic {
     Diagnostic {
         code: code.to_owned(),
         severity: "error".to_owned(),
+        entity_type: None,
+        entity_id: None,
         file: None,
         line: None,
         column: None,

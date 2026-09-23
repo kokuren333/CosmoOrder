@@ -1,0 +1,16 @@
+[
+  {
+    "id": "arithmetic.path",
+    "title": "From counting to sharing",
+    "objectives": [
+      "counting.forward",
+      "counting.compare",
+      "addition.basic",
+      "addition.carry",
+      "subtraction.basic",
+      "multiplication.groups",
+      "multiplication.facts",
+      "division.share"
+    ]
+  }
+]

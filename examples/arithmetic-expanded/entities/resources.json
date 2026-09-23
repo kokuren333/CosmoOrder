@@ -1,0 +1,54 @@
+[
+  {
+    "id": "counting.lesson",
+    "type": "markdown",
+    "title": "Counting and comparison",
+    "path": "content/counting.md",
+    "teaches": [
+      "counting.forward",
+      "counting.compare"
+    ],
+    "creator": "Osmium example authors",
+    "license": "CC0-1.0",
+    "attribution": "Original example text"
+  },
+  {
+    "id": "addition.lesson",
+    "type": "markdown",
+    "title": "Adding and carrying",
+    "path": "content/addition.md",
+    "teaches": [
+      "addition.basic",
+      "addition.carry"
+    ],
+    "creator": "Osmium example authors",
+    "license": "CC0-1.0",
+    "attribution": "Original example text"
+  },
+  {
+    "id": "subtraction.lesson",
+    "type": "markdown",
+    "title": "Subtraction",
+    "path": "content/subtraction.md",
+    "teaches": [
+      "subtraction.basic"
+    ],
+    "creator": "Osmium example authors",
+    "license": "CC0-1.0",
+    "attribution": "Original example text"
+  },
+  {
+    "id": "groups.lesson",
+    "type": "markdown",
+    "title": "Groups, multiplication, and division",
+    "path": "content/groups.md",
+    "teaches": [
+      "multiplication.groups",
+      "multiplication.facts",
+      "division.share"
+    ],
+    "creator": "Osmium example authors",
+    "license": "CC0-1.0",
+    "attribution": "Original example text"
+  }
+]

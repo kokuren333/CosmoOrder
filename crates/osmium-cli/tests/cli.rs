@@ -88,7 +88,16 @@ fn lint_reports_advice_without_failing_or_claiming_quality() {
     let outcome = run(&["osmium", "lint", &path_of(&directory), "--json"]);
     assert_eq!(outcome.exit, Exit::Success);
     assert_eq!(outcome.stdout["ok"], true);
-    assert!(codes(&outcome).contains(&"OSM_LINT_UNMEASURED".into()));
+    assert!(codes(&outcome).contains(&"OSM_LINT_OBJECTIVE_NO_ASSESSMENT".into()));
+    assert!(
+        outcome.stdout["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item["code"] == "OSM_LINT_OBJECTIVE_NO_ASSESSMENT"
+                && item["entity_type"] == "objective"
+                && item["entity_id"] == "addition.basic")
+    );
     assert!(codes(&outcome).contains(&"OSM_LINT_METADATA".into()));
     assert!(outcome.stdout["data"].get("quality_score").is_none());
     assert!(outcome.stderr.contains("warning"));

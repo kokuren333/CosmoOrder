@@ -59,6 +59,8 @@ fn error(file: &str, path: String, code: &str, message: impl Into<String>) -> Di
     Diagnostic {
         code: code.into(),
         severity: "error".into(),
+        entity_type: None,
+        entity_id: None,
         file: Some(file.into()),
         line: None,
         column: None,

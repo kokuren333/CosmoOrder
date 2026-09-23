@@ -21,7 +21,7 @@ export function PackageList({
         <div>
           <p className="eyebrow">YOUR LIBRARY</p>
           <h1 id="packages-heading">学びのライブラリ</h1>
-          <p className="lede">手元の教材から、今日の学びを始めましょう。</p>
+          <p className="lede">構造化された教材Packageを選び、内容と学習目標を確認できます。</p>
         </div>
         <button className="icon-button" onClick={onRefresh} disabled={busy}>
           <RefreshCw size={16} aria-hidden="true" />
@@ -54,6 +54,16 @@ export function PackageList({
               <div className="library-card-body">
                 <p className="meta">バージョン {item.package_version}</p>
                 <h2>{item.title}</h2>
+                <dl className="package-counts" aria-label={`${item.title}の構成`}>
+                  {([
+                    ["concepts", "Concepts"],
+                    ["objectives", "Objectives"],
+                    ["resources", "Resources"],
+                    ["assessments", "Assessments"],
+                  ] as const).map(([key, label]) => (
+                    <div key={key}><dt>{label}</dt><dd>{item.entity_counts[key] ?? 0}</dd></div>
+                  ))}
+                </dl>
                 <button
                   className="package primary icon-button"
                   disabled={busy}

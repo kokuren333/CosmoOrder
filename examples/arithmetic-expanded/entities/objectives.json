@@ -1,0 +1,42 @@
+[
+  {
+    "id": "counting.forward",
+    "concept": "counting",
+    "description": "Count forward within 20"
+  },
+  {
+    "id": "counting.compare",
+    "concept": "counting",
+    "description": "Compare two small quantities"
+  },
+  {
+    "id": "addition.basic",
+    "concept": "addition",
+    "description": "Add two single-digit numbers"
+  },
+  {
+    "id": "addition.carry",
+    "concept": "addition",
+    "description": "Add numbers with a carry"
+  },
+  {
+    "id": "subtraction.basic",
+    "concept": "subtraction",
+    "description": "Subtract within 20"
+  },
+  {
+    "id": "multiplication.groups",
+    "concept": "multiplication",
+    "description": "Represent multiplication as equal groups"
+  },
+  {
+    "id": "multiplication.facts",
+    "concept": "multiplication",
+    "description": "Multiply small whole numbers"
+  },
+  {
+    "id": "division.share",
+    "concept": "division",
+    "description": "Share a quantity into equal groups"
+  }
+]
