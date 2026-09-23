@@ -37,6 +37,21 @@ pub fn lint(model: &PackageModel) -> Vec<Diagnostic> {
                 suggestions: vec![],
             });
         };
+    if docs
+        .manifest
+        .get("language")
+        .and_then(Value::as_str)
+        .is_none_or(str::is_empty)
+    {
+        add(
+            "manifest",
+            0,
+            "manifest",
+            "language",
+            "OSM_LINT_LANGUAGE",
+            "package content language is unspecified".into(),
+        );
+    }
     let taught: BTreeSet<&str> = resources
         .iter()
         .flat_map(|item| ids(item, "teaches"))
@@ -158,6 +173,47 @@ pub fn lint(model: &PackageModel) -> Vec<Diagnostic> {
                     id,
                     "OSM_LINT_METADATA",
                     format!("resource {id} lacks {field}"),
+                );
+            }
+        }
+        if resource.get("language").and_then(Value::as_str).is_none()
+            && docs
+                .manifest
+                .get("language")
+                .and_then(Value::as_str)
+                .is_none()
+        {
+            add(
+                "resources",
+                index,
+                "resource",
+                id,
+                "OSM_LINT_LANGUAGE",
+                format!("resource {id} has no effective content language"),
+            );
+        }
+        if let Some(sources) = docs.manifest.get("sources").and_then(Value::as_array) {
+            let by_id: BTreeMap<&str, &Value> = sources
+                .iter()
+                .filter_map(|s| Some((s["id"].as_str()?, s)))
+                .collect();
+            let refs = ids(resource, "source_ids").collect::<Vec<_>>();
+            if !refs.is_empty()
+                && refs.iter().all(|source_id| {
+                    by_id
+                        .get(source_id)
+                        .is_some_and(|s| s["visibility"] == "private")
+                })
+            {
+                add(
+                    "resources",
+                    index,
+                    "resource",
+                    id,
+                    "OSM_LINT_SOURCE_VISIBILITY",
+                    format!(
+                        "resource {id} has only private provenance; no learner-attributable source is declared"
+                    ),
                 );
             }
         }

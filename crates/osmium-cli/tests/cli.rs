@@ -99,6 +99,7 @@ fn lint_reports_advice_without_failing_or_claiming_quality() {
                 && item["entity_id"] == "addition.basic")
     );
     assert!(codes(&outcome).contains(&"OSM_LINT_METADATA".into()));
+    assert!(codes(&outcome).contains(&"OSM_LINT_RESOURCE_SHORT".into()));
     assert!(outcome.stdout["data"].get("quality_score").is_none());
     assert!(outcome.stderr.contains("warning"));
 }

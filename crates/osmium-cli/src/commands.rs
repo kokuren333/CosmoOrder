@@ -127,7 +127,28 @@ pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failur
         .map_err(internal_serialization)?,
         Command::Lint { path, .. } => {
             let loaded = load(path)?;
-            let diagnostics = osmium_core::lint::lint(&loaded.model);
+            let mut diagnostics = osmium_core::lint::lint(&loaded.model);
+            let docs = loaded.model.documents();
+            for resource in docs.resources.as_array().unwrap() {
+                let id = resource["id"].as_str().unwrap_or_default();
+                if let Some(body) = resource["path"]
+                    .as_str()
+                    .and_then(|path| loaded.files.get(path))
+                    .and_then(|bytes| std::str::from_utf8(bytes).ok())
+                {
+                    if body.trim().chars().count() < 240 {
+                        diagnostics.push(Diagnostic { code:"OSM_LINT_RESOURCE_SHORT".into(), severity:"warning".into(), entity_type:Some("resource".into()), entity_id:Some(id.into()), file:resource["path"].as_str().map(str::to_owned), line:None, column:None, path:"/".into(), message:"resource body is brief; review whether it teaches the concept without additional material".into(), suggestions:vec!["consider explanation, example, distinction, or summary where useful".into()] });
+                    }
+                }
+            }
+            diagnostics.sort_by(|a, b| {
+                (&a.file, &a.entity_id, &a.code, &a.message).cmp(&(
+                    &b.file,
+                    &b.entity_id,
+                    &b.code,
+                    &b.message,
+                ))
+            });
             return Ok((
                 serde_json::json!({"finding_count": diagnostics.len(), "content_is_untrusted": true}),
                 diagnostics,
