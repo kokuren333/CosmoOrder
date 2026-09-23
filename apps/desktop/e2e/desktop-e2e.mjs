@@ -239,6 +239,21 @@ class App {
     }
   }
 
+  /** Click the first button whose rendered label starts with the given text. */
+  async clickTextStartingWith(label, description) {
+    const clicked = await this.evaluate(`(() => {
+      const button = [...document.querySelectorAll("button")].find(
+        (candidate) => candidate.textContent.trim().startsWith(${JSON.stringify(label)}),
+      );
+      if (button === undefined) return false;
+      button.click();
+      return true;
+    })()`);
+    if (clicked !== true) {
+      fail(`click ${description}`, `no button starting with ${label}`);
+    }
+  }
+
   async stop() {
     runningApps.delete(this);
     try {
@@ -440,7 +455,7 @@ async function main() {
   );
   await app.click('button[aria-label="日本語"]', "switch UI language back to Japanese");
   assert(
-    await app.evaluate('(() => { const text = document.querySelector(".package-counts")?.innerText ?? ""; return ["Concepts", "Objectives", "Resources", "Assessments"].every((label) => text.includes(label)); })()'),
+    await app.evaluate('(() => { const text = document.querySelector(".package-counts")?.innerText ?? ""; return ["テーマ", "学習目標", "教材", "問題"].every((label) => text.includes(label)); })()'),
     "the library card shows all four package counts",
   );
 
@@ -471,7 +486,7 @@ async function main() {
     GOLDEN_OBJECTIVE,
   );
   assert(
-    ["CONCEPT", "OBJECTIVE", "RESOURCE", "ASSESSMENT"].every((label) => lessonText.includes(label)),
+    ["テーマ · 学ぶ内容", "学習目標", "教材 · 読む", "問題 · 確かめる"].every((label) => lessonText.includes(label)),
     "the lesson shows the authored package hierarchy",
   );
 
@@ -768,13 +783,50 @@ async function main() {
     await rendererApp.waitForSelector("#lesson-heading", `${title} lesson`);
   }
 
-  await openFixture("体液バランスと臨床的推論");
-  await rendererApp.clickText("Fluid balance", "open medicine resource");
-  await rendererApp.waitForSelector(".markdown table", "medicine table");
+  const medicineTitle = "成人の脱水・体液状態評価の基礎";
+  await openFixture(medicineTitle);
+  const medicineOverview = await rendererApp.text();
+  for (const japanese of [
+    "体液の基礎から所見の統合へ",
+    "体液区分と水の移動",
+    "水分・電解質の喪失と体液量の変化",
+    "身体所見と経時変化の読み取り",
+    "複数の情報から体液状態を考える",
+    "細胞内液・間質液・血漿の位置関係を説明し",
+    "体液状態について妥当な推論と未確定事項",
+  ]) {
+    assert(medicineOverview.includes(japanese), `medicine overview shows Japanese metadata: ${japanese}`);
+  }
+  for (const legacy of [
+    "Fluid balance",
+    "Vital signs",
+    "Explain intake and output",
+    "Interpret a vital-sign trend in context",
+    "Original fictional pressure-test text",
+    "架空ケースで、最初に行う推論として最も適切なのはどれですか？",
+  ]) {
+    assert(!medicineOverview.includes(legacy), `medicine overview omits legacy text: ${legacy}`);
+  }
+
+  await rendererApp.clickText("体液はどこに分布するか", "open the body-compartment resource");
+  await rendererApp.waitForSelector(".markdown table", "medicine compartment table");
   assert(
     await rendererApp.evaluate('document.querySelector(".table-scroll") !== null'),
-    "medicine resource table is in a scrollable wrapper",
+    "medicine table is in a scrollable wrapper",
   );
+  const compartmentText = await rendererApp.text();
+  assert(compartmentText.includes("細胞内液"), "resource body is Japanese learning content");
+  assert(!compartmentText.includes("Original fictional pressure-test text"), "resource omits pressure-test attribution");
+  await rendererApp.click(".resource-references summary", "expand resource references");
+  const publicSources = await rendererApp.evaluate(`(() => ({
+    text: document.querySelector(".resource-references")?.innerText ?? "",
+    links: document.querySelectorAll(".resource-references a").length,
+    visible: [...(document.querySelectorAll(".resource-references li") ?? [])].map(item => item.dataset.sourceVisibility),
+  }))()`);
+  assert(publicSources.text.includes("体液区分（OpenStax『解剖生理学』第26.1節）"), "public source title appears from source_ids");
+  assert(publicSources.text.includes("https://openstax.org/books/anatomy-and-physiology-2e/pages/26-1-body-fluids-and-fluid-compartments"), "public source locator is shown as text");
+  assert(publicSources.links === 0, "source locator is not a Package-controlled navigation link");
+  assert(publicSources.visible.includes("public"), "public visibility reaches the Resource view");
   await rendererApp.send("Emulation.setDeviceMetricsOverride", {
     width: 390,
     height: 900,
@@ -789,6 +841,56 @@ async function main() {
   );
   await rendererApp.send("Emulation.clearDeviceMetricsOverride");
   await rendererApp.clickText("目次へ", "return to medicine outline");
+
+  await rendererApp.clickText("症例の情報を統合する", "open the case-integration resource");
+  await rendererApp.click(".resource-references summary", "expand integration references");
+  const sourceVisibility = await rendererApp.evaluate(`(() => ({
+    text: document.querySelector(".resource-references")?.innerText ?? "",
+    items: [...document.querySelectorAll(".resource-references li")].map(item => ({
+      text: item.innerText,
+      visibility: item.dataset.sourceVisibility,
+      hasLink: item.querySelector("a") !== null,
+    })),
+  }))()`);
+  const niceSource = sourceVisibility.items.find(item => item.visibility === "attribution_only");
+  assert(niceSource !== undefined, "attribution-only source is present for its Resource");
+  assert(niceSource.text.includes("臨床指針CG174"), "attribution citation is shown");
+  assert(!niceSource.text.includes("https://www.nice.org.uk/guidance/cg174"), "attribution locator is hidden");
+  assert(
+    await rendererApp.evaluate('!document.documentElement.outerHTML.includes("https://www.nice.org.uk/guidance/cg174")'),
+    "attribution locator is absent from the DOM",
+  );
+  assert(!niceSource.hasLink, "attribution source has no link");
+  assert(!sourceVisibility.text.includes("執筆者向け非公開メモ"), "private source title is absent");
+  assert(!sourceVisibility.text.includes("制作記録。配布・学習者表示の対象外。"), "private source citation is absent");
+  assert(!sourceVisibility.text.includes("../../docs/MEDICINE_PACKAGE_REVIEW.md"), "private source locator is absent from visible references");
+  assert(
+    await rendererApp.evaluate('!document.documentElement.outerHTML.includes("../../docs/MEDICINE_PACKAGE_REVIEW.md")'),
+    "private source locator is absent from the DOM",
+  );
+  await rendererApp.clickText("目次へ", "return to medicine curriculum");
+
+  const medicineAssessmentText = "成人が数日間の水様便と摂取低下";
+  await rendererApp.clickTextStartingWith(medicineAssessmentText, "open the medicine assessment");
+  await rendererApp.waitForSelector("#assessment-heading", "medicine assessment");
+  const assessmentText = await rendererApp.text();
+  assert(assessmentText.includes("血清ナトリウム濃度"), "medicine assessment asks for application");
+  assert(!assessmentText.includes("架空ケースで、最初に行う推論として最も適切なのはどれですか？"), "generic pressure-test question is absent");
+  await rendererApp.click("button[aria-label=\"進捗\"]", "open Japanese medicine progress");
+  await rendererApp.waitForSelector("#progress-heading", "Japanese medicine progress panel");
+  const medicineProgress = await rendererApp.text();
+  for (const objective of [
+    "細胞内液・間質液・血漿の位置関係を説明し",
+    "水分喪失とナトリウムを含む細胞外液喪失を区別し",
+    "病歴、身体所見、バイタルサイン",
+    "体液状態について妥当な推論と未確定事項",
+  ]) {
+    assert(medicineProgress.includes(objective), `progress shows Japanese objective: ${objective}`);
+  }
+  assert(!medicineProgress.includes("Explain intake and output"), "progress omits English legacy objectives");
+  assert(!medicineProgress.includes("Objective"), "Japanese progress panel omits English objective labels");
+  await rendererApp.click("button[aria-label=\"目次を表示\"]", "return from medicine progress");
+  await rendererApp.waitForSelector("#lesson-heading", "medicine curriculum after progress");
 
   await openFixture("Probability and conditional reasoning");
   await rendererApp.clickText("Conditional probability", "open math resource");
