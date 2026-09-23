@@ -20,7 +20,7 @@ Osmium records evidence and supports audit. It does not decide whether a use is 
 
 ## Design motivation
 
-Note-taking tools help organize knowledge, and flashcard tools help with recall practice; neither category alone provides a structured learning runtime for reusable curricula, resources, assessments, and progress. Osmium explores an open infrastructure where individuals, educators, institutions, and specialist communities can build, inspect, share, or privately manage learning packages. Open packages can reduce access barriers, while organizations can use the same format for their own materials. The project does not require commercial education to be excluded.
+Tools such as Obsidian help organize knowledge, and Anki helps with recall practice; neither category alone provides a structured learning runtime for reusable curricula, resources, assessments, and progress. Osmium explores an open infrastructure where individuals, educators, institutions, and specialist communities can build, inspect, share, or privately manage learning packages. Open packages can reduce access barriers for learners who cannot readily access tutoring or costly study materials, while organizations can use the same format for their own materials. The project does not require commercial education to be excluded.
 
 AI may reduce the cost of organizing permitted knowledge sources into reusable learning material. Generated content still needs source tracking, cross-checking, and human review. Osmium does not include an AI generation service or automatic rights assessment.
 

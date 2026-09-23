@@ -9,7 +9,12 @@
     ],
     "creator": "Osmium sample authors",
     "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text"
+    "attribution": "Original fictional pressure-test text",
+    "source": "https://www.who.int/news-room/fact-sheets/detail/drinking-water",
+    "provenance": {
+      "content_origin": "original sample text",
+      "human_review": "sample metadata only"
+    }
   },
   {
     "id": "vitals.lesson",
@@ -21,7 +26,12 @@
     ],
     "creator": "Osmium sample authors",
     "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text"
+    "attribution": "Original fictional pressure-test text",
+    "source": "https://www.who.int/news-room/fact-sheets/detail/drinking-water",
+    "provenance": {
+      "content_origin": "original sample text",
+      "human_review": "sample metadata only"
+    }
   },
   {
     "id": "reasoning.lesson",
@@ -33,6 +43,11 @@
     ],
     "creator": "Osmium sample authors",
     "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text"
+    "attribution": "Original fictional pressure-test text",
+    "source": "https://www.who.int/news-room/fact-sheets/detail/drinking-water",
+    "provenance": {
+      "content_origin": "original sample text",
+      "human_review": "sample metadata only"
+    }
   }
 ]

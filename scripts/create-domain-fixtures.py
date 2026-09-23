@@ -65,7 +65,11 @@ for slug, d in domains.items():
     for id,title,body in d["resources"]:
         path=f"content/{id}.md"; (root/path).write_text(f"# {title}\n\n{body}\n", encoding="utf-8")
         teaches=[o[0] for o in d["objectives"] if o[1]==id]
-        resources.append({"id":f"{id}.lesson","type":"markdown","title":title,"path":path,"teaches":teaches,"creator":"Osmium sample authors","license":"CC0-1.0","attribution":"Original fictional pressure-test text"})
+        resource={"id":f"{id}.lesson","type":"markdown","title":title,"path":path,"teaches":teaches,"creator":"Osmium sample authors","license":"CC0-1.0","attribution":"Original fictional pressure-test text"}
+        if slug == "medicine":
+            resource["source"] = "https://www.who.int/news-room/fact-sheets/detail/drinking-water"
+            resource["provenance"] = {"content_origin":"original sample text", "human_review":"sample metadata only"}
+        resources.append(resource)
     covered = {o[1] for o in d["objectives"] if any(o[0] in r["teaches"] for r in resources)}
     objective_concepts = {o[1] for o in d["objectives"]}
     for concept_id, concept_title, _ in d["concepts"]:
