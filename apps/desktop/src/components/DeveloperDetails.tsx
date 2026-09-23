@@ -1,15 +1,18 @@
 import type { ReactNode } from "react";
+import { localize, useUiLanguage } from "../i18n.ts";
 
 export function DeveloperDetails({
   children,
-  label = "技術情報",
+  label,
 }: {
   children: ReactNode;
   label?: string;
 }) {
+  const language = useUiLanguage();
+  const summary = label ?? localize(language, "技術情報", "Technical details");
   return (
     <details className="developer-details">
-      <summary>{label}</summary>
+      <summary>{summary}</summary>
       <div className="details-body">{children}</div>
     </details>
   );

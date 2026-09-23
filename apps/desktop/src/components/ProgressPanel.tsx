@@ -1,6 +1,7 @@
 import type { ObjectiveProgress } from "../types.ts";
 import { ArrowLeft, ChartNoAxesColumnIncreasing } from "lucide-react";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
+import { localize, useUiLanguage } from "../i18n.ts";
 
 export function ProgressPanel({
   progress,
@@ -15,6 +16,8 @@ export function ProgressPanel({
   onBack: () => void;
   busy: boolean;
 }) {
+  const language = useUiLanguage();
+  const tr = (ja: string, en: string) => localize(language, ja, en);
   const totalAttempts = progress.reduce((sum, item) => sum + item.attempts, 0);
   const totalCorrect = progress.reduce((sum, item) => sum + item.correct, 0);
   return (
@@ -22,51 +25,51 @@ export function ProgressPanel({
       <div className="panel-head">
         <div>
           <p className="eyebrow">YOUR PROGRESS</p>
-          <h1 id="progress-heading">学びの進捗</h1>
-          <p className="lede">これまでの回答を、学習目標ごとに振り返ります。</p>
+          <h1 id="progress-heading">{tr("進捗", "Progress")}</h1>
+          <p className="lede">{tr("Objectiveごとの回答記録です。", "Answer records by objective.")}</p>
         </div>
         <button onClick={onBack} disabled={busy}>
-          <ArrowLeft size={16} aria-hidden="true" />目次へ
+          <ArrowLeft size={16} aria-hidden="true" />{tr("目次へ", "Back to contents")}
         </button>
       </div>
       <div className="stats">
         <div className="stat">
-          <span><ChartNoAxesColumnIncreasing size={16} aria-hidden="true" />回答数（延べ）</span>
+          <span><ChartNoAxesColumnIncreasing size={16} aria-hidden="true" />{tr("回答数（延べ）", "Attempts (total)")}</span>
           <strong>
             {totalAttempts}
-            <small> 件</small>
+            <small> {tr("件", "items")}</small>
           </strong>
         </div>
         <div className="stat">
-          <span>正答数（延べ）</span>
+          <span>{tr("正答数（延べ）", "Correct (total)")}</span>
           <strong>
             {totalCorrect}
-            <small> 件</small>
+            <small> {tr("件", "items")}</small>
           </strong>
         </div>
       </div>
       <p className="meta">
-        学習目標ごとの観測値の合計です。複数の目標に対応する回答は、それぞれに数えられます。
+        {tr("複数Objectiveに対応する回答は、それぞれに集計されます。", "Attempts measuring multiple objectives are counted for each objective.")}
       </p>
-      <h2 className="section-heading">学習目標ごとの記録</h2>
+      <h2 className="section-heading">{tr("Objectiveごとの記録", "Records by objective")}</h2>
       {progress.length === 0 ? (
         <p className="empty card">
-          まだ進捗の記録がありません。問題に回答すると、ここで振り返れます。
+          {tr("記録はまだありません。問題に回答すると、ここに表示されます。", "No records yet. Answer a question to see progress here.")}
         </p>
       ) : (
         <ul className="progress-list">
           {progress.map((item) => (
             <li className="card" key={item.objective_id}>
-              <h3>{objectives.get(item.objective_id) ?? "学習目標"}</h3>
+              <h3>{objectives.get(item.objective_id) ?? tr("学習目標", "Objective")}</h3>
               <div className="progress-summary">
                 <strong className="accuracy">
                   {item.accuracy === null
                     ? "—"
                     : `${Math.round(item.accuracy * 100)}%`}
-                  <small> 正答率</small>
+                  <small> {tr("正答率", "accuracy")}</small>
                 </strong>
                 <span>
-                  {item.correct}/{item.attempts} 正答
+                  {item.correct}/{item.attempts} {tr("正答", "correct")}
                 </span>
               </div>
               {item.accuracy !== null ? (
@@ -74,18 +77,18 @@ export function ProgressPanel({
                   min={0}
                   max={1}
                   value={item.accuracy}
-                  aria-label={`${objectives.get(item.objective_id) ?? "学習目標"}の正答率`}
+                  aria-label={tr(`${objectives.get(item.objective_id) ?? "学習目標"}の正答率`, `Accuracy for ${objectives.get(item.objective_id) ?? "Objective"}`)}
                 >
                   {Math.round(item.accuracy * 100)}%
                 </meter>
               ) : (
-                <p className="meta">まだ回答なし</p>
+                <p className="meta">{tr("まだ回答なし", "No attempts")}</p>
               )}
               <p className="meta">
-                最終回答:{" "}
+                {tr("最終回答:", "Last answer:")}{" "}
                 {item.last_timestamp ? (
                   <time dateTime={item.last_timestamp}>
-                    {new Date(item.last_timestamp).toLocaleString("ja-JP")}
+                    {new Date(item.last_timestamp).toLocaleString(language === "ja" ? "ja-JP" : "en-US")}
                   </time>
                 ) : (
                   "—"
@@ -100,12 +103,12 @@ export function ProgressPanel({
         </ul>
       )}
       <p className="meta">
-        保存済みの回答を集計した記録です。習得を保証するものではありません。
+        {tr("保存済みの回答記録です。習得を保証するものではありません。", "Observed answer records; they do not guarantee mastery.")}
       </p>
-      <DeveloperDetails label="メンテナンス">
-        <p>保存済みイベントから進捗表示を再構築します。</p>
+      <DeveloperDetails label={tr("メンテナンス", "Maintenance")}>
+        <p>{tr("保存済みEventから進捗を再構築します。", "Rebuild progress from saved events.")}</p>
         <button onClick={onRebuild} disabled={busy}>
-          イベントから再構築
+          {tr("イベントから再構築", "Rebuild from events")}
         </button>
       </DeveloperDetails>
     </section>

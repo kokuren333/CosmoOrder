@@ -69,8 +69,8 @@ test("lesson exposes package hierarchy with absent optional metadata", async () 
   }));
   assert.match(html, /CONCEPT · 学ぶテーマ/);
   assert.match(html, /OBJECTIVE · 学習目標/);
-  assert.match(html, /RESOURCE · 読んで理解する/);
-  assert.match(html, /ASSESSMENT · 問題で確かめる/);
+  assert.match(html, /RESOURCE · 読む/);
+  assert.match(html, /ASSESSMENT · 確かめる/);
   assert.match(html, /<h1 id="lesson-heading">Sample<\/h1>/);
 });
 
@@ -108,7 +108,7 @@ test("shell marks the current learning context and disables course navigation wi
   const html = renderToStaticMarkup(createElement(AppShell, props));
   assert.match(html, /aria-label="目次を表示" aria-current="page"/);
   assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
-  assert.match(html, /aria-pressed="true">文字 200%/);
+  assert.match(html, /aria-pressed="true">200%/);
   const english = renderToStaticMarkup(createElement(AppShell, { ...props, language: "en" as const }));
   assert.match(english, /Skip to content/);
   assert.match(english, /Library/);

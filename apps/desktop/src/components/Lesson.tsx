@@ -16,6 +16,7 @@ import {
 import type { ConceptNode } from "../outline.ts";
 import type { LessonView, ObjectiveProgress } from "../types.ts";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
+import { localize, useUiLanguage } from "../i18n.ts";
 
 export function Lesson({
   lesson,
@@ -30,6 +31,8 @@ export function Lesson({
   onOpenResource: (id: string) => void;
   onOpenAssessment: (id: string) => void;
 }) {
+  const language = useUiLanguage();
+  const tr = (ja: string, en: string) => localize(language, ja, en);
   const [query, setQuery] = useState("");
   const view = outline(lesson);
   const found = search(lesson, query);
@@ -37,7 +40,7 @@ export function Lesson({
   const progressById = new Map(
     progress.map((item) => [item.objective_id, item]),
   );
-  const questionTitle = (id: string) => lesson.stimuli[id]?.text || "練習問題";
+  const questionTitle = (id: string) => lesson.stimuli[id]?.text || tr("練習問題", "Practice question");
   const conceptCard = (node: ConceptNode, index: number) => (
     <article className="concept card" key={node.concept.id}>
       <div className="concept-head">
@@ -45,16 +48,16 @@ export function Lesson({
           {String(index + 1).padStart(2, "0")}
         </span>
         <div>
-          <p className="eyebrow">CONCEPT · 学ぶテーマ</p>
+          <p className="eyebrow">CONCEPT · {tr("学ぶテーマ", "Topic")}</p>
           <h3>{node.concept.title}</h3>
           {node.concept.requires.length > 0 ? (
             <p className="meta">
-              前提となるテーマ:{" "}
+              {tr("前提となるConcepts:", "Prerequisite concepts:")}{" "}
               {node.concept.requires
                 .map(
                   (id) =>
                     lesson.concepts.find((c) => c.id === id)?.title ??
-                    "未指定のテーマ",
+                    tr("未指定のテーマ", "Unspecified concept"),
                 )
                 .join("、")}
             </p>
@@ -70,27 +73,27 @@ export function Lesson({
             <li key={objective.id}>
               <div className="objective">
                 <div>
-                  <p className="eyebrow">OBJECTIVE · 学習目標</p>
+                  <p className="eyebrow">OBJECTIVE · {tr("学習目標", "Learning objective")}</p>
                   <h4>{objective.description}</h4>
                 </div>
                 <span className="badge">
                   {!observed || observed.attempts === 0
-                    ? "まだ回答なし"
-                    : `${observed.correct}/${observed.attempts} 正答`}
+                    ? tr("まだ回答なし", "No attempts")
+                    : `${observed.correct}/${observed.attempts} ${tr("正答", "correct")}`}
                 </span>
               </div>
               <div className="learning-actions">
                 <section>
-                  <h5><BookOpenText size={16} aria-hidden="true" />RESOURCE · 読んで理解する</h5>
+                  <h5><BookOpenText size={16} aria-hidden="true" />RESOURCE · {tr("読む", "Read")}</h5>
                   {resources.length === 0 ? (
-                    <p className="meta">この目標の読み物はありません。</p>
+                    <p className="meta">{tr("関連するResourceはありません。", "No related resources.")}</p>
                   ) : (
                     resources.map((resource) => (
                       <button
                         className="learning-link"
                         key={resource.id}
                         disabled={busy}
-                        aria-label={`教材を開く:${resource.title}`}
+                        aria-label={tr(`教材を開く:${resource.title}`, `Open resource: ${resource.title}`)}
                         onClick={() => onOpenResource(resource.id)}
                       >
                         <span>{resource.title}</span>
@@ -100,16 +103,16 @@ export function Lesson({
                   )}
                 </section>
                 <section>
-                  <h5><ClipboardCheck size={16} aria-hidden="true" />ASSESSMENT · 問題で確かめる</h5>
+                  <h5><ClipboardCheck size={16} aria-hidden="true" />ASSESSMENT · {tr("確かめる", "Check")}</h5>
                   {assessments.length === 0 ? (
-                    <p className="meta">この目標の問題はありません。</p>
+                    <p className="meta">{tr("関連するAssessmentはありません。", "No related assessments.")}</p>
                   ) : (
                     assessments.map((assessment) => (
                       <button
                         className="learning-link"
                         key={assessment.id}
                         disabled={busy}
-                        aria-label={`問題を開く:${questionTitle(assessment.id)}`}
+                        aria-label={tr(`問題を開く:${questionTitle(assessment.id)}`, `Open assessment: ${questionTitle(assessment.id)}`)}
                         onClick={() => onOpenAssessment(assessment.id)}
                       >
                         <span className="question-preview">
@@ -147,11 +150,9 @@ export function Lesson({
         <div>
           <p className="eyebrow">PACKAGE OVERVIEW</p>
           <h1 id="lesson-heading">{lesson.manifest.title}</h1>
-          <p className="meta">
-            {lesson.manifest.language} · バージョン {lesson.package_version}
-          </p>
+          <p className="meta">{lesson.manifest.language} · {tr("バージョン", "Version")} {lesson.package_version}</p>
           <p className="meta">{lesson.concepts.length} Concepts · {lesson.objectives.length} Objectives · {lesson.resources.length} Resources · {lesson.assessments.length} Assessments</p>
-          <p>Concept → Objective → Resource / Assessment の関係を確認できます。</p>
+          <p>{tr("Concept → Objective → Resource / Assessmentの関係", "Concept → Objective → Resource / Assessment relationships")}</p>
         </div>
         {first ? (
           <div>
@@ -160,29 +161,29 @@ export function Lesson({
               disabled={busy}
               onClick={() => onOpenResource(first.id)}
             >
-              最初の教材を読む <ArrowRight size={17} aria-hidden="true" />
+              {tr("最初の教材を読む", "Read first resource")} <ArrowRight size={17} aria-hidden="true" />
             </button>
-            <p className="meta">目次に沿って表示しています</p>
+            <p className="meta">{tr("カリキュラム順に表示", "Ordered by curriculum")}</p>
           </div>
         ) : null}
       </header>
       <label className="field search-field">
-        <span><Search size={15} aria-hidden="true" />教材を検索</span>
+        <span><Search size={15} aria-hidden="true" />{tr("教材を検索", "Search package")}</span>
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="テーマ・教材名・ID"
+          placeholder={tr("テーマ・教材名・ID", "Concept, title, or ID")}
         />
       </label>
       {query.trim() !== "" ? (
         <div className="search-results card" aria-live="polite">
-          <h2>検索結果</h2>
+          <h2>{tr("検索結果", "Search results")}</h2>
           <p>
             {found.resources.length +
               found.concepts.length +
               found.assessments.length}{" "}
-            件
+            {tr("件", "results")}
           </p>
           <ul>
             {found.concepts.map((concept) => (
@@ -214,15 +215,14 @@ export function Lesson({
       {view.curricula.map((node) => (
         <section className="curriculum" key={node.curriculum.id}>
           <div className="section-heading">
-            <p className="eyebrow">カリキュラム</p>
+            <p className="eyebrow">{tr("カリキュラム", "Curriculum")}</p>
             <h2>{node.curriculum.title}</h2>
-            <p className="meta">{node.concepts.length} のテーマ</p>
+            <p className="meta">{node.concepts.length} {tr("Concepts", "concepts")}</p>
           </div>
           {node.concepts.map(conceptCard)}
           {node.orphan_objectives.length > 0 ? (
             <p className="warning">
-              テーマを特定できない学習目標が {node.orphan_objectives.length}{" "}
-              件あります。
+              {tr("Concept未指定のObjective:", "Objectives without a concept:")} {node.orphan_objectives.length}
             </p>
           ) : null}
           <DeveloperDetails>
@@ -232,11 +232,11 @@ export function Lesson({
       ))}
       {view.unlisted_concepts.length > 0 ? (
         <section className="curriculum">
-          <h2>その他のテーマ</h2>
+          <h2>{tr("その他のConcepts", "Other concepts")}</h2>
           {view.unlisted_concepts.map(conceptCard)}
         </section>
       ) : null}
-      <DeveloperDetails label="教材の技術情報">
+      <DeveloperDetails label={tr("教材の技術情報", "Package details")}>
         <dl>
           <dt>Package ID</dt>
           <dd>{lesson.package_id}</dd>

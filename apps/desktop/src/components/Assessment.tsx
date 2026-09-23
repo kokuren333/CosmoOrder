@@ -3,6 +3,7 @@ import { ArrowLeft, CircleCheck, CircleX, ArrowRight } from "lucide-react";
 import { Markdown } from "./Markdown.ts";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
 import type { Assessment, AttemptView, MarkdownView } from "../types.ts";
+import { localize, useUiLanguage } from "../i18n.ts";
 
 export function AssessmentView({
   assessment,
@@ -30,6 +31,8 @@ export function AssessmentView({
   total: number;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
+  const language = useUiLanguage();
+  const tr = (ja: string, en: string) => localize(language, ja, en);
   const feedbackHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (attempt !== null) feedbackHeading.current?.focus();
@@ -39,25 +42,25 @@ export function AssessmentView({
     assessment.response.type === "single_select"
       ? assessment.response.options
       : [
-          { id: "true", text: "はい" },
-          { id: "false", text: "いいえ" },
+          { id: "true", text: tr("はい", "Yes") },
+          { id: "false", text: tr("いいえ", "No") },
         ];
   return (
     <article className="assessment" aria-labelledby="assessment-heading">
       <div className="panel-head">
         <button className="ghost" onClick={onBack} disabled={busy}>
-          <ArrowLeft size={16} aria-hidden="true" />目次へ
+          <ArrowLeft size={16} aria-hidden="true" />{tr("目次へ", "Back to contents")}
         </button>
         <p className="meta">
-          問題 {position} / {total}
+          {tr("問題", "Question")} {position} / {total}
         </p>
       </div>
       <div className="question-surface">
         <p className="eyebrow">PRACTICE</p>
-        <h1 id="assessment-heading">問題で確かめる</h1>
+        <h1 id="assessment-heading">{tr("問題で確かめる", "Assessment")}</h1>
         <div className="stimulus">
           {stimulus === null ? (
-            <p className="empty">問題文を読み込めませんでした。</p>
+            <p className="empty">{tr("問題文を読み込めませんでした。", "Could not load the question.")}</p>
           ) : (
             <Markdown markdown={stimulus.markdown} />
           )}
@@ -75,7 +78,7 @@ export function AssessmentView({
           }}
         >
           <fieldset disabled={answered || busy}>
-            <legend>回答をひとつ選んでください</legend>
+            <legend>{tr("回答をひとつ選んでください", "Choose one answer")}</legend>
             {options.map((option, index) => (
               <label
                 className={`option${selected === option.id ? " selected" : ""}`}
@@ -93,7 +96,7 @@ export function AssessmentView({
                 </span>
                 <span className="option-text">{option.text}</span>
                 {selected === option.id ? (
-                  <span className="selection-label">選択中</span>
+                  <span className="selection-label">{tr("選択中", "Selected")}</span>
                 ) : null}
               </label>
             ))}
@@ -105,14 +108,14 @@ export function AssessmentView({
                 type="submit"
                 disabled={selected === null || busy || stimulus === null}
               >
-                {busy ? "採点中…" : "採点する"}
+                {busy ? tr("採点中…", "Checking…") : tr("採点する", "Submit answer")}
               </button>
               <span className="meta" role="status">
                 {selected === null
-                  ? "選択してから採点できます"
+                  ? tr("選択してから採点できます", "Choose an answer to continue")
                   : busy
-                    ? "回答を保存しています"
-                    : "選択した回答を送信します"}
+                    ? tr("回答を保存しています", "Saving answer")
+                    : tr("選択した回答を送信します", "Submit the selected answer")}
               </span>
             </div>
           ) : null}
@@ -127,20 +130,20 @@ export function AssessmentView({
           >
             <h2 id="feedback-heading" ref={feedbackHeading} tabIndex={-1}>
               {attempt.correct ? <CircleCheck size={22} aria-hidden="true" /> : <CircleX size={22} aria-hidden="true" />}
-              {attempt.correct ? "正解" : "不正解"}
+              {attempt.correct ? tr("正解", "Correct") : tr("不正解", "Incorrect")}
             </h2>
             <Markdown markdown={attempt.feedback_content.markdown} />
             <p>
               {attempt.replayed
-                ? "記録済みの回答を表示しています。"
-                : "回答を保存しました。"}
+                ? tr("記録済みの回答を表示しています。", "Showing the recorded answer.")
+                : tr("回答を保存しました。", "Answer saved.")}
             </p>
             <button
               className="primary"
               disabled={busy}
               onClick={hasNext ? onNext : onShowProgress}
             >
-              {hasNext ? <>次の問題 <ArrowRight size={16} aria-hidden="true" /></> : <>進捗を確認する <ArrowRight size={16} aria-hidden="true" /></>}
+              {hasNext ? <>{tr("次の問題", "Next question")} <ArrowRight size={16} aria-hidden="true" /></> : <>{tr("進捗を確認する", "View progress")} <ArrowRight size={16} aria-hidden="true" /></>}
             </button>
           </section>
         ) : null}

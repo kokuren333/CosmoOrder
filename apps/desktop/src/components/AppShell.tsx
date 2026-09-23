@@ -53,7 +53,7 @@ export function AppShell({
           className="brand ghost"
           onClick={onLibrary}
           disabled={busy}
-          aria-label="Osmium ライブラリへ"
+          aria-label={`Osmium ${t("library")}`}
         >
           <span className="brand-mark">
             <BrandGem />
@@ -74,14 +74,14 @@ export function AppShell({
                   aria-pressed={scale === value}
                   onClick={() => onScale(value)}
                 >
-                  文字 {value * 100}%
+                  {value * 100}%
                 </button>
               ))}
             </div>
           </details>
         </div>
       </header>
-      <nav className="app-nav" aria-label="メインナビゲーション">
+      <nav className="app-nav" aria-label={language === "ja" ? "メインナビゲーション" : "Main navigation"}>
         <button
           aria-current={section === "packages" ? "page" : undefined}
           onClick={onLibrary}
