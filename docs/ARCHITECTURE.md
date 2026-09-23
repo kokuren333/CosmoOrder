@@ -1,6 +1,6 @@
 # Osmium Architecture
 
-状態: 最小v1の設計。`osmium-core::schema` の構造検証と診断DTO、`parsing::parse_json` の制限付きJSON解析、`validation::validate_package` の意味検証を実装済み。他の操作境界は後続Phaseで実装する。公開API保証ではない。
+状態: 最小v1の当初設計と現行実装の境界を記録する。Phase表記の一部は履歴であり、各操作の現在状態は本文およびREADMEを参照。公開API保証ではない。
 
 現在の `PackageDocuments` は未検証のJSON文書集合、`PackageModel` は構造・意味検証を通過した読取り専用モデル。元のextensionsも保持する。モデル生成はファイルの存在や実際のsymlink安全性を証明しないため、filesystem adapterの検証完了前にinstall可能と扱わない。`prerequisite_order` は循環検証用の前提順序であり、Curriculumの順序や習熟推定を置換しない。
 
@@ -54,6 +54,21 @@ Phase 2bでは `osmium-core::query`（inspect/query/context）と `osmium-core::
 | install（I/O層） | local distribution + trusted library root → immutable install record |
 | submit_attempt（application） | item identity + response + request ID → atomic event + projection |
 | export_state（store） | event log → versioned JSONL（バックアップ時は整合したsnapshot） |
+
+## Content rendering boundary
+
+```text
+Learning Package Markdown
+  → osmium-package reads and validates the referenced resource
+  → osmium-core::content::compile_markdown
+  → renderer-neutral Content { blocks: Vec<Block> }
+  → Desktop IPC ContentView / ResourceView DTO
+  → React renderer builds nodes from Block / Span
+```
+
+`osmium-core::content` is the only Markdown parser and owns the semantic conversion. `Block` models headings, paragraphs, lists and list items, quotes, code, math, tables, inert HTML text and rules; `Span` models text, inline code, emphasis, strong, strikethrough, math and classified links. Images reduce to their alt text because the current package schema has no typed asset reference. The DTO sent to Desktop carries the compiled `Content`, not a second Markdown string. **RuntimeごとにMarkdown parserを持たせない。** Web/mobile or a future preview can consume the same Core IR rather than independently reinterpret package text.
+
+The IR contains no React, DOM, HTML, KaTeX output, syntax-highlighter output or renderer class names. Core classifies link targets: only `http`, `https`, and `mailto` schemes remain absolute links; package-relative links must be plain contained paths; absolute filesystem paths, traversal, schemes such as `javascript:`, `data:`, and `file:`, and malformed destinations lose their link target while retaining readable label text. Raw HTML remains literal inert text. Desktop renders these nodes with React; KaTeX and lowlight decorate only typed TeX/code values, and package code is never executed. KaTeX's generated output is converted into React nodes with bounded rendering options; package-authored HTML is never sent to an HTML parser or sink.
 
 Packageが指定するpathを直接OS APIに渡さない。GUIは受理済みpackage/entity IDを指定し、任意pathをIPC経由で読み出せない。問題のcorrect answerはローカル教材に含むため、試験の不正防止基盤とは位置づけない。
 

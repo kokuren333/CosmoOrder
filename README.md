@@ -14,6 +14,10 @@ Osmiumは、教材を、機械が読め、人間が監査でき、AI agentも改
 
 Packageに個人の回答履歴は書き込みません。`validate` は構造と参照の整合性を確認し、`lint` は教材の網羅性を警告します。どちらも教育的正確性や専門家の確認を保証しません。
 
+## 本文のレンダリング境界
+
+Package本文はPackage層が安全に読み込み、Coreの`compile_markdown`が一度だけ型付きContent IRへ変換します。Desktopへ渡す本文DTOはこのIRを含み、DesktopはMarkdown sourceを再解析しません。Runtimeは共通IRを描画し、数学やコードの装飾だけを表示層で行います。raw HTMLは不活性な文字列として扱い、Package内コードは実行しません。RuntimeごとにMarkdown parserを持たせないことを設計原則とします。詳しくは[アーキテクチャ](docs/ARCHITECTURE.md#content-rendering-boundary)を参照してください。
+
 ## 設計文書
 
 - [実装計画・フェーズと検証条件](docs/IMPLEMENTATION_PLAN.md)
