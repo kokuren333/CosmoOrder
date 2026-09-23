@@ -10,7 +10,7 @@ domains = {
         "language": "en",
         "concepts": [("fluid", "Fluid balance", []), ("vitals", "Vital signs", ["fluid"]), ("assessment", "Clinical assessment", ["vitals"]), ("reasoning", "Integrated reasoning", ["assessment"])],
         "resources": [
-            ("fluid", "Fluid balance", "Fluid balance describes intake, distribution, and loss. A deficit can reduce circulating volume.\n\n| Term | Meaning |\n|---|---|\n| Intake | Water and electrolytes received |\n| Output | Measured or estimated loss |\n\n**Dehydration** is a clinical state; a single sign does not establish its cause. Sources: [WHO public guidance](https://www.who.int/news-room/fact-sheets/detail/drinking-water). Creator: Osmium sample authors; license: CC0-1.0; original educational text."),
+            ("fluid", "Fluid balance", "Fluid balance describes intake, distribution, and loss. A deficit can reduce circulating volume.\n\n| Term | Meaning | Clinical context |\n|---|---|---|\n| Intake | Water and electrolytes received | Food and fluids consumed by mouth or enteral route |\n| Output | Measured or estimated loss | Urine, gastrointestinal losses, and other documented routes |\n\n**Dehydration** is a clinical state; a single sign does not establish its cause. Sources: [WHO public guidance](https://www.who.int/news-room/fact-sheets/detail/drinking-water). Creator: Osmium sample authors; license: CC0-1.0; original educational text."),
             ("vitals", "Vital signs", "Temperature, pulse, blood pressure, and respiratory rate provide context. Interpret trends with history and examination; measurement error and patient context matter.\n\n> A finding is evidence, not a diagnosis."),
             ("reasoning", "Case assessment", "A hypothetical adult reports two days of vomiting and dizziness on standing. Document uncertainty, assess stability, and seek qualified clinical supervision. This fictional case is for learning, not care guidance."),
         ],
@@ -44,7 +44,7 @@ domains = {
         "title": "Reading safe program output", "language": "en",
         "concepts": [("values", "Values and expressions", []), ("errors", "Error messages", ["values"]), ("diffs", "Code review diffs", ["errors"])],
         "resources": [
-            ("values", "Inspecting code as text", "The inline expression `2 + 2` evaluates in many languages, but Osmium displays package code and never executes it.\n\n```python\nmessage = \"hello\"\nprint(message)\n```\n\nLong lines remain horizontally scrollable: `result = transform(input_value, configuration, optional_context, validation_mode)`."),
+            ("values", "Inspecting code as text", "The inline expression `2 + 2` evaluates in many languages, but Osmium displays package code and never executes it.\n\n```python\nmessage = \"hello\"\nprint(message)\nresult = transform(input_value, configuration, optional_context, validation_mode, required_context, audit_metadata)\n```\n\nLong lines remain horizontally scrollable."),
             ("errors", "Output and errors", "Console output is evidence about a run, not proof of correctness.\n\n```text\n$ python example.py\nhello\nTraceback (most recent call last):\n  ValueError: invalid input\n```\n\nHTML/XML source is shown as code: `<img src=x onerror=alert(1)>` and `&lt;node attr=\"x\"/&gt;`."),
             ("diffs", "Reviewing a diff", "```diff\n- timeout = 10\n+ timeout = 20\n```\n\nA diff communicates proposed text changes; it does not apply or run them."),
         ],

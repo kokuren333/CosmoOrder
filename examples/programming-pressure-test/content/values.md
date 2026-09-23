@@ -5,6 +5,7 @@ The inline expression `2 + 2` evaluates in many languages, but Osmium displays p
 ```python
 message = "hello"
 print(message)
+result = transform(input_value, configuration, optional_context, validation_mode, required_context, audit_metadata)
 ```
 
-Long lines remain horizontally scrollable: `result = transform(input_value, configuration, optional_context, validation_mode)`.
+Long lines remain horizontally scrollable.

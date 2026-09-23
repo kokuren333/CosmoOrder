@@ -733,6 +733,116 @@ async function main() {
   await restarted.stop();
   pass("the application shut down again");
 
+  // 9. Render all four domain pressure-test packages in the real WebView.
+  const domains = ["medicine", "mathematics", "language", "programming"];
+  for (const domain of domains) {
+    const sourcePath = join(options.repo, "examples", `${domain}-pressure-test`);
+    const outputPath = join(home, `${domain}-pressure-test.osmium`);
+    const domainBuild = cli(["build", sourcePath, "--output", outputPath]);
+    assert(domainBuild.payload?.ok === true, `${domain}: package builds`);
+    const domainInstall = cli(["install", outputPath, "--json"]);
+    assert(domainInstall.payload?.ok === true, `${domain}: package installs`);
+  }
+
+  const rendererApp = new App();
+  await rendererApp.start();
+  async function openFixture(title) {
+    await rendererApp.clickText("ライブラリ", "open package library");
+    await rendererApp.waitFor(
+      `() => [...document.querySelectorAll(".library-card h2")].some((heading) => heading.textContent.trim() === ${JSON.stringify(title)})`,
+      `${title} appears in the library`,
+    );
+    await rendererApp.waitFor(
+      `() => [...document.querySelectorAll(".library-card")].some((card) => card.querySelector("h2")?.textContent.trim() === ${JSON.stringify(title)} && card.querySelector("button.package:not(:disabled)") !== null)`,
+      `${title} is ready to open`,
+    );
+    const opened = await rendererApp.evaluate(`(() => {
+      const card = [...document.querySelectorAll(".library-card")].find(
+        (candidate) => candidate.querySelector("h2")?.textContent.trim() === ${JSON.stringify(title)},
+      );
+      const button = card?.querySelector("button.package");
+      button?.click();
+      return button !== undefined;
+    })()`);
+    assert(opened, `open ${title}: package is listed`);
+    await rendererApp.waitForSelector("#lesson-heading", `${title} lesson`);
+  }
+
+  await openFixture("Clinical reasoning: dehydration");
+  await rendererApp.clickText("Fluid balance", "open medicine resource");
+  await rendererApp.waitForSelector(".markdown table", "medicine table");
+  assert(
+    await rendererApp.evaluate('document.querySelector(".table-scroll") !== null'),
+    "medicine resource table is in a scrollable wrapper",
+  );
+  await rendererApp.send("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await rendererApp.evaluate('document.querySelector(".display-settings").open = true');
+  await rendererApp.clickText("200%", "enlarge medicine table view");
+  assert(
+    await rendererApp.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"),
+    "medicine table stays within a 390px viewport at 200% text size",
+  );
+  await rendererApp.send("Emulation.clearDeviceMetricsOverride");
+  await rendererApp.clickText("目次へ", "return to medicine outline");
+
+  await openFixture("Probability and conditional reasoning");
+  await rendererApp.clickText("Conditional probability", "open math resource");
+  await rendererApp.waitForSelector(".math-inline .katex", "inline math output");
+  await rendererApp.waitForSelector(".katex-display .katex", "display math output");
+  await rendererApp.send("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await rendererApp.evaluate('document.querySelector(".display-settings").open = true');
+  await rendererApp.clickText("200%", "enlarge math view");
+  assert(
+    await rendererApp.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"),
+    "math resource fits a 390px viewport at 200% text size",
+  );
+  await rendererApp.send("Emulation.clearDeviceMetricsOverride");
+  await rendererApp.clickText("目次へ", "return to mathematics outline");
+
+  await openFixture("Japanese and English: asking for directions");
+  await rendererApp.clickText("Direction phrases", "open language resource");
+  await rendererApp.waitForSelector(".reader .markdown", "language resource body");
+  const languageText = await rendererApp.text();
+  assert(languageText.includes("ˈsteɪʃən"), "IPA text renders from language package");
+  assert(languageText.includes("左に曲がる"), "Japanese content remains unchanged");
+  await rendererApp.clickText("目次へ", "return to language outline");
+
+  await openFixture("Reading safe program output");
+  await rendererApp.clickText("Inspecting code as text", "open programming resource");
+  await rendererApp.waitForSelector('.code-frame [class*="hljs-"]', "highlighted code output");
+  await rendererApp.send("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await rendererApp.evaluate('document.querySelector(".display-settings").open = true');
+  await rendererApp.clickText("200%", "enlarge programming code view");
+  const codeCheck = await rendererApp.evaluate(`(() => ({
+    image: document.querySelector(".markdown img") !== null,
+    source: document.querySelector(".code-frame code")?.textContent ?? "",
+    frameOverflows: (() => { const frame = document.querySelector(".code-frame .md-pre"); return frame !== null && frame.scrollWidth > frame.clientWidth; })(),
+    pageFits: document.documentElement.scrollWidth <= window.innerWidth + 1,
+  }))()`);
+  assert(!codeCheck.image, "package code does not create an HTML image element");
+  assert(codeCheck.source.includes('print(message)'), "code remains displayed as inert text");
+  assert(codeCheck.source.includes("audit_metadata"), "long code line is preserved");
+  assert(codeCheck.pageFits, "programming resource fits a 390px viewport at 200% text size");
+  assert(codeCheck.frameOverflows, "long code line scrolls within its code frame");
+  await rendererApp.send("Emulation.clearDeviceMetricsOverride");
+  await rendererApp.stop();
+  pass("cross-domain renderer session shut down");
+
   console.log(`\n${steps.length} checks passed.`);
 }
 
