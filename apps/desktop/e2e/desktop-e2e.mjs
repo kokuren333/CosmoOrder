@@ -277,6 +277,13 @@ const GOLDEN_OBJECTIVE = "小さな整数の足し算ができる";
 async function checkPresentation(app, name) {
   const directory = join(home, "screenshots");
   mkdirSync(directory, { recursive: true });
+  for (const viewportWidth of [390, 1280]) {
+    await app.send("Emulation.setDeviceMetricsOverride", {
+      width: viewportWidth,
+      height: 900,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
   for (const theme of ["light", "dark"]) {
     await app.send("Emulation.setEmulatedMedia", {
       features: [
@@ -288,7 +295,7 @@ async function checkPresentation(app, name) {
       'document.querySelector(".display-settings").open = true',
     );
     for (const scale of [100, 150, 200]) {
-      await app.clickText(`文字 ${scale}%`, "text scale");
+      await app.clickText(`${scale}%`, "text scale");
       await app.waitFor(
         `() => document.querySelector(".app").style.fontSize === "${scale / 100}rem"`,
         "updated scale",
@@ -319,7 +326,7 @@ async function checkPresentation(app, name) {
           },
         });
         writeFileSync(
-          join(directory, `${name}-${theme}-${scale}.png`),
+          join(directory, `${name}-${viewportWidth}-${theme}-${scale}.png`),
           Buffer.from(screenshot.result.data, "base64"),
         );
         await app.evaluate(
@@ -328,7 +335,9 @@ async function checkPresentation(app, name) {
       }
     }
   }
-  await app.clickText("文字 100%", "restore text size");
+  }
+  await app.send("Emulation.clearDeviceMetricsOverride");
+  await app.clickText("100%", "restore text size");
   await app.evaluate(
     'document.querySelector(".display-settings").open = false',
   );
@@ -393,7 +402,7 @@ async function main() {
   const app = new App();
   await app.start();
   assert(
-    (await app.text()).includes("学びのライブラリ"),
+    (await app.text()).includes("ライブラリ"),
     "the application shows the packages panel",
   );
   assert(
@@ -422,6 +431,14 @@ async function main() {
     "the installed package in the list",
   );
   pass("the installed package is listed in the UI", PACKAGE_ID);
+  await app.click('button[aria-label="English"]', "switch UI language to English");
+  const englishLibrary = await app.text();
+  assert(englishLibrary.includes("Library"), "English UI strings are active");
+  assert(
+    englishLibrary.includes("足し算の基礎"),
+    "package content language stays Japanese when the UI is English",
+  );
+  await app.click('button[aria-label="日本語"]', "switch UI language back to Japanese");
   assert(
     await app.evaluate('(() => { const text = document.querySelector(".package-counts")?.innerText ?? ""; return ["Concepts", "Objectives", "Resources", "Assessments"].every((label) => text.includes(label)); })()'),
     "the library card shows all four package counts",
@@ -591,7 +608,7 @@ async function main() {
 
   // 6. Progress and history reflect the saved event. Both panels are reachable
   //    from the graded item as well as from the outline.
-  await app.click('button[aria-label="進捗を表示"]', "the progress button");
+  await app.click('button[aria-label="進捗"]', "the progress button");
   await app.waitForSelector("#progress-heading", "the progress panel");
   const progressText = await app.text();
   assert(
@@ -610,7 +627,7 @@ async function main() {
     "maintenance is collapsed",
   );
   await checkPresentation(app, "progress");
-  await app.click('button[aria-label="履歴を表示"]', "the history button");
+  await app.click('button[aria-label="履歴"]', "the history button");
   await app.waitForSelector("#history-heading", "the history panel");
   await app.waitFor(
     '() => document.querySelectorAll(".history-list > li").length === 2',
@@ -676,7 +693,7 @@ async function main() {
   );
 
   await restarted.click(
-    'button[aria-label="進捗を表示"]',
+    'button[aria-label="進捗"]',
     "the progress button after restart",
   );
   await restarted.waitForSelector(
@@ -700,7 +717,7 @@ async function main() {
     "the outline after restart",
   );
   await restarted.click(
-    'button[aria-label="履歴を表示"]',
+    'button[aria-label="履歴"]',
     "the history button after restart",
   );
   await restarted.waitForSelector(
