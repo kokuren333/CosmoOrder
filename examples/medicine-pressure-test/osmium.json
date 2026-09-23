@@ -2,8 +2,8 @@
   "schema_version": "0.1",
   "package_id": "org.osmium.pressure/medicine",
   "package_version": "0.1.0",
-  "title": "Clinical reasoning: dehydration",
-  "language": "en",
+  "title": "体液バランスと臨床的推論",
+  "language": "ja",
   "capabilities": {
     "required": [],
     "optional": []
@@ -15,5 +15,30 @@
     "resources": "entities/resources.json",
     "assessments": "entities/assessments.json"
   },
-  "extensions": {}
+  "extensions": {},
+  "sources": [
+    {
+      "id": "who-diarrhoeal-disease",
+      "kind": "url",
+      "title": "WHO: Diarrhoeal disease",
+      "locator": "https://www.who.int/en/news-room/fact-sheets/detail/diarrhoeal-disease",
+      "visibility": "public"
+    },
+    {
+      "id": "nice-iv-fluids",
+      "kind": "url",
+      "title": "NICE CG174: Intravenous fluid therapy in adults in hospital",
+      "locator": "https://www.nice.org.uk/guidance/cg174/chapter/Recommendations",
+      "citation": "National Institute for Health and Care Excellence. Intravenous fluid therapy in adults in hospital (CG174). Recommendations.",
+      "visibility": "attribution_only"
+    },
+    {
+      "id": "author-notes-demo",
+      "kind": "local_file",
+      "title": "架空の著者メモ（fixture用）",
+      "locator": "C:\\\\Users\\\\Example\\\\private\\\\notes.pdf",
+      "content_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "visibility": "private"
+    }
+  ]
 }

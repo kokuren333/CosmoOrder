@@ -768,7 +768,7 @@ async function main() {
     await rendererApp.waitForSelector("#lesson-heading", `${title} lesson`);
   }
 
-  await openFixture("Clinical reasoning: dehydration");
+  await openFixture("体液バランスと臨床的推論");
   await rendererApp.clickText("Fluid balance", "open medicine resource");
   await rendererApp.waitForSelector(".markdown table", "medicine table");
   assert(

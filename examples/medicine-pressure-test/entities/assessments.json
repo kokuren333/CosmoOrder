@@ -8,18 +8,18 @@
       "case.integrate"
     ],
     "stimulus": {
-      "markdown": "In the fictional case, which is the most appropriate first reasoning step?"
+      "markdown": "架空ケースで、最初に行う推論として最も適切なのはどれですか？"
     },
     "response": {
       "type": "single_select",
       "options": [
         {
           "id": "a",
-          "text": "Assume a diagnosis from one symptom"
+          "text": "一つの症状だけから診断を決める"
         },
         {
           "id": "b",
-          "text": "Assess stability and gather contextual findings"
+          "text": "全身状態を確認し、文脈となる情報を集める"
         }
       ]
     },
@@ -28,8 +28,12 @@
       "answer": "b"
     },
     "feedback": {
-      "markdown": "Link evidence to the reasoning concepts without treating this case as clinical advice."
-    }
+      "markdown": "所見を各概念と結び付けましょう。この架空例を診療助言として扱わないでください。"
+    },
+    "source_ids": [
+      "who-diarrhoeal-disease",
+      "author-notes-demo"
+    ]
   },
   {
     "id": "case.check.review",
@@ -40,18 +44,18 @@
       "case.integrate"
     ],
     "stimulus": {
-      "markdown": "Which statement best summarizes the concepts in **Clinical reasoning: dehydration**?"
+      "markdown": "**体液バランスと臨床的推論**の要点を最もよく表すものはどれですか？"
     },
     "response": {
       "type": "single_select",
       "options": [
         {
           "id": "a",
-          "text": "Use evidence and definitions from the resources"
+          "text": "教材の根拠と定義を用いて考える"
         },
         {
           "id": "b",
-          "text": "Infer an answer without checking the material"
+          "text": "教材を確認せずに答えを推測する"
         }
       ]
     },
@@ -60,7 +64,7 @@
       "answer": "a"
     },
     "feedback": {
-      "markdown": "Return to the related resources and connect the stated concepts to the objective."
+      "markdown": "関連する教材に戻り、概念を学習目標と結び付けてください。"
     }
   }
 ]

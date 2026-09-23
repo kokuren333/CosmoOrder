@@ -9,7 +9,8 @@
     ],
     "creator": "Osmium sample authors",
     "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text"
+    "attribution": "Original fictional pressure-test text",
+    "language": "en"
   },
   {
     "id": "errors.lesson",
@@ -21,7 +22,8 @@
     ],
     "creator": "Osmium sample authors",
     "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text"
+    "attribution": "Original fictional pressure-test text",
+    "language": "en"
   },
   {
     "id": "diffs.lesson",
@@ -33,6 +35,7 @@
     ],
     "creator": "Osmium sample authors",
     "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text"
+    "attribution": "Original fictional pressure-test text",
+    "language": "en"
   }
 ]

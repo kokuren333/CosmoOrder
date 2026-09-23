@@ -10,11 +10,16 @@
     "creator": "Osmium sample authors",
     "license": "CC0-1.0",
     "attribution": "Original fictional pressure-test text",
-    "source": "https://www.who.int/news-room/fact-sheets/detail/drinking-water",
     "provenance": {
-      "content_origin": "original sample text",
-      "human_review": "sample metadata only"
-    }
+      "content_origin": "fixture向けに独自執筆。根拠sourceを参照。",
+      "human_review": "学習用の例。診療指針としてレビュー済みではない。"
+    },
+    "language": "ja",
+    "source_ids": [
+      "who-diarrhoeal-disease",
+      "nice-iv-fluids",
+      "author-notes-demo"
+    ]
   },
   {
     "id": "vitals.lesson",
@@ -27,11 +32,15 @@
     "creator": "Osmium sample authors",
     "license": "CC0-1.0",
     "attribution": "Original fictional pressure-test text",
-    "source": "https://www.who.int/news-room/fact-sheets/detail/drinking-water",
     "provenance": {
-      "content_origin": "original sample text",
-      "human_review": "sample metadata only"
-    }
+      "content_origin": "fixture向けに独自執筆。根拠sourceを参照。",
+      "human_review": "学習用の例。診療指針としてレビュー済みではない。"
+    },
+    "language": "ja",
+    "source_ids": [
+      "who-diarrhoeal-disease",
+      "nice-iv-fluids"
+    ]
   },
   {
     "id": "reasoning.lesson",
@@ -44,10 +53,14 @@
     "creator": "Osmium sample authors",
     "license": "CC0-1.0",
     "attribution": "Original fictional pressure-test text",
-    "source": "https://www.who.int/news-room/fact-sheets/detail/drinking-water",
     "provenance": {
-      "content_origin": "original sample text",
-      "human_review": "sample metadata only"
-    }
+      "content_origin": "fixture向けに独自執筆。根拠sourceを参照。",
+      "human_review": "学習用の例。診療指針としてレビュー済みではない。"
+    },
+    "language": "ja",
+    "source_ids": [
+      "who-diarrhoeal-disease",
+      "nice-iv-fluids"
+    ]
   }
 ]

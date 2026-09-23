@@ -55,6 +55,11 @@ domains = {
 }
 
 for slug, d in domains.items():
+    if slug == "medicine":
+        # The medicine pressure test is a curated Japanese learning resource,
+        # not a generated compact renderer fixture. Preserve it when this
+        # script refreshes the other domains.
+        continue
     root = ROOT / f"{slug}-pressure-test"
     (root / "entities").mkdir(parents=True, exist_ok=True)
     (root / "content").mkdir(exist_ok=True)
@@ -65,7 +70,7 @@ for slug, d in domains.items():
     for id,title,body in d["resources"]:
         path=f"content/{id}.md"; (root/path).write_text(f"# {title}\n\n{body}\n", encoding="utf-8")
         teaches=[o[0] for o in d["objectives"] if o[1]==id]
-        resource={"id":f"{id}.lesson","type":"markdown","title":title,"path":path,"teaches":teaches,"creator":"Osmium sample authors","license":"CC0-1.0","attribution":"Original fictional pressure-test text"}
+        resource={"id":f"{id}.lesson","type":"markdown","title":title,"path":path,"teaches":teaches,"language":d["language"],"creator":"Osmium sample authors","license":"CC0-1.0","attribution":"Original fictional pressure-test text"}
         if slug == "medicine":
             resource["source"] = "https://www.who.int/news-room/fact-sheets/detail/drinking-water"
             resource["provenance"] = {"content_origin":"original sample text", "human_review":"sample metadata only"}

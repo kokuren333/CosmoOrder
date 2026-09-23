@@ -106,3 +106,9 @@ CommonMark本文とmetadataを保持し、Coreのcontent IRをrenderer-neutral�
 ## 将来の接続点
 
 Evaluator、ResourceProvider、Renderer、将来のMasteryEngine、CurriculumEngine、Registry、Importer/Exporterは責務として分ける。保存形式に必要なextensions/capabilitiesだけ最初から作り、動的コードloadは実装しない。AIやMCPは将来の外部クライアント、同期はevent identityを利用する別サービスの候補とする。Hubは未実装で運用先も未決定。Hubへ学習履歴を送る経路を最小v1に作らない。
+
+## Authoring and agent operations
+
+The stable direction is a shared capability surface: CLI and a future MCP adapter call the same Core and Package operations. Core validates package meaning and source references without I/O; Package handles bounded source loading, build sanitization, and distribution verification. CLI remains an argument/JSON envelope adapter. MCP should expose equivalent structured inputs/outputs and must not introduce alternate validation semantics. There is not yet a full application-operation facade or MCP server; extract one when an MCP adapter is implemented rather than prebuilding a generic plugin layer.
+
+Skills live above this capability surface and specify workflow/policy, not new operations. Search capability, shell availability, or MCP availability are agent runtime capabilities, not package semantics. Source acquisition method is not required in the portable provenance record. Detailed source fields and visibility behavior are in `SOURCES_AND_PROVENANCE.md`.

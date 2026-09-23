@@ -1,5 +1,7 @@
 # Osmium
 
+Authoring contracts for content language, source provenance, privacy visibility, and the CLI/MCP/Skills boundary are documented in [`docs/AI_AUTHORING.md`](docs/AI_AUTHORING.md) and [`docs/SOURCES_AND_PROVENANCE.md`](docs/SOURCES_AND_PROVENANCE.md). The package `language` is content metadata and is independent of Desktop UI locale. CLI currently provides structured JSON init, validate, lint, build, inspect, query, and context operations; source/entity authoring remains file-based.
+
 Osmiumは、教材を、機械が読め、人間が監査でき、AI agentも改善できる再利用可能な学習資産として扱うためのオープン学習基盤です。AIの計算資源を毎回同じ説明に使うだけでなく、一度作った教材を何度でも学べる形で残すことを重視します。**Build once. Learn many times.**
 
 現在はローカルでのPackage作成・静的検証・配布物のbuild/install・学習・イベント履歴保存を行うCLIと、Tauri 2 + ReactのDesktopを実装しています。AI Tutor、AI採点、AIによる自動教材生成、MCP authoring、Hubは未実装です。決定的なCLIと機械可読なPackageを、将来のAI authoring integrationの足場とします。
