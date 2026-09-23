@@ -1,0 +1,66 @@
+[
+  {
+    "id": "request.check",
+    "revision": "1",
+    "measures": [
+      "request.form",
+      "directions.translate",
+      "pronounce.station"
+    ],
+    "stimulus": {
+      "markdown": "Which is the more polite request?"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "Tell me the way."
+        },
+        {
+          "id": "b",
+          "text": "Could you tell me the way?"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "b"
+    },
+    "feedback": {
+      "markdown": "Could you is a conventional softener in this request."
+    }
+  },
+  {
+    "id": "request.check.review",
+    "revision": "1",
+    "measures": [
+      "request.form",
+      "directions.translate",
+      "pronounce.station"
+    ],
+    "stimulus": {
+      "markdown": "Which statement best summarizes the concepts in **Japanese and English: asking for directions**?"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "Use evidence and definitions from the resources"
+        },
+        {
+          "id": "b",
+          "text": "Infer an answer without checking the material"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "Return to the related resources and connect the stated concepts to the objective."
+    }
+  }
+]

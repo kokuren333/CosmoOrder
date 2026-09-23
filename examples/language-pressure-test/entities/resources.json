@@ -1,0 +1,38 @@
+[
+  {
+    "id": "politeness.lesson",
+    "type": "markdown",
+    "title": "A polite request",
+    "path": "content/politeness.md",
+    "teaches": [
+      "request.form"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original fictional pressure-test text"
+  },
+  {
+    "id": "directions.lesson",
+    "type": "markdown",
+    "title": "Direction phrases",
+    "path": "content/directions.md",
+    "teaches": [
+      "directions.translate"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original fictional pressure-test text"
+  },
+  {
+    "id": "pronunciation.lesson",
+    "type": "markdown",
+    "title": "Pronunciation cues",
+    "path": "content/pronunciation.lesson.md",
+    "teaches": [
+      "pronounce.station"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original pressure-test text"
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "fluid.define",
+    "concept": "fluid",
+    "description": "Explain intake and output"
+  },
+  {
+    "id": "vitals.interpret",
+    "concept": "vitals",
+    "description": "Interpret a vital-sign trend in context"
+  },
+  {
+    "id": "case.integrate",
+    "concept": "reasoning",
+    "description": "Integrate fluid history, vital signs, and examination findings"
+  }
+]

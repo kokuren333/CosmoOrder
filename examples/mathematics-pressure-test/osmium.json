@@ -1,0 +1,19 @@
+{
+  "schema_version": "0.1",
+  "package_id": "org.osmium.pressure/mathematics",
+  "package_version": "0.1.0",
+  "title": "Probability and conditional reasoning",
+  "language": "en",
+  "capabilities": {
+    "required": [],
+    "optional": []
+  },
+  "entities": {
+    "concepts": "entities/concepts.json",
+    "objectives": "entities/objectives.json",
+    "curricula": "entities/curricula.json",
+    "resources": "entities/resources.json",
+    "assessments": "entities/assessments.json"
+  },
+  "extensions": {}
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "values.read",
+    "concept": "values",
+    "description": "Identify a literal and a function call"
+  },
+  {
+    "id": "errors.read",
+    "concept": "errors",
+    "description": "Locate the exception type in output"
+  },
+  {
+    "id": "diffs.review",
+    "concept": "diffs",
+    "description": "Describe a changed line in a diff"
+  }
+]

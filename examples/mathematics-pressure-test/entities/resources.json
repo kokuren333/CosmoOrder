@@ -1,0 +1,38 @@
+[
+  {
+    "id": "probability.lesson",
+    "type": "markdown",
+    "title": "Probability basics",
+    "path": "content/probability.md",
+    "teaches": [
+      "probability.bounds"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original fictional pressure-test text"
+  },
+  {
+    "id": "conditional.lesson",
+    "type": "markdown",
+    "title": "Conditional probability",
+    "path": "content/conditional.md",
+    "teaches": [
+      "conditional.compute"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original fictional pressure-test text"
+  },
+  {
+    "id": "bayes.lesson",
+    "type": "markdown",
+    "title": "Bayes' rule",
+    "path": "content/bayes.lesson.md",
+    "teaches": [
+      "bayes.apply"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original pressure-test text"
+  }
+]

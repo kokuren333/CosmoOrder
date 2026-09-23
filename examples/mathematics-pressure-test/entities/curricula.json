@@ -1,0 +1,11 @@
+[
+  {
+    "id": "core",
+    "title": "Core sequence",
+    "objectives": [
+      "probability.bounds",
+      "conditional.compute",
+      "bayes.apply"
+    ]
+  }
+]

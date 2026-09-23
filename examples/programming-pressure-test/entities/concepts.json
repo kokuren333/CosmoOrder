@@ -1,0 +1,21 @@
+[
+  {
+    "id": "values",
+    "title": "Values and expressions",
+    "requires": []
+  },
+  {
+    "id": "errors",
+    "title": "Error messages",
+    "requires": [
+      "values"
+    ]
+  },
+  {
+    "id": "diffs",
+    "title": "Code review diffs",
+    "requires": [
+      "errors"
+    ]
+  }
+]

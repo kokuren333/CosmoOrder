@@ -1,0 +1,66 @@
+[
+  {
+    "id": "bayes.check",
+    "revision": "1",
+    "measures": [
+      "probability.bounds",
+      "conditional.compute",
+      "bayes.apply"
+    ],
+    "stimulus": {
+      "markdown": "If $P(A)=0.2$, $P(B|A)=0.5$, and $P(B)=0.4$, find $P(A|B)$."
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "0.25"
+        },
+        {
+          "id": "b",
+          "text": "0.4"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "Substitute into Bayes' rule: $P(A|B)=P(B|A)P(A)/P(B)$."
+    }
+  },
+  {
+    "id": "bayes.check.review",
+    "revision": "1",
+    "measures": [
+      "probability.bounds",
+      "conditional.compute",
+      "bayes.apply"
+    ],
+    "stimulus": {
+      "markdown": "Which statement best summarizes the concepts in **Probability and conditional reasoning**?"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "Use evidence and definitions from the resources"
+        },
+        {
+          "id": "b",
+          "text": "Infer an answer without checking the material"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "Return to the related resources and connect the stated concepts to the objective."
+    }
+  }
+]

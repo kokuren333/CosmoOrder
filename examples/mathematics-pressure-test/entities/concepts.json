@@ -1,0 +1,28 @@
+[
+  {
+    "id": "probability",
+    "title": "Probability",
+    "requires": []
+  },
+  {
+    "id": "events",
+    "title": "Events",
+    "requires": [
+      "probability"
+    ]
+  },
+  {
+    "id": "conditional",
+    "title": "Conditional probability",
+    "requires": [
+      "events"
+    ]
+  },
+  {
+    "id": "bayes",
+    "title": "Bayes' rule",
+    "requires": [
+      "conditional"
+    ]
+  }
+]

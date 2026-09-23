@@ -1,0 +1,17 @@
+[
+  {
+    "id": "probability.bounds",
+    "concept": "probability",
+    "description": "Check probability bounds"
+  },
+  {
+    "id": "conditional.compute",
+    "concept": "conditional",
+    "description": "Compute a conditional probability from a table"
+  },
+  {
+    "id": "bayes.apply",
+    "concept": "bayes",
+    "description": "Apply Bayes' rule and state its assumptions"
+  }
+]

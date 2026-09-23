@@ -1,0 +1,66 @@
+[
+  {
+    "id": "errors.check",
+    "revision": "1",
+    "measures": [
+      "values.read",
+      "errors.read",
+      "diffs.review"
+    ],
+    "stimulus": {
+      "markdown": "Which token names the exception type?\n\n```text\nValueError: invalid input\n```"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "ValueError"
+        },
+        {
+          "id": "b",
+          "text": "input"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "The exception type precedes the message text."
+    }
+  },
+  {
+    "id": "errors.check.review",
+    "revision": "1",
+    "measures": [
+      "values.read",
+      "errors.read",
+      "diffs.review"
+    ],
+    "stimulus": {
+      "markdown": "Which statement best summarizes the concepts in **Reading safe program output**?"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "Use evidence and definitions from the resources"
+        },
+        {
+          "id": "b",
+          "text": "Infer an answer without checking the material"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "Return to the related resources and connect the stated concepts to the objective."
+    }
+  }
+]

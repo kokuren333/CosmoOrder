@@ -1,0 +1,38 @@
+[
+  {
+    "id": "fluid.lesson",
+    "type": "markdown",
+    "title": "Fluid balance",
+    "path": "content/fluid.md",
+    "teaches": [
+      "fluid.define"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original fictional pressure-test text"
+  },
+  {
+    "id": "vitals.lesson",
+    "type": "markdown",
+    "title": "Vital signs",
+    "path": "content/vitals.md",
+    "teaches": [
+      "vitals.interpret"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original fictional pressure-test text"
+  },
+  {
+    "id": "reasoning.lesson",
+    "type": "markdown",
+    "title": "Case assessment",
+    "path": "content/reasoning.md",
+    "teaches": [
+      "case.integrate"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original fictional pressure-test text"
+  }
+]

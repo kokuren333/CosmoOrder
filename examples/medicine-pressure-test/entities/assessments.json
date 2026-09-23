@@ -1,0 +1,66 @@
+[
+  {
+    "id": "case.check",
+    "revision": "1",
+    "measures": [
+      "fluid.define",
+      "vitals.interpret",
+      "case.integrate"
+    ],
+    "stimulus": {
+      "markdown": "In the fictional case, which is the most appropriate first reasoning step?"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "Assume a diagnosis from one symptom"
+        },
+        {
+          "id": "b",
+          "text": "Assess stability and gather contextual findings"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "b"
+    },
+    "feedback": {
+      "markdown": "Link evidence to the reasoning concepts without treating this case as clinical advice."
+    }
+  },
+  {
+    "id": "case.check.review",
+    "revision": "1",
+    "measures": [
+      "fluid.define",
+      "vitals.interpret",
+      "case.integrate"
+    ],
+    "stimulus": {
+      "markdown": "Which statement best summarizes the concepts in **Clinical reasoning: dehydration**?"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "Use evidence and definitions from the resources"
+        },
+        {
+          "id": "b",
+          "text": "Infer an answer without checking the material"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "Return to the related resources and connect the stated concepts to the objective."
+    }
+  }
+]

@@ -1,0 +1,11 @@
+[
+  {
+    "id": "core",
+    "title": "Core sequence",
+    "objectives": [
+      "values.read",
+      "errors.read",
+      "diffs.review"
+    ]
+  }
+]

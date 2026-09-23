@@ -1,0 +1,38 @@
+[
+  {
+    "id": "values.lesson",
+    "type": "markdown",
+    "title": "Inspecting code as text",
+    "path": "content/values.md",
+    "teaches": [
+      "values.read"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original fictional pressure-test text"
+  },
+  {
+    "id": "errors.lesson",
+    "type": "markdown",
+    "title": "Output and errors",
+    "path": "content/errors.md",
+    "teaches": [
+      "errors.read"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original fictional pressure-test text"
+  },
+  {
+    "id": "diffs.lesson",
+    "type": "markdown",
+    "title": "Reviewing a diff",
+    "path": "content/diffs.md",
+    "teaches": [
+      "diffs.review"
+    ],
+    "creator": "Osmium sample authors",
+    "license": "CC0-1.0",
+    "attribution": "Original fictional pressure-test text"
+  }
+]

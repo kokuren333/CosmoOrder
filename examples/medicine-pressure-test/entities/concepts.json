@@ -1,0 +1,28 @@
+[
+  {
+    "id": "fluid",
+    "title": "Fluid balance",
+    "requires": []
+  },
+  {
+    "id": "vitals",
+    "title": "Vital signs",
+    "requires": [
+      "fluid"
+    ]
+  },
+  {
+    "id": "assessment",
+    "title": "Clinical assessment",
+    "requires": [
+      "vitals"
+    ]
+  },
+  {
+    "id": "reasoning",
+    "title": "Integrated reasoning",
+    "requires": [
+      "assessment"
+    ]
+  }
+]

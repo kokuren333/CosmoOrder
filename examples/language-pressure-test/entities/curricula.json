@@ -1,0 +1,11 @@
+[
+  {
+    "id": "core",
+    "title": "Core sequence",
+    "objectives": [
+      "request.form",
+      "directions.translate",
+      "pronounce.station"
+    ]
+  }
+]

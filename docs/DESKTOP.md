@@ -4,6 +4,8 @@
 Rust Core / `osmium_store::runtime` にあり、UIはそれを呼ぶだけです。採点、検証、
 version解決、progress集計をTypeScript側へ複製していません。
 
+本文のMarkdown表示はGFM table/strikethrough、数式（KaTeX）、コード強調表示を含みます。raw HTMLは解釈せず、コードは表示・コピーのみで実行しません。UI言語（日本語／English）はPackage本文の言語と独立しています。wide table/equation/codeは横スクロールします。狭い画面と200%文字サイズでの基本responsive CSSはありますが、ネイティブmobile runtimeとしては未検証です。
+
 ## 構成
 
 ```text

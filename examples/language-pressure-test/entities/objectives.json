@@ -1,0 +1,17 @@
+[
+  {
+    "id": "request.form",
+    "concept": "politeness",
+    "description": "Choose a polite request form"
+  },
+  {
+    "id": "directions.translate",
+    "concept": "directions",
+    "description": "Match direction phrases across Japanese and English"
+  },
+  {
+    "id": "pronounce.station",
+    "concept": "pronunciation",
+    "description": "Recognize the stressed syllable in station"
+  }
+]

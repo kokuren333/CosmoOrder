@@ -1,0 +1,21 @@
+[
+  {
+    "id": "politeness",
+    "title": "Polite requests",
+    "requires": []
+  },
+  {
+    "id": "directions",
+    "title": "Direction phrases",
+    "requires": [
+      "politeness"
+    ]
+  },
+  {
+    "id": "pronunciation",
+    "title": "Pronunciation cues",
+    "requires": [
+      "directions"
+    ]
+  }
+]

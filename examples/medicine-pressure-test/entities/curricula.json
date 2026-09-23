@@ -1,0 +1,11 @@
+[
+  {
+    "id": "core",
+    "title": "Core sequence",
+    "objectives": [
+      "fluid.define",
+      "vitals.interpret",
+      "case.integrate"
+    ]
+  }
+]
