@@ -96,25 +96,22 @@ pub struct PackageView {
     pub selected_version: String,
 }
 
-/// A short Markdown string with its compiled, inert content IR. Stimuli and
-/// feedback are compiled once in the shell so the renderer never needs an HTML
-/// sink and never compiles Markdown itself.
+/// Typed, renderer-neutral content returned across Desktop IPC. Markdown is
+/// compiled by Core before this boundary and its source text is not duplicated
+/// into the renderer DTO.
 #[derive(Debug, Serialize)]
-pub struct MarkdownView {
-    pub markdown: String,
+pub struct ContentView {
+    /// Plain-text projection used for compact previews, derived from the IR.
     pub text: String,
     pub content: Content,
 }
 
-impl MarkdownView {
-    fn compile(markdown: &str) -> CommandResult<Self> {
-        let content = compile_markdown(markdown)
-            .map_err(|error| CommandError::shell("OSM_CONTENT", error))?;
-        Ok(Self {
-            text: content.to_plain_text(),
-            markdown: markdown.to_owned(),
-            content,
-        })
+impl ContentView {
+    fn compile(source: &str) -> CommandResult<Self> {
+        let content =
+            compile_markdown(source).map_err(|error| CommandError::shell("OSM_CONTENT", error))?;
+        let text = content.to_plain_text();
+        Ok(Self { text, content })
     }
 }
 
@@ -132,7 +129,7 @@ pub struct LessonView {
     pub resources: Value,
     pub assessments: Value,
     /// Compiled stimulus Markdown, keyed by assessment ID.
-    pub stimuli: std::collections::BTreeMap<String, MarkdownView>,
+    pub stimuli: std::collections::BTreeMap<String, ContentView>,
 }
 
 /// A resource body plus its compiled, inert content IR.
@@ -143,7 +140,6 @@ pub struct ResourceView {
     pub digest: String,
     pub resource: Value,
     pub content: Content,
-    pub markdown: String,
     pub content_is_untrusted: bool,
 }
 
@@ -155,7 +151,7 @@ pub struct AttemptView {
     pub correct: bool,
     pub score: u8,
     pub feedback: Value,
-    pub feedback_content: MarkdownView,
+    pub feedback_content: ContentView,
     pub evaluator: Value,
     pub objective_ids: Vec<String>,
     pub assessment_id: String,
@@ -217,7 +213,7 @@ pub fn open_lesson(
             let markdown = assessment["stimulus"]["markdown"]
                 .as_str()
                 .unwrap_or_default();
-            stimuli.insert(id.to_owned(), MarkdownView::compile(markdown)?);
+            stimuli.insert(id.to_owned(), ContentView::compile(markdown)?);
         }
     }
     Ok(LessonView {
@@ -254,7 +250,6 @@ pub fn read_resource(
         digest: object_string(&view, "digest"),
         resource: view["resource"].clone(),
         content,
-        markdown: markdown.to_owned(),
         content_is_untrusted: true,
     })
 }
@@ -307,7 +302,7 @@ pub fn submit_attempt(
         correct: event["correct"].as_bool().unwrap_or(false),
         score: event["score"].as_u64().unwrap_or(0) as u8,
         feedback: event["assessment_snapshot"]["feedback"].clone(),
-        feedback_content: MarkdownView::compile(feedback)?,
+        feedback_content: ContentView::compile(feedback)?,
         evaluator: event["evaluator"].clone(),
         objective_ids: event["objective_ids"]
             .as_array()
@@ -380,4 +375,18 @@ pub fn backup_state(desktop: State<'_, Desktop>, output: String) -> CommandResul
     let output = PathBuf::from(output);
     desktop.with(|runtime| runtime.backup(&output))?;
     Ok(json!({"output": output.to_string_lossy()}))
+}
+
+#[cfg(test)]
+mod content_view_tests {
+    use super::ContentView;
+
+    #[test]
+    fn desktop_content_dto_contains_ir_and_derived_text_but_not_markdown_source() {
+        let view = ContentView::compile("# Title\n\nA **typed** paragraph.").expect("content");
+        let value = serde_json::to_value(view).expect("serializable DTO");
+        assert_eq!(value["text"], "Title\nA typed paragraph.");
+        assert!(value["content"]["blocks"].is_array());
+        assert!(value.get("markdown").is_none());
+    }
 }

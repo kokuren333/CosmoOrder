@@ -1,4 +1,4 @@
-import type { LearningEvent, MarkdownView } from "../types.ts";
+import type { LearningEvent, ContentView } from "../types.ts";
 import { ArrowLeft, Clock3 } from "lucide-react";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
 import { localize, useUiLanguage } from "../i18n.ts";
@@ -13,7 +13,7 @@ export function HistoryPanel({
 }: {
   events: LearningEvent[];
   objectives: Map<string, string>;
-  stimuli: Record<string, MarkdownView>;
+  stimuli: Record<string, ContentView>;
   onLoadMore: () => void;
   onBack: () => void;
   busy: boolean;

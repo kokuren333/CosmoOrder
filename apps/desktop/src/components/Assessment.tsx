@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, CircleCheck, CircleX, ArrowRight } from "lucide-react";
 import { Markdown } from "./Markdown.ts";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
-import type { Assessment, AttemptView, MarkdownView } from "../types.ts";
+import type { Assessment, AttemptView, ContentView } from "../types.ts";
 import { localize, useUiLanguage } from "../i18n.ts";
 
 export function AssessmentView({
@@ -19,7 +19,7 @@ export function AssessmentView({
   total,
 }: {
   assessment: Assessment;
-  stimulus: MarkdownView | null;
+  stimulus: ContentView | null;
   attempt: AttemptView | null;
   busy: boolean;
   onAnswer: (response: string | boolean) => void;

@@ -30,9 +30,9 @@ export interface Content {
   blocks: Block[];
 }
 
-/** A short Markdown string compiled by the shell into inert content IR. */
-export interface MarkdownView {
-  markdown: string;
+/** Core-compiled renderer-neutral content crossing the Desktop IPC boundary. */
+export interface ContentView {
+  /** Plain-text preview derived from the IR. */
   text: string;
   content: Content;
 }
@@ -140,7 +140,7 @@ export interface LessonView {
   resources: Resource[];
   assessments: Assessment[];
   /** Compiled stimulus Markdown, keyed by assessment ID. */
-  stimuli: Record<string, MarkdownView>;
+  stimuli: Record<string, ContentView>;
 }
 
 export interface ResourceView {
@@ -149,7 +149,6 @@ export interface ResourceView {
   digest: string;
   resource: Resource;
   content: Content;
-  markdown: string;
   content_is_untrusted: boolean;
 }
 
@@ -186,7 +185,7 @@ export interface AttemptView {
   correct: boolean;
   score: number;
   feedback: { markdown: string };
-  feedback_content: MarkdownView;
+  feedback_content: ContentView;
   evaluator: { id: string; version: string };
   objective_ids: string[];
   assessment_id: string;

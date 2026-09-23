@@ -62,7 +62,7 @@ test("lesson exposes package hierarchy with absent optional metadata", async () 
     curricula: [{ id: "intro", title: "Intro", objectives: ["count.basic"] }],
     resources: [{ id: "lesson", type: "markdown", title: "Read counting", path: "content/a.md", teaches: ["count.basic"] }],
     assessments: [{ id: "check", revision: "1", measures: ["count.basic"], stimulus: { markdown: "How many?" }, response: { type: "boolean" as const }, evaluation: { type: "exact", answer: true }, feedback: { markdown: "Yes" } }],
-    stimuli: { check: { markdown: "How many?", text: "How many?", content: { blocks: [] } } },
+    stimuli: { check: { text: "How many?", content: { blocks: [] } } },
   };
   const html = renderToStaticMarkup(createElement(Lesson, {
     lesson, progress: [], busy: false, onOpenResource: noop, onOpenAssessment: noop,
@@ -176,7 +176,7 @@ test("both assessment types use labeled radio cards and require explicit grading
   };
   const props = {
     assessment,
-    stimulus: { markdown: "問題", text: "問題", content: { blocks: [] } },
+    stimulus: { text: "問題", content: { blocks: [] } },
     attempt: null,
     busy: false,
     onAnswer: noop,
