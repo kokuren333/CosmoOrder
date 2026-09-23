@@ -4,7 +4,7 @@
 
 | 順序 | 拡張 | 最初から保持する境界 |
 |---|---|---|
-| 最小v1後 | math、画像、音声、動画、外部URL、YouTube | TeX/素材を正本、ResourceProvider、明示network操作、alt/captions/license |
+| 最小v1後 | 画像、音声、動画、外部URL、YouTube | TeX/素材を正本、ResourceProvider、明示network操作、alt/captions/license（数式はDesktop KaTeX表示済み） |
 | 同上 | multiple select/numeric/text/fill blank/ordering/matching、共通stimulus | Response/Evaluation/Feedbackの分離、versioned capability、決定的採点の適合試験 |
 | 同上 | Theme tokens、scoped CSS、安全なHTML subset | presentation enhancement、安全性・accessibility、無効時の本文fallback |
 | 続いて | Cloudflare Hub、publishing、search、download、fork/versioning | provider-independent Registry HTTP、Workers/D1/R2/Queues、immutable release、upload→validate→index→publish |
@@ -17,6 +17,6 @@
 | 需要に応じて | Web/Mobile、QTI/CASE/xAPI/LTI/EPUB/SCORM | renderer/store分離、標準とのadapter、exportによる脱出経路 |
 | 配布拡大時 | signing/TUF/Sigstore、self-host/federation、moderation/trust | canonical manifest/hash、Registry protocol、配布許可と教育品質を分ける |
 
-Golden Packageは最小schemaと同時に1つ作り、数学・語学・プログラミングへ広げる。画像付き医学連問はmediaとassessment groupの仕様検証に使う。現行機能で表現できない例を無理に平坦化せず、拡張の必要性を記録する。
+現行のSchema 0.1は[算数、医学、数学、語学、プログラミングのfixtures](../examples/)で圧力テスト中。医学の統合objective（複数Conceptにまたがる学習目標）、typed media references、複数Assessmentを束ねるcase/stimulus、Response形式の幅は未解決のdesign pressureとして記録する。現行機能で表現しにくい例を無理に平坦化せず、fixtureから必要性を確認する。
 
 HubはRuntimeの前提条件にしない。Hubの停止・provider変更時も手元のdirectory/ZIPとLearning Eventが残ることをすべての拡張の条件とする。
