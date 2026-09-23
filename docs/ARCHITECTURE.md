@@ -84,7 +84,7 @@ projectionは試行数、正答数、最終回答時刻等から開始する。�
 
 ## Renderingと権限
 
-CommonMark本文とmetadataを保持し、Coreのcontent IRは再生成できる中間表現にする。Desktopの表示ではreact-markdownからReact node treeを生成し、raw HTMLは取り込まず、ReactのHTML sinkも使わない。現在はDesktopが元Markdownから直接レンダリングするため、Core IRをRendererの共通入力にする目標との間にadapterの不一致が残る。mobile/web runtime着手前に、型付き拡張（table/math/strikethrough/code fence）を持つIRへ統合するか、portable renderer-neutral ASTを別途設ける必要がある。Package codeは表示・copyのみで実行しない。外部URLは表示だけを基本とし、自動fetchしない。
+CommonMark本文とmetadataを保持し、Coreのcontent IRをrenderer-neutralな表示入力とする。現在のIRにはheading/list/quote/table/math/codeなどの構造、inline math、classified link destinationが含まれる。DesktopはこのIRをReact node treeへ変換し、raw HTMLを解釈せず、ReactのHTML sinkを使わない。KaTeXとlowlightは型付きIRのTeX/code値から装飾nodeを生成し、その生成結果だけをReact nodeへ変換する。Package codeは表示・copyのみで実行しない。外部URLは表示だけを基本とし、自動fetchしない。
 
 標準themeに加えてKaTeXとhighlight.js系の表示themeを使う。semantic headings、フォームlabels、keyboard操作、focus、文字拡大、contrast、reduced motionをRuntimeの責任とする。Math sourceはTeXを正本とし、mediaは現行Packageにtyped asset referenceがなく、将来ResourceProviderとの設計が必要。scoped CSSは独立した検証を通すpresentation enhancementにする。
 

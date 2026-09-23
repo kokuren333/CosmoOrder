@@ -4,7 +4,7 @@
 
 | 順序 | 拡張 | 最初から保持する境界 |
 |---|---|---|
-| 最小v1後 | 画像、音声、動画、外部URL、YouTube | TeX/素材を正本、ResourceProvider、明示network操作、alt/captions/license（数式はDesktop KaTeX表示済み） |
+| 最小v1後 | 画像、音声、動画、外部URL、YouTube | TeX/素材を正本、ResourceProvider、明示network操作、alt/captions/license（数式はCore IRとDesktop KaTeXで表示） |
 | 同上 | multiple select/numeric/text/fill blank/ordering/matching、共通stimulus | Response/Evaluation/Feedbackの分離、versioned capability、決定的採点の適合試験 |
 | 同上 | Theme tokens、scoped CSS、安全なHTML subset | presentation enhancement、安全性・accessibility、無効時の本文fallback |
 | 続いて | Cloudflare Hub、publishing、search、download、fork/versioning | provider-independent Registry HTTP、Workers/D1/R2/Queues、immutable release、upload→validate→index→publish |

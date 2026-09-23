@@ -45,6 +45,13 @@ pub enum Block {
         language: Option<String>,
         text: String,
     },
+    Math {
+        tex: String,
+    },
+    Table {
+        headers: Vec<Vec<Span>>,
+        rows: Vec<Vec<Vec<Span>>>,
+    },
     /// A block-level HTML run, kept as literal text. It is never markup.
     Html {
         text: String,
@@ -73,6 +80,13 @@ pub enum Span {
     },
     Strong {
         spans: Vec<Span>,
+    },
+    Strikethrough {
+        spans: Vec<Span>,
+    },
+    Math {
+        tex: String,
+        display: bool,
     },
     /// `url` is empty for an in-package relative target, whose lexical form
     /// stays in `href`. A rejected destination never becomes a `Link`.
@@ -114,6 +128,17 @@ fn blocks_text(blocks: &[Block], output: &mut String) {
                 output.push_str(text);
                 output.push('\n');
             }
+            Block::Math { tex } => {
+                output.push_str(tex);
+                output.push('\n');
+            }
+            Block::Table { headers, rows } => {
+                for cell in headers.iter().chain(rows.iter().flatten()) {
+                    spans_text(cell, output);
+                    output.push('\t');
+                }
+                output.push('\n');
+            }
             Block::Rule => output.push('\n'),
         }
     }
@@ -123,7 +148,10 @@ fn spans_text(spans: &[Span], output: &mut String) {
     for span in spans {
         match span {
             Span::Text { text } | Span::Code { text } => output.push_str(text),
-            Span::Emphasis { spans } | Span::Strong { spans } => spans_text(spans, output),
+            Span::Emphasis { spans } | Span::Strong { spans } | Span::Strikethrough { spans } => {
+                spans_text(spans, output)
+            }
+            Span::Math { tex, .. } => output.push_str(tex),
             Span::Link { spans, .. } => spans_text(spans, output),
         }
     }
@@ -208,7 +236,8 @@ pub fn compile_markdown(markdown: &str) -> Result<Content, String> {
         ));
     }
     let mut state = State::new();
-    for event in Parser::new_ext(markdown, Options::empty()) {
+    let options = Options::ENABLE_TABLES | Options::ENABLE_STRIKETHROUGH | Options::ENABLE_MATH;
+    for event in Parser::new_ext(markdown, options) {
         state.event(event)?;
     }
     // A tight list item, and a document whose last line has no blank line after
@@ -240,6 +269,7 @@ enum FrameKind {
     Root,
     Emphasis,
     Strong,
+    Strikethrough,
     Link {
         url: String,
         href: String,
@@ -269,6 +299,13 @@ struct ListState {
     sink: usize,
 }
 
+struct TableState {
+    headers: Vec<Vec<Span>>,
+    rows: Vec<Vec<Vec<Span>>>,
+    current: Vec<Vec<Span>>,
+    in_head: bool,
+}
+
 struct State {
     frames: Vec<Frame>,
     sinks: Vec<Sink>,
@@ -277,6 +314,7 @@ struct State {
     count: usize,
     heading: Option<u8>,
     code: Option<CodeState>,
+    table: Option<TableState>,
 }
 
 impl State {
@@ -295,6 +333,7 @@ impl State {
             count: 0,
             heading: None,
             code: None,
+            table: None,
         }
     }
 
@@ -363,6 +402,7 @@ impl State {
             FrameKind::Root | FrameKind::LabelOnly => spans,
             FrameKind::Emphasis => vec![Span::Emphasis { spans }],
             FrameKind::Strong => vec![Span::Strong { spans }],
+            FrameKind::Strikethrough => vec![Span::Strikethrough { spans }],
             FrameKind::Link { url, href } => vec![Span::Link { url, href, spans }],
         };
         self.top_spans().extend(wrapped);
@@ -449,14 +489,16 @@ impl State {
                 });
                 Ok(())
             }
-            // Math is not rendered in v1; the TeX source is kept as inert text
-            // so a later math renderer can consume the same IR.
-            Event::InlineMath(tex) | Event::DisplayMath(tex) => {
-                self.emit(Span::Code {
-                    text: tex.into_string(),
+            Event::InlineMath(tex) => {
+                self.emit(Span::Math {
+                    tex: tex.into_string(),
+                    display: false,
                 });
                 Ok(())
             }
+            Event::DisplayMath(tex) => self.deliver(Block::Math {
+                tex: tex.into_string(),
+            }),
             Event::TaskListMarker(checked) => {
                 self.emit(Span::Text {
                     text: if checked { "[x] " } else { "[ ] " }.to_owned(),
@@ -487,6 +529,40 @@ impl State {
                     blocks: Vec::new(),
                     list: None,
                 });
+                Ok(())
+            }
+            Tag::Table(_) => {
+                self.enter()?;
+                self.table = Some(TableState {
+                    headers: Vec::new(),
+                    rows: Vec::new(),
+                    current: Vec::new(),
+                    in_head: false,
+                });
+                Ok(())
+            }
+            Tag::TableHead => {
+                self.enter()?;
+                if let Some(table) = self.table.as_mut() {
+                    table.current.clear();
+                    table.in_head = true;
+                }
+                Ok(())
+            }
+            Tag::TableRow => {
+                self.enter()?;
+                if let Some(table) = self.table.as_mut() {
+                    table.current.clear();
+                    table.in_head = false;
+                }
+                Ok(())
+            }
+            Tag::TableCell => {
+                self.enter()?;
+                self.count += 1;
+                if self.count > MAX_BLOCKS {
+                    return Err("markdown produces too many table cells".to_owned());
+                }
                 Ok(())
             }
             Tag::CodeBlock(kind) => {
@@ -543,6 +619,14 @@ impl State {
                 });
                 Ok(())
             }
+            Tag::Strikethrough => {
+                self.enter()?;
+                self.frames.push(Frame {
+                    kind: FrameKind::Strikethrough,
+                    spans: Vec::new(),
+                });
+                Ok(())
+            }
             Tag::Link { dest_url, .. } => {
                 self.enter()?;
                 match classify_link(&dest_url) {
@@ -571,13 +655,8 @@ impl State {
             Tag::DefinitionList
             | Tag::DefinitionListTitle
             | Tag::DefinitionListDefinition
-            | Tag::Table(_)
-            | Tag::TableHead
-            | Tag::TableRow
-            | Tag::TableCell
             | Tag::HtmlBlock
             | Tag::MetadataBlock(_)
-            | Tag::Strikethrough
             | Tag::Superscript
             | Tag::Subscript => self.enter(),
         }
@@ -610,6 +689,36 @@ impl State {
                 self.deliver(Block::BlockQuote { blocks })
             }
             TagEnd::CodeBlock => Ok(()),
+            TagEnd::TableCell => {
+                self.leave();
+                let cell = self.take_spans();
+                if let Some(table) = self.table.as_mut() {
+                    table.current.push(cell);
+                }
+                Ok(())
+            }
+            TagEnd::TableHead => {
+                self.leave();
+                if let Some(table) = self.table.as_mut() {
+                    table.headers = std::mem::take(&mut table.current);
+                }
+                Ok(())
+            }
+            TagEnd::TableRow => {
+                self.leave();
+                if let Some(table) = self.table.as_mut() {
+                    table.rows.push(std::mem::take(&mut table.current));
+                }
+                Ok(())
+            }
+            TagEnd::Table => {
+                self.leave();
+                let table = self.table.take().expect("table state");
+                self.deliver(Block::Table {
+                    headers: table.headers,
+                    rows: table.rows,
+                })
+            }
             TagEnd::List(tight) => {
                 self.leave();
                 self.flush_inline_paragraph()?;
@@ -634,7 +743,11 @@ impl State {
                 }
                 Ok(())
             }
-            TagEnd::Emphasis | TagEnd::Strong | TagEnd::Link | TagEnd::Image => {
+            TagEnd::Emphasis
+            | TagEnd::Strong
+            | TagEnd::Strikethrough
+            | TagEnd::Link
+            | TagEnd::Image => {
                 self.leave();
                 self.close_frame();
                 Ok(())
@@ -643,11 +756,6 @@ impl State {
             | TagEnd::DefinitionList
             | TagEnd::DefinitionListTitle
             | TagEnd::DefinitionListDefinition
-            | TagEnd::Table
-            | TagEnd::TableHead
-            | TagEnd::TableRow
-            | TagEnd::TableCell
-            | TagEnd::Strikethrough
             | TagEnd::Superscript
             | TagEnd::Subscript => {
                 self.leave();

@@ -62,7 +62,7 @@ export function AssessmentView({
           {stimulus === null ? (
             <p className="empty">{tr("問題文を読み込めませんでした。", "Could not load the question.")}</p>
           ) : (
-            <Markdown markdown={stimulus.markdown} />
+            <Markdown content={stimulus.content} />
           )}
         </div>
         <form
@@ -132,7 +132,7 @@ export function AssessmentView({
               {attempt.correct ? <CircleCheck size={22} aria-hidden="true" /> : <CircleX size={22} aria-hidden="true" />}
               {attempt.correct ? tr("正解", "Correct") : tr("不正解", "Incorrect")}
             </h2>
-            <Markdown markdown={attempt.feedback_content.markdown} />
+            <Markdown content={attempt.feedback_content.content} />
             <p>
               {attempt.replayed
                 ? tr("記録済みの回答を表示しています。", "Showing the recorded answer.")

@@ -20,7 +20,10 @@ fn flatten(spans: &[Span], output: &mut String) {
     for span in spans {
         match span {
             Span::Text { text } | Span::Code { text } => output.push_str(text),
-            Span::Emphasis { spans } | Span::Strong { spans } => flatten(spans, output),
+            Span::Emphasis { spans } | Span::Strong { spans } | Span::Strikethrough { spans } => {
+                flatten(spans, output)
+            }
+            Span::Math { tex, .. } => output.push_str(tex),
             Span::Link { spans, .. } => flatten(spans, output),
         }
     }
@@ -30,6 +33,12 @@ fn block_text(block: &Block, output: &mut String) {
     match block {
         Block::Heading { spans, .. } | Block::Paragraph { spans } => flatten(spans, output),
         Block::Code { text, .. } | Block::Html { text } => output.push_str(text),
+        Block::Math { tex } => output.push_str(tex),
+        Block::Table { headers, rows } => {
+            for cell in headers.iter().chain(rows.iter().flatten()) {
+                flatten(cell, output);
+            }
+        }
         Block::List { items, .. } => {
             for item in items {
                 for block in &item.blocks {
@@ -44,6 +53,28 @@ fn block_text(block: &Block, output: &mut String) {
         }
         Block::Rule => {}
     }
+}
+
+#[test]
+fn compiles_tables_strikethrough_inline_and_display_math_to_typed_ir() {
+    let content = compile(
+        "| Term | Meaning |\n|---|---|\n| **A** | ~~old~~\n\nInline $x^2$\n\n$$\n\\frac{1}{2}\n$$\n",
+    );
+    let Block::Table { headers, rows } = &content.blocks[0] else {
+        panic!("table IR expected: {:?}", content.blocks);
+    };
+    assert_eq!(headers.len(), 2);
+    assert_eq!(rows.len(), 1);
+    assert!(matches!(rows[0][1][0], Span::Strikethrough { .. }));
+    let Block::Paragraph { spans } = &content.blocks[1] else {
+        panic!("paragraph expected");
+    };
+    assert!(
+        spans
+            .iter()
+            .any(|span| matches!(span, Span::Math { tex, display: false } if tex == "x^2"))
+    );
+    assert!(matches!(&content.blocks[2], Block::Math { tex } if tex.contains("frac")));
 }
 
 fn document_text(content: &Content) -> String {
@@ -237,6 +268,15 @@ fn oversized_markdown_is_rejected() {
 }
 
 #[test]
+fn excessive_table_cells_are_rejected_within_the_document_limit() {
+    let mut markdown = String::from("| A | B |\n|---|---|\n");
+    for _ in 0..MAX_MARKDOWN_BYTES / 16 {
+        markdown.push_str("| x | y |\n");
+    }
+    assert!(compile_markdown(&markdown).is_err());
+}
+
+#[test]
 fn golden_lesson_compiles_to_expected_structure() {
     let markdown = include_str!("../../../examples/arithmetic/content/introduction.md");
     let content = compile(markdown);
@@ -248,4 +288,39 @@ fn golden_lesson_compiles_to_expected_structure() {
         "plain text keeps the lesson: {text}"
     );
     assert!(text.contains("2個"));
+}
+
+#[test]
+fn cross_domain_resources_compile_to_renderer_neutral_structures() {
+    let medicine = compile(include_str!(
+        "../../../examples/medicine-pressure-test/content/fluid.md"
+    ));
+    assert!(
+        medicine
+            .blocks
+            .iter()
+            .any(|block| matches!(block, Block::Table { .. }))
+    );
+
+    let mathematics = compile(include_str!(
+        "../../../examples/mathematics-pressure-test/content/conditional.md"
+    ));
+    assert!(
+        mathematics
+            .blocks
+            .iter()
+            .any(|block| matches!(block, Block::Math { .. }))
+    );
+    assert!(mathematics.blocks.iter().any(|block| matches!(block, Block::Paragraph { spans } if spans.iter().any(|span| matches!(span, Span::Math { display: false, .. })))));
+
+    let language = compile(include_str!(
+        "../../../examples/language-pressure-test/content/politeness.md"
+    ));
+    assert!(language.to_plain_text().contains("駅への行き方"));
+    assert!(language.blocks.iter().any(|block| matches!(block, Block::Paragraph { spans } if spans.iter().any(|span| matches!(span, Span::Strong { .. })))));
+
+    let programming = compile(include_str!(
+        "../../../examples/programming-pressure-test/content/values.md"
+    ));
+    assert!(programming.blocks.iter().any(|block| matches!(block, Block::Code { language: Some(language), .. } if language == "python")));
 }

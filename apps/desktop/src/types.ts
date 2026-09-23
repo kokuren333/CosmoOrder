@@ -7,6 +7,8 @@ export type Span =
   | { type: "code"; text: string }
   | { type: "emphasis"; spans: Span[] }
   | { type: "strong"; spans: Span[] }
+  | { type: "strikethrough"; spans: Span[] }
+  | { type: "math"; tex: string; display: boolean }
   | { type: "link"; url: string; href: string; spans: Span[] };
 
 export type Block =
@@ -15,6 +17,8 @@ export type Block =
   | { type: "list"; ordered: boolean; tight: boolean; items: ListItem[] }
   | { type: "block_quote"; blocks: Block[] }
   | { type: "code"; language: string | null; text: string }
+  | { type: "math"; tex: string }
+  | { type: "table"; headers: Span[][]; rows: Span[][][] }
   | { type: "html"; text: string }
   | { type: "rule" };
 
