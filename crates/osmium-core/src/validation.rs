@@ -154,6 +154,166 @@ pub fn validate_package(documents: PackageDocuments) -> Result<PackageModel, Vec
     let objectives = documents.objectives.as_array().unwrap();
     let resources = documents.resources.as_array().unwrap();
     let assessments = documents.assessments.as_array().unwrap();
+    if let Some(sources) = documents.manifest.get("sources").and_then(Value::as_array) {
+        let mut source_ids = BTreeSet::new();
+        for (index, source) in sources.iter().enumerate() {
+            let id = source["id"].as_str().unwrap_or_default();
+            if !source_ids.insert(id) {
+                errors.push(error(
+                    "manifest",
+                    format!("/sources/{index}/id"),
+                    "OSM_DUPLICATE_SOURCE",
+                    format!("duplicate source ID: {id}"),
+                ));
+            }
+            let visibility = source["visibility"].as_str().unwrap_or_default();
+            let kind = source["kind"].as_str().unwrap_or_default();
+            let locator = source
+                .get("locator")
+                .and_then(Value::as_str)
+                .unwrap_or_default();
+            if kind == "package_asset"
+                && !locator.is_empty()
+                && validate_relative_path(locator).is_err()
+            {
+                errors.push(error(
+                    "manifest",
+                    format!("/sources/{index}/locator"),
+                    "OSM_SOURCE_LOCATOR",
+                    "package_asset locator must be a safe package-relative path",
+                ));
+            }
+            if visibility != "private"
+                && kind != "manual"
+                && locator.trim().is_empty()
+                && source
+                    .get("citation")
+                    .and_then(Value::as_str)
+                    .is_none_or(str::is_empty)
+            {
+                errors.push(error(
+                    "manifest",
+                    format!("/sources/{index}"),
+                    "OSM_SOURCE_LOCATOR",
+                    "a distributable source requires a locator or citation",
+                ));
+            }
+            if visibility == "public" && locator.trim().is_empty() {
+                errors.push(error(
+                    "manifest",
+                    format!("/sources/{index}/locator"),
+                    "OSM_SOURCE_LOCATOR",
+                    "a public source requires a usable locator",
+                ));
+            }
+            if visibility != "private"
+                && (!locator_is_portable(locator)
+                    || locator.contains('?')
+                    || url_has_credentials(locator))
+            {
+                errors.push(error(
+                    "manifest",
+                    format!("/sources/{index}/locator"),
+                    "OSM_SOURCE_PRIVACY",
+                    "distributable locators must be portable and must not contain query parameters",
+                ));
+            }
+        }
+        for (index, resource) in resources.iter().enumerate() {
+            if let Some(language) = resource.get("language").and_then(Value::as_str) {
+                if language_tags::LanguageTag::parse(language).is_err() {
+                    errors.push(error(
+                        "resources",
+                        format!("/{index}/language"),
+                        "OSM_LANGUAGE",
+                        "resource language must be a well-formed BCP 47 tag",
+                    ));
+                }
+            }
+            let mut refs = BTreeSet::new();
+            for (ref_index, source_id) in resource
+                .get("source_ids")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .enumerate()
+            {
+                let source_id = source_id.as_str().unwrap_or_default();
+                if !source_ids.contains(source_id) {
+                    errors.push(error(
+                        "resources",
+                        format!("/{index}/source_ids/{ref_index}"),
+                        "OSM_SOURCE_REFERENCE",
+                        format!("unknown source ID: {source_id}"),
+                    ));
+                }
+                if !refs.insert(source_id) {
+                    errors.push(error(
+                        "resources",
+                        format!("/{index}/source_ids/{ref_index}"),
+                        "OSM_SOURCE_REFERENCE",
+                        format!("duplicate source reference: {source_id}"),
+                    ));
+                }
+            }
+        }
+        for (index, assessment) in assessments.iter().enumerate() {
+            for (ref_index, source_id) in assessment
+                .get("source_ids")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .enumerate()
+            {
+                let source_id = source_id.as_str().unwrap_or_default();
+                if !source_ids.contains(source_id) {
+                    errors.push(error(
+                        "assessments",
+                        format!("/{index}/source_ids/{ref_index}"),
+                        "OSM_SOURCE_REFERENCE",
+                        format!("unknown source ID: {source_id}"),
+                    ));
+                }
+            }
+        }
+    } else {
+        for (index, resource) in resources.iter().enumerate() {
+            if let Some(language) = resource.get("language").and_then(Value::as_str) {
+                if language_tags::LanguageTag::parse(language).is_err() {
+                    errors.push(error(
+                        "resources",
+                        format!("/{index}/language"),
+                        "OSM_LANGUAGE",
+                        "resource language must be a well-formed BCP 47 tag",
+                    ));
+                }
+            }
+            if resource
+                .get("source_ids")
+                .is_some_and(|v| !v.as_array().is_some_and(Vec::is_empty))
+            {
+                errors.push(error(
+                    "resources",
+                    format!("/{index}/source_ids"),
+                    "OSM_SOURCE_REFERENCE",
+                    "resource references sources but manifest has no source registry",
+                ));
+            }
+        }
+        for (index, assessment) in assessments.iter().enumerate() {
+            if assessment
+                .get("source_ids")
+                .is_some_and(|v| !v.as_array().is_some_and(Vec::is_empty))
+            {
+                errors.push(error(
+                    "assessments",
+                    format!("/{index}/source_ids"),
+                    "OSM_SOURCE_REFERENCE",
+                    "assessment references sources but manifest has no source registry",
+                ));
+            }
+        }
+    }
     let mut indices = BTreeMap::new();
     for kind in [
         DocumentKind::Concepts,
@@ -375,4 +535,27 @@ pub fn validate_package(documents: PackageDocuments) -> Result<PackageModel, Vec
         documents,
         prerequisite_order: order,
     })
+}
+
+fn locator_is_portable(locator: &str) -> bool {
+    if locator.is_empty() {
+        return true;
+    }
+    let lower = locator.to_ascii_lowercase();
+    !(locator.starts_with('/')
+        || locator.starts_with('\\')
+        || lower.as_bytes().get(1) == Some(&b':')
+        || lower.contains("/users/")
+        || lower.contains("/home/")
+        || lower.contains("\\users\\")
+        || lower.contains("\\home\\")
+        || locator.contains("\\")
+        || locator.chars().any(char::is_control))
+}
+
+fn url_has_credentials(locator: &str) -> bool {
+    locator
+        .split_once("://")
+        .and_then(|(_, rest)| rest.split('/').next())
+        .is_some_and(|authority| authority.contains('@'))
 }

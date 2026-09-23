@@ -77,6 +77,49 @@ fn unknown_required_capability_and_version_are_explicit() {
 }
 
 #[test]
+fn source_registry_checks_references_visibility_and_portability() {
+    let mut docs = example();
+    docs.manifest["sources"] = json!([
+        {"id":"public-ref","kind":"url","locator":"https://example.org/guide","visibility":"public"},
+        {"id":"private-ref","kind":"local_file","locator":"C:\\Users\\Example\\notes.pdf","visibility":"private"}
+    ]);
+    docs.resources[0]["source_ids"] = json!(["public-ref", "private-ref"]);
+    docs.resources[0]["language"] = json!("ja-JP");
+    assert!(validate_package(docs.clone()).is_ok());
+    docs.resources[0]["source_ids"] = json!(["missing"]);
+    has_error(docs, "OSM_SOURCE_REFERENCE", "/0/source_ids/0");
+
+    for locator in [
+        "C:/private/file.pdf",
+        "/home/person/paper.pdf",
+        "https://example.org/g?token=secret",
+        "https://user:secret@example.org/g",
+    ] {
+        let mut docs = example();
+        docs.manifest["sources"] =
+            json!([{"id":"public-ref","kind":"url","locator":locator,"visibility":"public"}]);
+        assert!(
+            validate_package(docs)
+                .unwrap_err()
+                .iter()
+                .any(|d| d.code == "OSM_SOURCE_PRIVACY"),
+            "{locator}"
+        );
+    }
+    let mut docs = example();
+    docs.manifest["sources"] = json!([{"id":"asset-ref","kind":"package_asset","locator":"../outside.pdf","visibility":"public"}]);
+    has_error(docs, "OSM_SOURCE_LOCATOR", "/sources/0/locator");
+    let mut docs = example();
+    docs.resources[0]["language"] = json!("not a language tag ???");
+    assert!(
+        validate_package(docs)
+            .unwrap_err()
+            .iter()
+            .any(|d| d.code == "OSM_LANGUAGE")
+    );
+}
+
+#[test]
 fn prerequisite_cycles_and_self_edges_fail() {
     let mut docs = example();
     docs.concepts[0]["requires"] = json!(["addition"]);

@@ -152,6 +152,131 @@ fn existing_outputs_and_invalid_sources_are_preserved() {
     assert!(!missing.exists());
 }
 
+#[test]
+fn private_and_attribution_only_provenance_is_sanitized_before_distribution() {
+    let distribution = compile_source(
+        &Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/medicine-pressure-test"),
+    )
+    .unwrap();
+    let package = &distribution.model.documents().manifest;
+    let sources = package["sources"].as_array().unwrap();
+    assert!(
+        !sources
+            .iter()
+            .any(|source| source["id"] == "author-notes-demo")
+    );
+    let attribution = sources
+        .iter()
+        .find(|source| source["id"] == "nice-iv-fluids")
+        .unwrap();
+    assert!(attribution.get("locator").is_none());
+    assert!(attribution["citation"].is_string());
+    for bytes in distribution.files.values() {
+        let text = String::from_utf8_lossy(bytes);
+        assert!(!text.contains("C:\\\\Users"));
+        assert!(!text.contains("/home/"));
+        assert!(!text.contains("author-notes-demo"));
+    }
+    assert!(
+        sources
+            .iter()
+            .any(|source| source["visibility"] == "public" && source["locator"].is_string())
+    );
+    assert!(
+        distribution
+            .model
+            .documents()
+            .resources
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|resource| resource.get("provenance").is_none())
+    );
+}
+
+#[test]
+fn untrusted_distribution_cannot_inject_private_provenance() {
+    let temp = tempfile::tempdir().unwrap();
+    let folder = temp.path().join("built");
+    build(&source(), &folder).unwrap();
+    let path = folder.join("manifest.json");
+    let mut value: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    value["package"]["sources"] = json!([{"id":"private-demo","kind":"local_file","locator":"/home/demo/private.pdf","visibility":"private"}]);
+    fs::write(path, canonical_json(&value)).unwrap();
+    assert!(
+        read_distribution(&folder).unwrap_err()[0]
+            .message
+            .contains("private provenance")
+    );
+}
+
+#[test]
+fn package_asset_sources_are_included_and_hash_checked() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().join("source");
+    fs::create_dir(&root).unwrap();
+    for entry in fs::read_dir(source()).unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        let target = root.join(entry.file_name());
+        if path.is_dir() {
+            fs::create_dir(&target).unwrap();
+            for nested in fs::read_dir(path).unwrap() {
+                let nested = nested.unwrap();
+                fs::copy(nested.path(), target.join(nested.file_name())).unwrap();
+            }
+        } else {
+            fs::copy(path, target).unwrap();
+        }
+    }
+    let asset = b"portable source excerpt";
+    let private_asset = b"private note content";
+    let citation_asset = b"citation only source";
+    fs::write(root.join("evidence.txt"), asset).unwrap();
+    fs::write(root.join("private.txt"), private_asset).unwrap();
+    fs::write(root.join("citation.txt"), citation_asset).unwrap();
+    let manifest_path = root.join("osmium.json");
+    let mut manifest: serde_json::Value =
+        serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
+    manifest["sources"] = json!([
+        {"id":"included-evidence","kind":"package_asset","locator":"evidence.txt","visibility":"public","content_hash":format!("sha256:{}",sha256(asset))},
+        {"id":"private-evidence","kind":"package_asset","locator":"private.txt","visibility":"private"},
+        {"id":"citation-evidence","kind":"package_asset","locator":"citation.txt","title":"Citation only","citation":"Example citation","visibility":"attribution_only"}
+    ]);
+    fs::write(
+        &manifest_path,
+        serde_json::to_vec_pretty(&manifest).unwrap(),
+    )
+    .unwrap();
+    let resource_path = root.join("entities/resources.json");
+    let mut resources: serde_json::Value =
+        serde_json::from_slice(&fs::read(&resource_path).unwrap()).unwrap();
+    resources[0]["source_ids"] =
+        json!(["included-evidence", "private-evidence", "citation-evidence"]);
+    fs::write(
+        &resource_path,
+        serde_json::to_vec_pretty(&resources).unwrap(),
+    )
+    .unwrap();
+    let distribution = compile_source(&root).unwrap();
+    assert_eq!(distribution.files["evidence.txt"], asset);
+    assert!(!distribution.files.contains_key("private.txt"));
+    assert!(!distribution.files.contains_key("citation.txt"));
+    assert_eq!(
+        distribution.model.documents().resources[0]["source_ids"],
+        json!(["included-evidence", "citation-evidence"])
+    );
+    let output = temp.path().join("built");
+    build(&root, &output).unwrap();
+    fs::write(output.join("evidence.txt"), b"tampered").unwrap();
+    assert!(
+        read_distribution(&output)
+            .unwrap_err()
+            .iter()
+            .any(|d| d.code == "OSM_HASH")
+    );
+}
+
 fn zip_entries(entries: &[(&str, Vec<u8>)], method: CompressionMethod) -> Vec<u8> {
     let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
     for (name, bytes) in entries {

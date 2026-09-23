@@ -79,6 +79,11 @@
           "minLength": 2,
           "maxLength": 100
         },
+        "sources": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/source"},
+          "maxItems": 10000
+        },
         "capabilities": {
           "type": "object",
           "properties": {
@@ -254,6 +259,8 @@
         "path": {
           "$ref": "#/$defs/path"
         },
+        "language": {"type":"string", "minLength":2, "maxLength":100},
+        "source_ids": {"type":"array", "items":{"$ref":"#/$defs/id"}, "uniqueItems":true, "maxItems":10000},
         "teaches": {
           "type": "array",
           "items": {
@@ -299,6 +306,20 @@
       ],
       "additionalProperties": false
     },
+    "source": {
+      "type":"object",
+      "properties": {
+        "id":{"$ref":"#/$defs/id"},
+        "kind":{"enum":["url","doi","isbn","citation","local_file","package_asset","manual"]},
+        "title":{"type":"string","minLength":1,"maxLength":16384},
+        "locator":{"type":"string","minLength":1,"maxLength":16384},
+        "citation":{"type":"string","minLength":1,"maxLength":16384},
+        "visibility":{"enum":["public","attribution_only","private"]},
+        "content_hash":{"type":"string","pattern":"^sha256:[0-9a-f]{64}$"}
+      },
+      "required":["id","kind","visibility"],
+      "additionalProperties":false
+    },
     "assessment": {
       "oneOf": [
         {
@@ -321,6 +342,7 @@
               "maxItems": 10000,
               "uniqueItems": true
             },
+            "source_ids": {"type":"array", "items":{"$ref":"#/$defs/id"}, "uniqueItems":true, "maxItems":10000},
             "stimulus": {
               "type": "object",
               "properties": {
@@ -437,6 +459,7 @@
               "maxItems": 10000,
               "uniqueItems": true
             },
+            "source_ids": {"type":"array", "items":{"$ref":"#/$defs/id"}, "uniqueItems":true, "maxItems":10000},
             "stimulus": {
               "type": "object",
               "properties": {

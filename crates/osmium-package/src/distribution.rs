@@ -180,7 +180,42 @@ pub(crate) fn verify_files(
     if !errors.is_empty() {
         return Err(errors);
     }
+    if let Some(sources) = source_manifest.get("sources").and_then(Value::as_array) {
+        if sources
+            .iter()
+            .any(|source| source["visibility"] == "private")
+        {
+            return Err(invalid(
+                "private provenance is forbidden in a distributable package",
+            ));
+        }
+        if sources.iter().any(|source| {
+            source["visibility"] == "attribution_only" && source.get("locator").is_some()
+        }) {
+            return Err(invalid(
+                "attribution-only sources must not distribute their locator",
+            ));
+        }
+    }
     let mut used = BTreeSet::from(["manifest.json".to_owned()]);
+    if let Some(sources) = source_manifest.get("sources").and_then(Value::as_array) {
+        for source in sources {
+            if source["kind"] == "package_asset" {
+                let Some(path) = source["locator"].as_str() else {
+                    continue;
+                };
+                let bytes = files
+                    .get(path)
+                    .ok_or_else(|| invalid(format!("missing package asset: {path}")))?;
+                if let Some(expected) = source.get("content_hash").and_then(Value::as_str)
+                    && expected != format!("sha256:{}", sha256(bytes))
+                {
+                    return Err(diagnostic(path, "OSM_HASH", "package asset hash mismatch"));
+                }
+                used.insert(path.to_owned());
+            }
+        }
+    }
     let mut documents = BTreeMap::new();
     for (kind, path) in source_manifest["entities"].as_object().unwrap() {
         let path = path.as_str().unwrap();
@@ -206,6 +241,16 @@ pub(crate) fn verify_files(
         assessments: documents["assessments"].clone(),
     })?;
     for resource in model.documents().resources.as_array().unwrap() {
+        if resource.get("source").is_some() {
+            return Err(invalid(
+                "legacy unclassified source locator is forbidden in a distribution",
+            ));
+        }
+        if resource.get("provenance").is_some() {
+            return Err(invalid(
+                "unclassified legacy provenance is forbidden in a distribution",
+            ));
+        }
         let path = resource["path"].as_str().unwrap();
         if !path.ends_with(".md") {
             return Err(invalid("unsupported resource extension"));
@@ -233,7 +278,21 @@ pub(crate) fn verify_files(
 pub fn compile_source(source: &Path) -> Result<Distribution, Vec<Diagnostic>> {
     let loaded = load_source(source)?;
     let mut files = BTreeMap::new();
+    let excluded_assets: BTreeSet<&str> = loaded
+        .model
+        .documents()
+        .manifest
+        .get("sources")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter(|record| record["kind"] == "package_asset" && record["visibility"] != "public")
+        .filter_map(|record| record["locator"].as_str())
+        .collect();
     for (name, bytes) in &loaded.files {
+        if excluded_assets.contains(name.as_str()) {
+            continue;
+        }
         if matches!(name.as_str(), "osmium.json" | "osmium.yaml") {
             continue;
         }
@@ -248,10 +307,68 @@ pub fn compile_source(source: &Path) -> Result<Distribution, Vec<Diagnostic>> {
         };
         files.insert(name.clone(), bytes);
     }
+    // Provenance is authoring input. Never place private records or legacy
+    // unclassified source locators in a distributable archive.
+    let manifest_path = loaded.model.documents().manifest["entities"]["resources"]
+        .as_str()
+        .unwrap();
+    let mut resources: Value =
+        parse_json(files.get(manifest_path).unwrap(), manifest_path).map_err(|e| vec![*e])?;
+    let assessment_path = loaded.model.documents().manifest["entities"]["assessments"]
+        .as_str()
+        .unwrap();
+    let mut assessments: Value =
+        parse_json(files.get(assessment_path).unwrap(), assessment_path).map_err(|e| vec![*e])?;
+    let mut manifest = loaded.model.documents().manifest.clone();
+    let sources = manifest
+        .get("sources")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+    let private_ids: BTreeSet<String> = sources
+        .iter()
+        .filter(|source| source["visibility"] == "private")
+        .filter_map(|source| source["id"].as_str().map(str::to_owned))
+        .collect();
+    if manifest.get("sources").is_some() {
+        let mut distributable = Vec::new();
+        for mut source in sources {
+            match source["visibility"].as_str().unwrap_or("public") {
+                "private" => continue,
+                "attribution_only" => {
+                    if let Some(object) = source.as_object_mut() {
+                        object.remove("locator");
+                    }
+                }
+                _ => {}
+            }
+            distributable.push(source);
+        }
+        manifest["sources"] = Value::Array(distributable);
+    }
+    for resource in resources.as_array_mut().unwrap() {
+        if let Some(source_ids) = resource.get_mut("source_ids").and_then(Value::as_array_mut) {
+            source_ids.retain(|id| id.as_str().is_some_and(|id| !private_ids.contains(id)));
+        }
+        if let Some(object) = resource.as_object_mut() {
+            object.remove("source");
+            object.remove("provenance");
+        }
+    }
+    for assessment in assessments.as_array_mut().unwrap() {
+        if let Some(source_ids) = assessment
+            .get_mut("source_ids")
+            .and_then(Value::as_array_mut)
+        {
+            source_ids.retain(|id| id.as_str().is_some_and(|id| !private_ids.contains(id)));
+        }
+    }
+    files.insert(manifest_path.to_owned(), canonical_json(&resources));
+    files.insert(assessment_path.to_owned(), canonical_json(&assessments));
     let manifest = DistributionManifest {
         distribution_version: "0.1".into(),
         canonicalization: "osmium-json-0.1".into(),
-        package: loaded.model.documents().manifest.clone(),
+        package: manifest,
         files: files
             .iter()
             .map(|(name, bytes)| {

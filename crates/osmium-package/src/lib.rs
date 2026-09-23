@@ -321,5 +321,25 @@ pub fn load_source(path: impl AsRef<Path>) -> Result<LoadedSource, Vec<Diagnosti
             files.insert(name.into(), bytes);
         }
     }
+    if let Some(sources) = manifest
+        .get("sources")
+        .and_then(serde_json::Value::as_array)
+    {
+        for source in sources
+            .iter()
+            .filter(|source| source["kind"] == "package_asset")
+        {
+            let name = source["locator"].as_str().unwrap();
+            let bytes = read_checked(&root, name, &entries)?;
+            if let Some(expected) = source
+                .get("content_hash")
+                .and_then(serde_json::Value::as_str)
+                && expected != format!("sha256:{}", crate::distribution::sha256(&bytes))
+            {
+                return Err(diagnostic(name, "OSM_HASH", "package asset hash mismatch"));
+            }
+            files.insert(name.into(), bytes);
+        }
+    }
     Ok(LoadedSource { model, files })
 }
