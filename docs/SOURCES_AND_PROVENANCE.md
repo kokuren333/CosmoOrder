@@ -14,7 +14,9 @@ Status: development contract for Package format 0.1. Source records are optional
 - `attribution_only`: distributable identifying metadata/citation, with locator removed during build.
 - `private`: authoring provenance only. The entire record and each Resource reference to it are removed from the built Package.
 
-The distribution reader rejects private records, attribution-only locators, and legacy unclassified Resource `source`/`provenance` values. The legacy free-form provenance object has no portability/privacy contract, so build removes it rather than risk leaking author paths or private values. Learner UI does not currently render a bibliography; a future opt-in References view should expose only sanitized public/attribution records.
+The distribution reader rejects private records, attribution-only locators, and legacy unclassified Resource `source`/`provenance` values. The legacy free-form provenance object has no portability/privacy contract, so build removes it rather than risk leaking author paths or private values.
+
+The Desktop Reader shows a closed **References / 参考資料** disclosure for sources referenced by that Resource only. The shared Runtime projects `public` title, citation, and locator, and `attribution_only` title and citation; private records are omitted before the Desktop DTO is created. Attribution-only locators are removed at both the Runtime and DTO boundaries. Public URLs are rendered as inert text because the Desktop currently has no approved external-link opener; the reference view does not create an anchor or navigate the WebView. A Resource with no learner-visible sources has no disclosure, so private-only provenance is not signaled by a count or empty heading.
 
 ## Local inputs and portable locators
 
