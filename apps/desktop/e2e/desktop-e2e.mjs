@@ -820,6 +820,39 @@ async function main() {
   await openFixture("Reading safe program output");
   await rendererApp.clickText("Inspecting code as text", "open programming resource");
   await rendererApp.waitForSelector('.code-frame [class*="hljs-"]', "highlighted code output");
+  const inertMarkupCheck = await rendererApp.evaluate(`(() => {
+    const body = document.querySelector(".markdown");
+    const links = [...(body?.querySelectorAll("a") ?? [])];
+    const labels = links.map((link) => link.textContent.trim());
+    return {
+      unsafeHref: links.some((link) => link.hasAttribute("href") && !/^(https?:|mailto:)/i.test(link.getAttribute("href") ?? "")),
+      rejectedLabelsAreText: body?.innerText.includes("blocked script") === true && body.innerText.includes("blocked traversal") && !links.some((link) => link.textContent.includes("blocked script") || link.textContent.includes("blocked traversal")),
+      imageInjected: body?.querySelector("img") !== null,
+      fallbackText: body?.innerText.includes("diagram fallback text") === true,
+      rawHtmlIsText: body?.innerText.includes('<img src="x" onerror="alert(1)">') === true,
+      externalLink: labels.includes("External reference"),
+      localReferenceHasNoNavigationTarget: links.some((link) => link.textContent.includes("Local package reference") && !link.hasAttribute("href")),
+    };
+  })()`);
+  assert(!inertMarkupCheck.unsafeHref, "unsafe package links never become clickable anchors");
+  assert(inertMarkupCheck.rejectedLabelsAreText, "unsafe link labels remain readable plain text");
+  assert(!inertMarkupCheck.imageInjected, "package images never load or inject an image element");
+  assert(inertMarkupCheck.fallbackText, "image alt text remains visible as a fallback");
+  assert(inertMarkupCheck.rawHtmlIsText, "raw HTML remains visible as inert text");
+  assert(inertMarkupCheck.externalLink, "Core-classified external links render as anchors");
+  assert(inertMarkupCheck.localReferenceHasNoNavigationTarget, "package-relative references render without an unsafe navigation target");
+  await rendererApp.evaluate(`(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: async (text) => { window.__osmiumCopied = text; } },
+    });
+  })()`);
+  await rendererApp.click(".code-copy", "copy code button");
+  await rendererApp.waitFor(
+    '() => typeof window.__osmiumCopied === "string" && window.__osmiumCopied.includes("print(message)")',
+    "copy button writes the source code to the clipboard",
+  );
+  pass("copy code button copies inert source text");
   await rendererApp.send("Emulation.setDeviceMetricsOverride", {
     width: 390,
     height: 900,

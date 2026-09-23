@@ -205,6 +205,9 @@ fn unsafe_link_targets_are_rejected() {
         "//evil.example/x",
         "../../outside.md",
         "/absolute/path.md",
+        "C:\\Windows\\System32\\drivers\\etc\\hosts",
+        "C:/Windows/System32/drivers/etc/hosts",
+        "\\\\server\\share\\outside.md",
         "#fragment",
         "content/../outside.md",
     ] {
@@ -323,4 +326,51 @@ fn cross_domain_resources_compile_to_renderer_neutral_structures() {
         "../../../examples/programming-pressure-test/content/values.md"
     ));
     assert!(programming.blocks.iter().any(|block| matches!(block, Block::Code { language: Some(language), .. } if language == "python")));
+}
+
+#[test]
+fn programming_fixture_keeps_links_and_html_inert_and_images_as_alt_text() {
+    let content = compile(include_str!(
+        "../../../examples/programming-pressure-test/content/values.md"
+    ));
+    let text = content.to_plain_text();
+    assert!(text.contains("External reference"));
+    assert!(text.contains("blocked script"));
+    assert!(text.contains("blocked traversal"));
+    assert!(text.contains("diagram fallback text"));
+    assert!(text.contains("<img src=\"x\" onerror=\"alert(1)\">"));
+
+    fn spans_have_only_classified_links(spans: &[Span]) {
+        for span in spans {
+            match span {
+                Span::Link { url, href, spans } => {
+                    let external = url.starts_with("https://")
+                        || url.starts_with("http://")
+                        || url.starts_with("mailto:");
+                    let relative = url.is_empty()
+                        && !href.starts_with('/')
+                        && !href.contains(['\\', ':'])
+                        && !href.contains("..");
+                    assert!(
+                        external || relative,
+                        "unexpected link target: {url:?} {href:?}"
+                    );
+                    assert!(!href.starts_with("javascript:"));
+                    assert!(!href.contains(".."));
+                    spans_have_only_classified_links(spans);
+                }
+                Span::Emphasis { spans }
+                | Span::Strong { spans }
+                | Span::Strikethrough { spans } => {
+                    spans_have_only_classified_links(spans);
+                }
+                Span::Text { .. } | Span::Code { .. } | Span::Math { .. } => {}
+            }
+        }
+    }
+    for block in &content.blocks {
+        if let Block::Paragraph { spans } = block {
+            spans_have_only_classified_links(spans);
+        }
+    }
 }
