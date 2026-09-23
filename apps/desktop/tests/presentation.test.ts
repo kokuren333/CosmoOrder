@@ -81,7 +81,8 @@ test("empty library still offers the install path", async () => {
   const html = renderToStaticMarkup(createElement(PackageList, {
     packages: [], selected: null, busy: false, onSelect: noop, onRefresh: noop,
   }));
-  assert.match(html, /インストールした教材がここに並びます/);
+  assert.match(html, /Packageがありません/);
+  assert.match(html, /osmium install/);
   assert.match(html, /osmium install/);
 });
 

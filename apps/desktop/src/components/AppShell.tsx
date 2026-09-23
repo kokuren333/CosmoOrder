@@ -9,7 +9,7 @@ import {
 import type { StatusView } from "../types.ts";
 import { BrandGem } from "./BrandGem.tsx";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
-import { uiText, type UiLanguage } from "../i18n.ts";
+import { UiLanguageContext, uiText, type UiLanguage } from "../i18n.ts";
 
 export function AppShell({
   section,
@@ -43,6 +43,7 @@ export function AppShell({
   const learning = ["lesson", "reader", "assessment"].includes(section);
   const t = (key: Parameters<typeof uiText>[1]) => uiText(language, key);
   return (
+    <UiLanguageContext.Provider value={language}>
     <div className="app" style={{ fontSize: `${scale}rem` }}>
       <a className="skip-link" href="#main-content">
         {t("skip")}
@@ -136,5 +137,6 @@ export function AppShell({
         ) : null}
       </footer>
     </div>
+    </UiLanguageContext.Provider>
   );
 }
