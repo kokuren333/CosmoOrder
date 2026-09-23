@@ -1,28 +1,22 @@
 [
   {
-    "id": "fluid",
-    "title": "Fluid balance",
+    "id": "compartments",
+    "title": "体液区分と水の移動",
     "requires": []
   },
   {
-    "id": "vitals",
-    "title": "Vital signs",
-    "requires": [
-      "fluid"
-    ]
+    "id": "loss-patterns",
+    "title": "水分・電解質の喪失と体液量の変化",
+    "requires": ["compartments"]
   },
   {
-    "id": "assessment",
-    "title": "Clinical assessment",
-    "requires": [
-      "vitals"
-    ]
+    "id": "clinical-signals",
+    "title": "身体所見と経時変化の読み取り",
+    "requires": ["loss-patterns"]
   },
   {
-    "id": "reasoning",
-    "title": "Integrated reasoning",
-    "requires": [
-      "assessment"
-    ]
+    "id": "integrated-assessment",
+    "title": "複数の情報から体液状態を考える",
+    "requires": ["clinical-signals"]
   }
 ]

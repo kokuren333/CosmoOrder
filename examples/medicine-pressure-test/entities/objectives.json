@@ -1,17 +1,22 @@
 [
   {
-    "id": "fluid.define",
-    "concept": "fluid",
-    "description": "Explain intake and output"
+    "id": "compartments.explain",
+    "concept": "compartments",
+    "description": "細胞内液・間質液・血漿の位置関係を説明し、水と溶質の移動を区別できる。"
   },
   {
-    "id": "vitals.interpret",
-    "concept": "vitals",
-    "description": "Interpret a vital-sign trend in context"
+    "id": "losses.distinguish",
+    "concept": "loss-patterns",
+    "description": "水分喪失とナトリウムを含む細胞外液喪失を区別し、脱水と循環血液量低下を同義に扱わない。"
   },
   {
-    "id": "case.integrate",
-    "concept": "reasoning",
-    "description": "Integrate fluid history, vital signs, and examination findings"
+    "id": "findings.interpret",
+    "concept": "clinical-signals",
+    "description": "病歴、身体所見、バイタルサイン、測定値の推移を組み合わせ、所見の限界も説明できる。"
+  },
+  {
+    "id": "state.integrate",
+    "concept": "integrated-assessment",
+    "description": "仮想症例の摂取・喪失歴と経時的所見から、体液状態について妥当な推論と未確定事項を分けて述べられる。"
   }
 ]

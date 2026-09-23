@@ -296,7 +296,7 @@ fn golden_lesson_compiles_to_expected_structure() {
 #[test]
 fn cross_domain_resources_compile_to_renderer_neutral_structures() {
     let medicine = compile(include_str!(
-        "../../../examples/medicine-pressure-test/content/fluid.md"
+        "../../../examples/medicine-pressure-test/content/compartments.md"
     ));
     assert!(
         medicine

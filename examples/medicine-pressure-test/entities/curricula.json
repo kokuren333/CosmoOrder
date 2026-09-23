@@ -1,11 +1,12 @@
 [
   {
-    "id": "core",
-    "title": "Core sequence",
+    "id": "adult-fluid-assessment",
+    "title": "体液の基礎から所見の統合へ",
     "objectives": [
-      "fluid.define",
-      "vitals.interpret",
-      "case.integrate"
+      "compartments.explain",
+      "losses.distinguish",
+      "findings.interpret",
+      "state.integrate"
     ]
   }
 ]

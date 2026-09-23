@@ -163,11 +163,11 @@ fn private_and_attribution_only_provenance_is_sanitized_before_distribution() {
     assert!(
         !sources
             .iter()
-            .any(|source| source["id"] == "author-notes-demo")
+            .any(|source| source["id"] == "private-author-note")
     );
     let attribution = sources
         .iter()
-        .find(|source| source["id"] == "nice-iv-fluids")
+        .find(|source| source["id"] == "nice-cg174")
         .unwrap();
     assert!(attribution.get("locator").is_none());
     assert!(attribution["citation"].is_string());
@@ -175,7 +175,8 @@ fn private_and_attribution_only_provenance_is_sanitized_before_distribution() {
         let text = String::from_utf8_lossy(bytes);
         assert!(!text.contains("C:\\\\Users"));
         assert!(!text.contains("/home/"));
-        assert!(!text.contains("author-notes-demo"));
+        assert!(!text.contains("private-author-note"));
+        assert!(!text.contains("../../docs/MEDICINE_PACKAGE_REVIEW.md"));
     }
     assert!(
         sources

@@ -1,66 +1,50 @@
 [
   {
-    "id": "fluid.lesson",
+    "id": "compartments.lesson",
     "type": "markdown",
-    "title": "Fluid balance",
-    "path": "content/fluid.md",
-    "teaches": [
-      "fluid.define"
-    ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text",
-    "provenance": {
-      "content_origin": "fixture向けに独自執筆。根拠sourceを参照。",
-      "human_review": "学習用の例。診療指針としてレビュー済みではない。"
-    },
+    "title": "体液はどこに分布するか",
+    "path": "content/compartments.md",
+    "teaches": ["compartments.explain"],
     "language": "ja",
-    "source_ids": [
-      "who-diarrhoeal-disease",
-      "nice-iv-fluids",
-      "author-notes-demo"
-    ]
+    "creator": "Osmium編集プロジェクト（AI支援執筆）",
+    "attribution": "本教材向けに日本語で新規執筆。根拠資料は「参考資料」を参照。",
+    "license": "再利用条件は未設定。",
+    "source_ids": ["openstax-fluid-compartments", "merck-volume-depletion"]
   },
   {
-    "id": "vitals.lesson",
+    "id": "losses.lesson",
     "type": "markdown",
-    "title": "Vital signs",
-    "path": "content/vitals.md",
-    "teaches": [
-      "vitals.interpret"
-    ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text",
-    "provenance": {
-      "content_origin": "fixture向けに独自執筆。根拠sourceを参照。",
-      "human_review": "学習用の例。診療指針としてレビュー済みではない。"
-    },
+    "title": "喪失の種類から体液変化を考える",
+    "path": "content/losses.md",
+    "teaches": ["losses.distinguish"],
     "language": "ja",
-    "source_ids": [
-      "who-diarrhoeal-disease",
-      "nice-iv-fluids"
-    ]
+    "creator": "Osmium編集プロジェクト（AI支援執筆）",
+    "attribution": "本教材向けに日本語で新規執筆。根拠資料は「参考資料」を参照。",
+    "license": "再利用条件は未設定。",
+    "source_ids": ["who-diarrhoeal-disease", "merck-volume-depletion"]
   },
   {
-    "id": "reasoning.lesson",
+    "id": "findings.lesson",
     "type": "markdown",
-    "title": "Case assessment",
-    "path": "content/reasoning.md",
-    "teaches": [
-      "case.integrate"
-    ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text",
-    "provenance": {
-      "content_origin": "fixture向けに独自執筆。根拠sourceを参照。",
-      "human_review": "学習用の例。診療指針としてレビュー済みではない。"
-    },
+    "title": "所見を一つずつ、推移とともに読む",
+    "path": "content/findings.md",
+    "teaches": ["findings.interpret"],
     "language": "ja",
-    "source_ids": [
-      "who-diarrhoeal-disease",
-      "nice-iv-fluids"
-    ]
+    "creator": "Osmium編集プロジェクト（AI支援執筆）",
+    "attribution": "本教材向けに日本語で新規執筆。根拠資料は「参考資料」を参照。",
+    "license": "再利用条件は未設定。",
+    "source_ids": ["merck-volume-depletion", "nice-cg174"]
+  },
+  {
+    "id": "integration.lesson",
+    "type": "markdown",
+    "title": "症例の情報を統合する",
+    "path": "content/integration.md",
+    "teaches": ["state.integrate"],
+    "language": "ja",
+    "creator": "Osmium編集プロジェクト（AI支援執筆）",
+    "attribution": "本教材向けに日本語で新規執筆。根拠資料は「参考資料」を参照。",
+    "license": "再利用条件は未設定。",
+    "source_ids": ["nice-cg174", "merck-volume-depletion", "private-author-note"]
   }
 ]
