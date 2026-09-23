@@ -15,6 +15,7 @@ import { AppShell } from "./components/AppShell.tsx";
 import { Reader } from "./components/Reader.tsx";
 import { osmium, toOsmiumError } from "./client.ts";
 import { readingOrder } from "./outline.ts";
+import { uiText, type UiLanguage } from "./i18n.ts";
 import type {
   AttemptView,
   ErrorView,
@@ -78,6 +79,10 @@ export function App(): ReactElement {
   const [diagnostics, setDiagnostics] = useState<ErrorView[]>([]);
   const [busy, setBusy] = useState(false);
   const [scale, setScale] = useState(1);
+  const [uiLanguage, setUiLanguage] = useState<UiLanguage>(() =>
+    localStorage.getItem("osmium.ui-language") === "en" ? "en" : "ja",
+  );
+  const t = (key: Parameters<typeof uiText>[1]) => uiText(uiLanguage, key);
 
   const fail = useCallback((error: unknown) => {
     setDiagnostics(toOsmiumError(error).diagnostics);
@@ -312,12 +317,17 @@ export function App(): ReactElement {
       onLesson={() => setPanel({ name: "lesson" })}
       onProgress={() => void showProgress()}
       onHistory={() => void showHistory(0)}
+      language={uiLanguage}
+      onLanguage={(language) => {
+        localStorage.setItem("osmium.ui-language", language);
+        setUiLanguage(language);
+      }}
     >
       {diagnostics.length > 0 ? (
         <div className="error" role="alert">
           <DiagnosticList diagnostics={diagnostics} />
           <button type="button" onClick={() => setDiagnostics([])}>
-            閉じる
+            {t("close")}
           </button>
         </div>
       ) : null}

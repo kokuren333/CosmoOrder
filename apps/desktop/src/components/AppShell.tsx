@@ -9,6 +9,7 @@ import {
 import type { StatusView } from "../types.ts";
 import { BrandGem } from "./BrandGem.tsx";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
+import { uiText, type UiLanguage } from "../i18n.ts";
 
 export function AppShell({
   section,
@@ -21,6 +22,8 @@ export function AppShell({
   onLesson,
   onProgress,
   onHistory,
+  language,
+  onLanguage,
   children,
 }: {
   section: string;
@@ -33,13 +36,16 @@ export function AppShell({
   onLesson: () => void;
   onProgress: () => void;
   onHistory: () => void;
+  language: UiLanguage;
+  onLanguage: (language: UiLanguage) => void;
   children: ReactNode;
 }) {
   const learning = ["lesson", "reader", "assessment"].includes(section);
+  const t = (key: Parameters<typeof uiText>[1]) => uiText(language, key);
   return (
     <div className="app" style={{ fontSize: `${scale}rem` }}>
       <a className="skip-link" href="#main-content">
-        本文へ移動
+        {t("skip")}
       </a>
       <header className="app-header">
         <button
@@ -53,13 +59,13 @@ export function AppShell({
           </span>
           <span className="brand-copy">
             <span>Osmium</span>
-            <small>学びを、もっと身近に。</small>
           </span>
         </button>
         <div className="header-tools">
-          <span className="local-label">このデバイスで学ぶ</span>
+          <span className="local-label">{t("local")}</span>
+          <button type="button" onClick={() => onLanguage(language === "ja" ? "en" : "ja")} aria-label={t("language")}>{t("language")}</button>
           <details className="display-settings">
-            <summary><Type size={15} aria-hidden="true" />文字サイズ</summary>
+            <summary><Type size={15} aria-hidden="true" />{t("fontSize")}</summary>
             <div className="row">
               {[1, 1.5, 2].map((value) => (
                 <button
@@ -81,44 +87,43 @@ export function AppShell({
           disabled={busy}
         >
           <Library size={17} aria-hidden="true" />
-          ライブラリ
+          {t("library")}
         </button>
         <button
           className="course-nav"
-          aria-label="目次を表示"
+          aria-label={t("tableOfContents")}
           aria-current={learning ? "page" : undefined}
           onClick={onLesson}
           disabled={busy || title === null}
         >
           <BookOpenText size={17} aria-hidden="true" />
-          {title ?? "教材を選ぶ"}
+          {title ?? t("choosePackage")}
         </button>
         <button
-          aria-label="進捗を表示"
+          aria-label={t("progress")}
           aria-current={section === "progress" ? "page" : undefined}
           onClick={onProgress}
           disabled={busy || title === null}
         >
           <ChartNoAxesColumnIncreasing size={17} aria-hidden="true" />
-          進捗
+          {t("progress")}
         </button>
         <button
-          aria-label="履歴を表示"
+          aria-label={t("history")}
           aria-current={section === "history" ? "page" : undefined}
           onClick={onHistory}
           disabled={busy || title === null}
         >
           <History size={17} aria-hidden="true" />
-          履歴
+          {t("history")}
         </button>
       </nav>
       <main id="main-content" tabIndex={-1}>
         {children}
       </main>
       <footer className="app-footer">
-        <p>学びの記録は、このデバイスに保存されます。</p>
         {status !== null ? (
-          <DeveloperDetails label="実行環境の詳細">
+          <DeveloperDetails label={t("executionDetails")}>
             <dl>
               <dt>OSMIUM_HOME</dt>
               <dd>{status.home}</dd>
