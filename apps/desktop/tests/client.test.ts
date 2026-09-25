@@ -10,15 +10,21 @@ test("a structured rejection keeps every diagnostic", () => {
     diagnostics: [
       {
         code: "OSM_REFERENCE",
+        severity: "error",
         message: "objective references a missing concept",
         file: "entities/objectives.json",
+        line: null,
+        column: null,
         path: "/0/concept",
         suggestions: ["declare the concept first"],
       },
       {
         code: "OSM_PATH",
+        severity: "error",
         message: "path escapes the package root",
         file: null,
+        line: null,
+        column: null,
         path: "",
         suggestions: [],
       },
@@ -27,6 +33,7 @@ test("a structured rejection keeps every diagnostic", () => {
   assert.ok(error instanceof OsmiumError);
   assert.equal(error.diagnostics.length, 2);
   assert.equal(error.diagnostics[0]?.code, "OSM_REFERENCE");
+  assert.equal(error.diagnostics[0]?.severity, "error");
   assert.equal(error.diagnostics[0]?.suggestions.length, 1);
   assert.ok(error.message.includes("OSM_REFERENCE: objective references a missing concept"));
 });
@@ -44,6 +51,6 @@ test("a string rejection is reported verbatim", () => {
 });
 
 test("an already normalized error is returned unchanged", () => {
-  const first = toOsmiumError({ diagnostics: [{ code: "OSM_IO", message: "no", file: null, path: "", suggestions: [] }] });
+  const first = toOsmiumError({ diagnostics: [{ code: "OSM_IO", severity: "error", message: "no", file: null, line: null, column: null, path: "", suggestions: [] }] });
   assert.equal(toOsmiumError(first), first);
 });

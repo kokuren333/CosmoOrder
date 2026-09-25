@@ -2,6 +2,7 @@ import { Markdown } from "./Markdown.ts";
 import { ArrowLeft, ArrowRight, ListTree } from "lucide-react";
 import { DeveloperDetails } from "./DeveloperDetails.tsx";
 import { ResourceReferences } from "./ResourceReferences.tsx";
+import { PressureVolumePrototype } from "./PressureVolumePrototype.tsx";
 import type { Resource, ResourceView } from "../types.ts";
 import { localize, useUiLanguage } from "../i18n.ts";
 
@@ -14,6 +15,7 @@ export function Reader({
   onBack,
   loading,
   courseTitle,
+  packageId,
 }: {
   resource: Resource;
   view: ResourceView | null;
@@ -23,6 +25,7 @@ export function Reader({
   onBack: () => void;
   loading: boolean;
   courseTitle: string;
+  packageId: string;
 }) {
   const language = useUiLanguage();
   const tr = (ja: string, en: string) => localize(language, ja, en);
@@ -77,6 +80,7 @@ export function Reader({
         ) : (
           <Markdown content={view.content} />
         )}
+        {packageId === "org.example/cardiovascular-atlas-validation" && resource.id === "hemodynamics.resource" ? <PressureVolumePrototype /> : null}
         <DeveloperDetails>
           <dl>
             <dt>Resource ID</dt>
@@ -93,7 +97,7 @@ export function Reader({
           ) : null}
         </DeveloperDetails>
       </div>
-      <ResourceReferences sources={view?.sources ?? []} />
+      <ResourceReferences references={view?.references ?? []} />
       {navigation("本文の後の教材ナビゲーション")}
     </article>
   );

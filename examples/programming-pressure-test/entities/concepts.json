@@ -1,21 +1,5 @@
 [
-  {
-    "id": "values",
-    "title": "Values and expressions",
-    "requires": []
-  },
-  {
-    "id": "errors",
-    "title": "Error messages",
-    "requires": [
-      "values"
-    ]
-  },
-  {
-    "id": "diffs",
-    "title": "Code review diffs",
-    "requires": [
-      "errors"
-    ]
-  }
+  {"id":"expressions","title":"値・式・関数呼び出しを読む","requires":[]},
+  {"id":"errors","title":"エラー出力から調査の手がかりを得る","requires":["expressions"]},
+  {"id":"diffs","title":"差分を根拠に変更をレビューする","requires":["errors"]}
 ]

@@ -16,14 +16,17 @@
     "assessments": "entities/assessments.json"
   },
   "extensions": {},
-  "sources": [
+  "references": [
     {
       "id": "openstax-fluid-compartments",
       "kind": "url",
       "title": "体液区分（OpenStax『解剖生理学』第26.1節）",
       "locator": "https://openstax.org/books/anatomy-and-physiology-2e/pages/26-1-body-fluids-and-fluid-compartments",
       "citation": "OpenStax. 『解剖生理学 第2版』第26.1節「体液と体液区分」. ライス大学（Rice University）.",
-      "visibility": "public"
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public",
+      "type": "webpage"
     },
     {
       "id": "who-diarrhoeal-disease",
@@ -31,7 +34,10 @@
       "title": "下痢性疾患に伴う水・電解質喪失（世界保健機関）",
       "locator": "https://www.who.int/en/news-room/fact-sheets/detail/diarrhoeal-disease",
       "citation": "世界保健機関（WHO）.「下痢性疾患」ファクトシート.",
-      "visibility": "public"
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public",
+      "type": "webpage"
     },
     {
       "id": "merck-volume-depletion",
@@ -39,7 +45,12 @@
       "title": "細胞外液量減少（Merck Manual Professional Edition）",
       "locator": "https://www.merckmanuals.com/professional/nephrology/fluid-metabolism/volume-depletion",
       "citation": "Merck Manual Professional Edition.「細胞外液量減少」. 2026年6月更新.",
-      "visibility": "public"
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public",
+      "type": "webpage",
+      "updated_at": "2026-06",
+      "publisher": "Merck Manual"
     },
     {
       "id": "nice-cg174",
@@ -47,15 +58,12 @@
       "title": "成人の体液状態評価（NICE CG174）",
       "locator": "https://www.nice.org.uk/guidance/cg174/chapter/recommendations",
       "citation": "英国国立医療技術評価機構（NICE）.「成人入院患者の静脈内輸液療法」臨床指針CG174・推奨事項.",
-      "visibility": "attribution_only"
-    },
-    {
-      "id": "private-author-note",
-      "kind": "local_file",
-      "title": "執筆者向け非公開メモ",
-      "locator": "../../docs/MEDICINE_PACKAGE_REVIEW.md",
-      "citation": "制作記録。配布・学習者表示の対象外。",
-      "visibility": "private"
+      "visibility": "attribution_only",
+      "record_visibility": "public",
+      "locator_visibility": "hidden",
+      "type": "guideline",
+      "publisher": "NICE",
+      "version": "CG174"
     }
   ]
 }

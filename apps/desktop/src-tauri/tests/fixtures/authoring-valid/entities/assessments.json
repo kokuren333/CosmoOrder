@@ -1,0 +1,21 @@
+[
+  {
+    "id": "apply-foundations-item",
+    "revision": "1",
+    "measures": ["apply-foundations"],
+    "cognitive_level": "application",
+    "stimulus": {
+      "markdown": "A learner meets a new example that uses the foundational idea in a different setting. Which explanation best demonstrates applying that idea to the new example?"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        { "id": "a", "text": "Apply the idea to the new example and explain the connection." },
+        { "id": "b", "text": "Repeat the name of the idea without using the example." },
+        { "id": "c", "text": "Choose an answer without relating it to the idea." }
+      ]
+    },
+    "evaluation": { "type": "exact", "answer": "a" },
+    "feedback": { "markdown": "The best answer applies the idea and explains its connection to the new example." }
+  }
+]

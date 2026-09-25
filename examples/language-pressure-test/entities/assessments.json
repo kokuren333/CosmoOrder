@@ -1,57 +1,28 @@
 [
   {
-    "id": "request.check",
+    "id": "requests.check",
     "revision": "1",
     "measures": [
-      "request.form",
-      "directions.translate",
-      "pronounce.station"
+      "requests.choose"
     ],
+    "cognitive_level": "discrimination",
     "stimulus": {
-      "markdown": "Which is the more polite request?"
+      "markdown": "駅の場所を知らないので、近くの人に道をたずねます。会話の最初に使う表現として、最も自然なのはどれですか？"
     },
     "response": {
       "type": "single_select",
       "options": [
         {
           "id": "a",
-          "text": "Tell me the way."
+          "text": "Excuse me, could you tell me how to get to the station?"
         },
         {
           "id": "b",
-          "text": "Could you tell me the way?"
-        }
-      ]
-    },
-    "evaluation": {
-      "type": "exact",
-      "answer": "b"
-    },
-    "feedback": {
-      "markdown": "Could you is a conventional softener in this request."
-    }
-  },
-  {
-    "id": "request.check.review",
-    "revision": "1",
-    "measures": [
-      "request.form",
-      "directions.translate",
-      "pronounce.station"
-    ],
-    "stimulus": {
-      "markdown": "Which statement best summarizes the concepts in **Japanese and English: asking for directions**?"
-    },
-    "response": {
-      "type": "single_select",
-      "options": [
-        {
-          "id": "a",
-          "text": "Use evidence and definitions from the resources"
+          "text": "Tell me the station now."
         },
         {
-          "id": "b",
-          "text": "Infer an answer without checking the material"
+          "id": "c",
+          "text": "I tell you where is the station."
         }
       ]
     },
@@ -60,7 +31,90 @@
       "answer": "a"
     },
     "feedback": {
-      "markdown": "Return to the related resources and connect the stated concepts to the objective."
-    }
+      "markdown": "Excuse me で相手に声をかけ、Could you tell me ...? で情報を依頼しています。丁寧さは文型だけで決まるわけではなく、声の調子や状況にも左右されます。"
+    },
+    "evidence_reference_ids": [
+      "bc-polite-requests",
+      "cambridge-where-indirect"
+    ]
+  },
+  {
+    "id": "directions.check",
+    "revision": "1",
+    "measures": [
+      "directions.exchange"
+    ],
+    "cognitive_level": "application",
+    "stimulus": {
+      "markdown": "案内所で、図書館までの道順を短く説明します。まず公園まで直進し、その後に右へ曲がると伝える文はどれですか？"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "Go straight until you reach the park, then turn right."
+        },
+        {
+          "id": "b",
+          "text": "Turn right the park, then go straight."
+        },
+        {
+          "id": "c",
+          "text": "The park is straight than the library."
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "Go straight ... until you reach the park ... then turn ... の順に動作を並べると、順序と目印が明確です。straight はここでは「曲がらずに進む」という意味で使われています。"
+    },
+    "evidence_reference_ids": [
+      "cambridge-straight-definition",
+      "cambridge-next-to-definition",
+      "cambridge-across-definition"
+    ]
+  },
+  {
+    "id": "listening.check",
+    "revision": "1",
+    "measures": [
+      "listening.confirm"
+    ],
+    "cognitive_level": "application",
+    "stimulus": {
+      "markdown": "相手の案内の途中が聞き取れませんでした。失礼になりにくく、もう一度言ってもらう表現はどれですか？"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "Sorry, could you say that again, please?"
+        },
+        {
+          "id": "b",
+          "text": "What? Speak clearly."
+        },
+        {
+          "id": "c",
+          "text": "I don't listen your direction."
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "Sorry で聞き返しを始め、Could you ...? と please を使って依頼しています。聞き取りでは station /ˈsteɪ.ʃən/ のように、語の強勢位置が手がかりの一つになります。"
+    },
+    "evidence_reference_ids": [
+      "cambridge-station-pronunciation",
+      "bc-polite-requests"
+    ]
   }
 ]

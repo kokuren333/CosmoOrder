@@ -1,0 +1,37 @@
+[
+  {
+    "id": "addition.lesson",
+    "type": "markdown",
+    "title": "1と1を合わせる",
+    "path": "content/introduction.md",
+    "teaches": [
+      "addition.basic"
+    ],
+    "language": "ja",
+    "creator": "Osmium example authors",
+    "attribution": "Original demonstration text; repository license not yet selected.",
+    "license_status": "unknown",
+    "evidence_reference_ids": [
+      "public-safe-query",
+      "hidden-locator",
+      "packaged-asset"
+    ]
+  },
+  {
+    "id": "addition.summary",
+    "type": "markdown",
+    "title": "足し算のまとめ",
+    "path": "content/summary.md",
+    "teaches": [
+      "addition.basic"
+    ],
+    "language": "ja",
+    "creator": "Osmium example authors",
+    "attribution": "Original demonstration text, dedicated to the public domain by its authors.",
+    "license_status": "known",
+    "license": "CC0-1.0",
+    "evidence_reference_ids": [
+      "packaged-asset"
+    ]
+  }
+]

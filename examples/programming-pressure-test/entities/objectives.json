@@ -1,17 +1,5 @@
 [
-  {
-    "id": "values.read",
-    "concept": "values",
-    "description": "Identify a literal and a function call"
-  },
-  {
-    "id": "errors.read",
-    "concept": "errors",
-    "description": "Locate the exception type in output"
-  },
-  {
-    "id": "diffs.review",
-    "concept": "diffs",
-    "description": "Describe a changed line in a diff"
-  }
+  {"id":"expressions.trace","concept":"expressions","description":"変数への代入、値、式、関数呼び出しの関係をコード例から説明し、実行前に分かることと分からないことを区別する。"},
+  {"id":"errors.diagnose","concept":"errors","description":"Python風のエラー出力から例外名・説明・発生位置を読み取り、次に確かめる事実を選ぶ。"},
+  {"id":"diffs.review","concept":"diffs","description":"差分の追加・削除・周辺文脈を読み、変更の影響と追加確認が必要な点を指摘する。"}
 ]

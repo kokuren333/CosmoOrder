@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.1",
+  "package_id": "org.example/authoring-broken",
+  "package_version": "1.0.0",
+  "title": "Broken authoring fixture",
+  "language": "en",
+  "capabilities": { "required": [], "optional": [] },
+  "entities": {
+    "concepts": "entities/concepts.json",
+    "objectives": "entities/objectives.json",
+    "curricula": "entities/curricula.json",
+    "resources": "entities/resources.json",
+    "assessments": "entities/assessments.json"
+  },
+  "extensions": {}
+}

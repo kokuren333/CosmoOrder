@@ -1,0 +1,19 @@
+[
+  {
+    "id": "apply-foundations-item",
+    "revision": "1",
+    "measures": ["apply-foundations"],
+    "cognitive_level": "application",
+    "stimulus": { "markdown": "Which explanation applies this idea to a new example and explains the connection?" },
+    "response": {
+      "type": "single_select",
+      "options": [
+        { "id": "a", "text": "Apply the idea and explain the connection." },
+        { "id": "b", "text": "Repeat the name without using the example." },
+        { "id": "c", "text": "Choose without relating the answer to the idea." }
+      ]
+    },
+    "evaluation": { "type": "exact", "answer": "a" },
+    "feedback": { "markdown": "Apply the idea to the new example." }
+  }
+]

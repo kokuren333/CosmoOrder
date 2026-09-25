@@ -56,6 +56,20 @@ fn answer_reopen_and_idempotency_preserve_observations() {
 }
 
 #[test]
+fn reinstalling_the_same_digest_restores_its_existing_progress() {
+    let (temp, mut runtime) = setup();
+    runtime.answer(PACKAGE, None, &request(json!("b"))).unwrap();
+    let before = runtime.progress(PACKAGE, None).unwrap();
+    let distribution = temp.path().join("package.osmium");
+
+    runtime.uninstall(PACKAGE, "0.1.0").unwrap();
+    assert!(runtime.packages().unwrap().is_empty());
+    runtime.install(&distribution).unwrap();
+
+    assert_eq!(runtime.progress(PACKAGE, None).unwrap(), before);
+}
+
+#[test]
 fn invalid_answers_and_transaction_failure_leave_no_half_event() {
     let (_temp, mut runtime) = setup();
     assert!(
@@ -226,5 +240,155 @@ fn new_package_version_does_not_reinterpret_old_attempts() {
             .unwrap()
             .event["score"],
         1
+    );
+}
+
+#[test]
+fn uninstall_removes_only_the_requested_version_and_preserves_events() {
+    let (temp, mut runtime) = setup();
+    runtime
+        .answer(PACKAGE, Some("0.1.0"), &request(json!("b")))
+        .unwrap();
+
+    let updated = temp.path().join("updated-source");
+    for (name, bytes) in osmium_package::load_source(source()).unwrap().files {
+        let path = updated.join(name);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, bytes).unwrap();
+    }
+    let manifest_path = updated.join("osmium.json");
+    let mut manifest: Value = serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
+    manifest["package_version"] = json!("0.2.0");
+    fs::write(manifest_path, serde_json::to_vec(&manifest).unwrap()).unwrap();
+    let archive = temp.path().join("updated.osmium");
+    build(&updated, &archive).unwrap();
+    runtime.install(&archive).unwrap();
+
+    let removed = runtime.uninstall(PACKAGE, "0.1.0").unwrap();
+    assert_eq!(removed.package_version, "0.1.0");
+    assert_eq!(runtime.packages().unwrap().len(), 1);
+    assert_eq!(runtime.packages().unwrap()[0].package_version, "0.2.0");
+    assert_eq!(
+        runtime
+            .history(PACKAGE, Some("0.1.0"), 16, 0)
+            .unwrap()
+            .len(),
+        1
+    );
+    let all_history = runtime.history_all(16, 0).unwrap();
+    assert_eq!(all_history.len(), 1);
+    assert_eq!(all_history[0]["package_version"], "0.1.0");
+    assert_eq!(
+        all_history[0]["assessment_snapshot"]["stimulus"]["markdown"],
+        "1 + 1 はいくつ？"
+    );
+    assert!(runtime.progress(PACKAGE, Some("0.2.0")).unwrap()[0].attempts == 0);
+}
+
+#[test]
+fn uninstall_succeeds_when_another_installed_version_is_damaged() {
+    let (temp, mut runtime) = setup();
+    runtime.answer(PACKAGE, Some("0.1.0"), &request(json!("b"))).unwrap();
+    let updated = temp.path().join("updated-source");
+    for (name, bytes) in osmium_package::load_source(source()).unwrap().files {
+        let path = updated.join(name);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, bytes).unwrap();
+    }
+    let manifest_path = updated.join("osmium.json");
+    let mut manifest: Value = serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
+    manifest["package_version"] = json!("0.2.0");
+    fs::write(manifest_path, serde_json::to_vec(&manifest).unwrap()).unwrap();
+    let archive = temp.path().join("updated.osmium");
+    build(&updated, &archive).unwrap();
+    runtime.install(&archive).unwrap();
+    let damaged_path = runtime.packages().unwrap().into_iter().find(|item| item.package_version == "0.2.0").unwrap().path.join("entities/resources.json");
+    fs::write(damaged_path, b"tampered unrelated version").unwrap();
+
+    let report = runtime.uninstall(PACKAGE, "0.1.0").unwrap();
+    assert_eq!(report.package_version, "0.1.0");
+    assert_eq!(runtime.package_inventory().unwrap().len(), 1);
+    assert!(runtime.package_inventory().unwrap()[0].integrity_error.is_some());
+    assert_eq!(runtime.history_all(16, 0).unwrap().len(), 1);
+}
+
+#[test]
+fn damaged_payload_can_be_uninstalled_after_restart_without_losing_history() {
+    let (temp, mut runtime) = setup();
+    runtime
+        .answer(PACKAGE, Some("0.1.0"), &request(json!("b")))
+        .unwrap();
+    let installed = runtime.packages().unwrap().remove(0);
+    let damaged = installed.path.join("entities/resources.json");
+    drop(runtime);
+    fs::write(damaged, b"tampered payload").unwrap();
+
+    let mut runtime = Runtime::open(&temp.path().join("home")).unwrap();
+    let inventory = runtime.package_inventory().unwrap();
+    assert_eq!(inventory.len(), 1);
+    assert!(inventory[0].integrity_error.is_some());
+    assert_eq!(
+        runtime.uninstall(PACKAGE, "0.1.0").unwrap().package_version,
+        "0.1.0"
+    );
+    assert!(runtime.packages().unwrap().is_empty());
+    assert_eq!(
+        runtime
+            .history(PACKAGE, Some("0.1.0"), 16, 0)
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(runtime.history_all(16, 0).unwrap().len(), 1);
+}
+
+#[test]
+fn learner_reference_dto_keeps_evidence_but_never_an_authoring_locator() {
+    let temp = tempfile::tempdir().unwrap();
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples/provenance-visibility-pressure-test");
+    let distribution = temp.path().join("provenance.osmium");
+    build(&fixture, &distribution).unwrap();
+    let mut runtime = Runtime::open(&temp.path().join("home")).unwrap();
+    runtime.install(&distribution).unwrap();
+
+    let view = runtime
+        .resource("org.osmium.pressure/provenance", None, "addition.lesson")
+        .unwrap();
+    let references = view["references"].as_array().unwrap();
+    assert_eq!(references.len(), 3);
+    // A safe publication query survives into the learner DTO.
+    let public = references
+        .iter()
+        .find(|source| source["id"] == "public-safe-query")
+        .unwrap();
+    assert_eq!(
+        public["locator"],
+        "https://example.org/article?id=123&lang=ja"
+    );
+    assert_eq!(public["publisher"], "Example Organization");
+    // A hidden locator keeps the record attributable but the URL never reaches
+    // the DTO that the Desktop renders.
+    let hidden = references
+        .iter()
+        .find(|source| source["id"] == "hidden-locator")
+        .unwrap();
+    assert!(hidden.get("locator").is_none());
+    assert_eq!(hidden["locator_visibility"], "hidden");
+    assert_eq!(
+        hidden["citation"],
+        "Example Organization. Internal document."
+    );
+    // No record is private, and the projection never emits a private marker.
+    for source in references {
+        assert_ne!(source["record_visibility"], "private");
+        assert_ne!(source["visibility"], "private");
+    }
+    // The DTO is a projection: authoring-only fields such as content_hash never
+    // travel even for a record that does distribute.
+    assert!(
+        references
+            .iter()
+            .all(|source| source.get("content_hash").is_none())
     );
 }

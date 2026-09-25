@@ -20,6 +20,9 @@ use tauri::{WebviewUrl, WebviewWindowBuilder};
 /// Data directory used by this process. `OSMIUM_HOME` wins, then the platform
 /// default, matching the CLI exactly.
 fn data_home() -> Result<std::path::PathBuf, error::CommandError> {
+    if let Some(home) = std::env::var_os("OSMIUM_HOME") {
+        return Ok(std::path::PathBuf::from(home));
+    }
     default_home().map_err(error::CommandError::new)
 }
 
@@ -51,11 +54,12 @@ pub fn run() {
         }
     };
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .manage(desktop)
         .setup(|app| {
             let mut builder =
                 WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
-                    .title("Osmium")
+                    .title("CosmoOrder")
                     .inner_size(1180.0, 820.0)
                     .min_inner_size(720.0, 520.0)
                     .resizable(true)
@@ -68,15 +72,29 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::status,
+            commands::default_source_directory,
             commands::list_packages,
             commands::open_lesson,
             commands::read_resource,
             commands::submit_attempt,
             commands::progress,
             commands::history,
+            commands::all_history,
+            commands::package_context,
+            commands::package_concept_search,
             commands::rebuild_progress,
             commands::export_state,
             commands::backup_state,
+            commands::review_source,
+            commands::create_source,
+            commands::open_source_editor,
+            commands::save_source,
+            commands::open_authoring_workspace,
+            commands::save_authoring_workspace,
+            commands::install_source,
+            commands::install_distribution,
+            commands::export_source,
+            commands::uninstall_package,
         ])
         .run(tauri::generate_context!())
         .expect("the Osmium desktop runtime starts");

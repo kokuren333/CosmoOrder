@@ -1,0 +1,50 @@
+[
+  {
+    "id": "foundations.resource",
+    "type": "markdown",
+    "title": "心臓の構造と血液の流れ",
+    "path": "content/foundations.md",
+    "teaches": ["structure.explain", "chambers.compare", "valves.describe", "pulmonary.trace", "systemic.trace", "myocardium.describe", "conduction.trace", "coronary.explain", "cycle.sequence", "phases.compare"],
+    "language": "ja",
+    "creator": "CosmoOrder P1.5 validation fixture",
+    "attribution": "UX検証用の概説。医学的判断や臨床行為の根拠として使用しない。",
+    "license_status": "unknown",
+    "evidence_reference_ids": ["openstax-cardiac-cycle", "openstax-cardiac-physiology"]
+  },
+  {
+    "id": "hemodynamics.resource",
+    "type": "markdown",
+    "title": "充満・負荷・拍出をつなげる",
+    "path": "content/hemodynamics.md",
+    "teaches": ["stroke-volume.explain", "heart-rate.explain", "output.calculate", "ef.interpret", "return.trace", "filling.explain", "preload.explain", "contractility.explain", "afterload.explain", "resistance.explain", "pv-loop.read", "starling.explain"],
+    "language": "ja",
+    "creator": "CosmoOrder P1.5 validation fixture",
+    "attribution": "UX検証用の概説。医学的判断や臨床行為の根拠として使用しない。",
+    "license_status": "unknown",
+    "evidence_reference_ids": ["openstax-cardiac-physiology"]
+  },
+  {
+    "id": "compensation.resource",
+    "type": "markdown",
+    "title": "循環の代償と心不全症候群",
+    "path": "content/compensation.md",
+    "teaches": ["perfusion.explain", "renal-perfusion.explain", "sympathetic.explain", "raas.explain", "adh.explain", "natriuretic.explain", "retention.explain", "congestion.explain", "hf-syndrome.explain", "remodeling.explain", "cardiorenal.explain"],
+    "language": "ja",
+    "creator": "CosmoOrder P1.5 validation fixture",
+    "attribution": "UX検証用の概説。医学的判断や臨床行為の根拠として使用しない。",
+    "license_status": "unknown",
+    "evidence_reference_ids": ["openstax-cardiac-physiology", "aha-heart-failure-2022", "esc-heart-failure-2026"]
+  },
+  {
+    "id": "phenotypes.resource",
+    "type": "markdown",
+    "title": "心不全の表現型と薬剤群を識別する",
+    "path": "content/phenotypes.md",
+    "teaches": ["phenotypes.compare", "hfref.describe", "hfmr.describe", "hfpef.describe", "diuretics.describe", "acei.describe", "arb.describe", "arni.describe", "beta.describe", "mra.describe", "sglt2.describe"],
+    "language": "ja",
+    "creator": "CosmoOrder P1.5 validation fixture",
+    "attribution": "UX検証用の概説。医学的判断や臨床行為の根拠として使用しない。",
+    "license_status": "unknown",
+    "evidence_reference_ids": ["aha-heart-failure-2022", "esc-heart-failure-2026"]
+  }
+]

@@ -317,10 +317,21 @@ fn cross_domain_resources_compile_to_renderer_neutral_structures() {
     assert!(mathematics.blocks.iter().any(|block| matches!(block, Block::Paragraph { spans } if spans.iter().any(|span| matches!(span, Span::Math { display: false, .. })))));
 
     let language = compile(include_str!(
-        "../../../examples/language-pressure-test/content/politeness.md"
+        "../../../examples/language-pressure-test/content/requests.md"
     ));
     assert!(language.to_plain_text().contains("駅への行き方"));
     assert!(language.blocks.iter().any(|block| matches!(block, Block::Paragraph { spans } if spans.iter().any(|span| matches!(span, Span::Strong { .. })))));
+
+    let directions = compile(include_str!(
+        "../../../examples/language-pressure-test/content/directions.md"
+    ));
+    assert!(
+        directions
+            .blocks
+            .iter()
+            .any(|block| matches!(block, Block::Table { .. }))
+    );
+    assert!(directions.to_plain_text().contains("across from"));
 
     let programming = compile(include_str!(
         "../../../examples/programming-pressure-test/content/values.md"
@@ -334,11 +345,15 @@ fn programming_fixture_keeps_links_and_html_inert_and_images_as_alt_text() {
         "../../../examples/programming-pressure-test/content/values.md"
     ));
     let text = content.to_plain_text();
-    assert!(text.contains("External reference"));
-    assert!(text.contains("blocked script"));
-    assert!(text.contains("blocked traversal"));
-    assert!(text.contains("diagram fallback text"));
-    assert!(text.contains("<img src=\"x\" onerror=\"alert(1)\">"));
+    assert!(text.contains("Python公式Tutorial"));
+    assert!(text.contains("端末を開くリンク"));
+    assert!(text.contains("Package外を指す相対リンク"));
+    assert!(text.contains("図が読み込めないときの説明"));
+    assert!(text.contains("このタグも文字列として扱います"));
+    // The image survives only as its alternative text, never as a fetchable
+    // element, and the raw HTML example stays visible text.
+    assert!(!text.contains("example.invalid/diagram.png"));
+    assert!(text.contains("onerror="));
 
     fn spans_have_only_classified_links(spans: &[Span]) {
         for span in spans {

@@ -16,6 +16,8 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 /// Upper bound for a single `query` page.
 pub const MAX_QUERY_LIMIT: usize = 256;
+/// Maximum number of matches returned by a Package-local Concept search.
+pub const MAX_CONCEPT_SEARCH_RESULTS: usize = 20;
 /// Upper bound for the entity kinds a single `context` traversal may reach.
 pub const MAX_CONTEXT_NODES: usize = 512;
 /// Upper bound for the serialized entity bytes a `context` result may carry.
@@ -123,6 +125,18 @@ pub struct QueryView {
     pub returned: usize,
     pub truncated: bool,
     pub entities: Vec<EntitySummary>,
+}
+
+/// Bounded title search over Concepts in one Package. Results remain in the
+/// author's document order; callers can narrow a broad query rather than
+/// receiving the entire Concept collection.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ConceptSearchView {
+    pub query: String,
+    pub total: usize,
+    pub limit: usize,
+    pub results: Vec<EntitySummary>,
+    pub truncated: bool,
 }
 
 /// One entity reached by a context traversal, with its full untrusted payload.
@@ -431,6 +445,57 @@ pub fn query(
         returned,
         truncated: offset + returned < all.len(),
         entities: page,
+    })
+}
+
+/// Search Concept titles within one validated Package, returning a small
+/// deterministic result set suitable for recentering a local Atlas view.
+pub fn search_concepts(
+    model: &PackageModel,
+    needle: &str,
+    limit: usize,
+) -> Result<ConceptSearchView, Vec<Diagnostic>> {
+    if limit == 0 || limit > MAX_CONCEPT_SEARCH_RESULTS || needle.chars().count() > 128 {
+        return Err(vec![error(
+            "cli",
+            "OSM_QUERY_LIMIT",
+            format!(
+                "search requires 1..={MAX_CONCEPT_SEARCH_RESULTS} results and at most 128 query characters"
+            ),
+        )]);
+    }
+    let query = needle.trim();
+    if query.is_empty() {
+        return Ok(ConceptSearchView {
+            query: String::new(),
+            total: 0,
+            limit,
+            results: Vec::new(),
+            truncated: false,
+        });
+    }
+    let normalized = query.to_lowercase();
+    let matches = entities(model, EntityKind::Concept)
+        .iter()
+        .filter(|entity| {
+            required_str(entity, "title")
+                .to_lowercase()
+                .contains(&normalized)
+        });
+    let mut total = 0;
+    let mut results = Vec::new();
+    for entity in matches {
+        total += 1;
+        if results.len() < limit {
+            results.push(summary(EntityKind::Concept, entity));
+        }
+    }
+    Ok(ConceptSearchView {
+        query: query.to_owned(),
+        total,
+        limit,
+        truncated: total > results.len(),
+        results,
     })
 }
 
@@ -784,6 +849,27 @@ mod tests {
     }
 
     #[test]
+    fn concept_search_is_case_insensitive_package_local_and_bounded() {
+        let mut documents = model().documents().clone();
+        documents.concepts.as_array_mut().unwrap().push(json!({
+            "id": "addition.extra",
+            "title": "足し算の応用",
+            "requires": ["addition"]
+        }));
+        let model = validate_package(documents).unwrap();
+        let view = search_concepts(&model, "  足し  ", 1).unwrap();
+        assert_eq!(view.query, "足し");
+        assert_eq!(view.total, 2);
+        assert_eq!(view.results.len(), 1);
+        assert_eq!(view.results[0].id, "addition");
+        assert!(view.truncated);
+        assert!(search_concepts(&model, "  ", 1).unwrap().results.is_empty());
+        assert!(search_concepts(&model, "足し", 0).is_err());
+        assert!(search_concepts(&model, "足し", MAX_CONCEPT_SEARCH_RESULTS + 1).is_err());
+        assert!(search_concepts(&model, &"x".repeat(129), 1).is_err());
+    }
+
+    #[test]
     fn query_accepts_plural_kind_spelling() {
         assert_eq!(EntityKind::parse("concepts"), Some(EntityKind::Concept));
         assert_eq!(
@@ -839,6 +925,59 @@ mod tests {
     }
 
     #[test]
+    fn concept_context_is_atlas_ready_and_keeps_curriculum_order_separate() {
+        let view = context(&model(), EntityKind::Concept, "addition", 2, 64)
+            .expect("bounded Concept neighborhood");
+        let ids: BTreeSet<&str> = view.nodes.iter().map(|node| node.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            BTreeSet::from([
+                "addition",
+                "carry",
+                "addition.basic",
+                "carry.basic",
+                "addition.lesson",
+                "addition.01",
+                "intro",
+            ])
+        );
+        assert!(!view.truncated);
+
+        let relation_kinds: BTreeSet<&str> = view
+            .relations
+            .iter()
+            .map(|relation| relation.relation.as_str())
+            .collect();
+        assert_eq!(
+            relation_kinds,
+            BTreeSet::from(["concept", "measures", "orders", "requires", "teaches"])
+        );
+        assert!(view.relations.iter().any(|relation| {
+            relation.relation == "requires"
+                && relation.from_id == "addition"
+                && relation.to_id == "carry"
+                && relation.incoming
+        }));
+        assert!(view.relations.iter().any(|relation| {
+            relation.relation == "orders"
+                && relation.from_id == "addition.basic"
+                && relation.to_id == "intro"
+                && relation.incoming
+        }));
+
+        let curriculum = view
+            .nodes
+            .iter()
+            .find(|node| node.kind == EntityKind::Curriculum && node.id == "intro")
+            .expect("the related Curriculum is available as a detail node");
+        assert_eq!(
+            curriculum.entity["objectives"],
+            json!(["addition.basic", "carry.basic"]),
+            "Curriculum order is the author's ordered objective list, not a requires edge"
+        );
+    }
+
+    #[test]
     fn prerequisite_depth_counts_the_chain_below_the_target() {
         // `addition` has no prerequisites; `carry` needs `addition`.
         assert_eq!(
@@ -880,6 +1019,26 @@ mod tests {
     #[test]
     fn context_rejects_zero_depth_and_unknown_ids() {
         assert!(context(&model(), EntityKind::Concept, "addition", 0, 8).is_err());
+        assert!(
+            context(
+                &model(),
+                EntityKind::Concept,
+                "addition",
+                MAX_CONTEXT_DEPTH + 1,
+                8
+            )
+            .is_err()
+        );
+        assert!(
+            context(
+                &model(),
+                EntityKind::Concept,
+                "addition",
+                1,
+                MAX_CONTEXT_NODES + 1
+            )
+            .is_err()
+        );
         assert!(context(&model(), EntityKind::Concept, "missing", 1, 8).is_err());
     }
 

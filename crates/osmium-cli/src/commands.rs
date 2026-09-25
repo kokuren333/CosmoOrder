@@ -1,13 +1,14 @@
 //! One function per command. Each maps CLI arguments onto Core or Package
 //! operations and returns a serializable view; none re-implements validation.
 
-use crate::args::{Cli, Command};
+use crate::args::{Cli, Command, ReferenceAction};
 use crate::error::{Failure, target_diagnostic};
 use osmium_core::query::{self, EntityKind};
 use osmium_core::schema::Diagnostic;
 use osmium_core::validation::PackageModel;
 use osmium_package::init::{self, InitRequest};
 use osmium_package::load_source;
+use osmium_package::references::{self, ReferenceDraft};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
@@ -45,6 +46,15 @@ pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failur
             serde_json::to_value(library.packages().map_err(Failure::from_diagnostics)?)
                 .map_err(internal_serialization)?
         }
+        Command::Uninstall {
+            package_id,
+            package_version,
+        } => serde_json::to_value(
+            runtime(cli)?
+                .uninstall(package_id, package_version)
+                .map_err(Failure::from_diagnostics)?,
+        )
+        .map_err(internal_serialization)?,
         Command::Learn {
             package_id,
             package_version,
@@ -129,6 +139,12 @@ pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failur
             let loaded = load(path)?;
             let mut diagnostics = osmium_core::lint::lint(&loaded.model);
             let docs = loaded.model.documents();
+            let package_language = docs
+                .manifest
+                .get("language")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or_default()
+                .to_owned();
             for resource in docs.resources.as_array().unwrap() {
                 let id = resource["id"].as_str().unwrap_or_default();
                 if let Some(body) = resource["path"]
@@ -138,6 +154,30 @@ pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failur
                 {
                     if body.trim().chars().count() < 240 {
                         diagnostics.push(Diagnostic { code:"OSM_LINT_RESOURCE_SHORT".into(), severity:"warning".into(), entity_type:Some("resource".into()), entity_id:Some(id.into()), file:resource["path"].as_str().map(str::to_owned), line:None, column:None, path:"/".into(), message:"resource body is brief; review whether it teaches the concept without additional material".into(), suggestions:vec!["consider explanation, example, distinction, or summary where useful".into()] });
+                    }
+                    // A body written in a completely different script from the
+                    // declared language is a heuristic signal, never an error:
+                    // mixed-language teaching material is legitimate, so this
+                    // only fires when the declared script is absent entirely.
+                    let declared = resource
+                        .get("language")
+                        .and_then(serde_json::Value::as_str)
+                        .unwrap_or(&package_language);
+                    if let Some(message) = script_mismatch(declared, body) {
+                        diagnostics.push(Diagnostic {
+                            code: "OSM_LINT_LANGUAGE_SCRIPT".into(),
+                            severity: "warning".into(),
+                            entity_type: Some("resource".into()),
+                            entity_id: Some(id.into()),
+                            file: resource["path"].as_str().map(str::to_owned),
+                            line: None,
+                            column: None,
+                            path: "/".into(),
+                            message,
+                            suggestions: vec![
+                                "confirm the declared language or the body text".into(),
+                            ],
+                        });
                     }
                 }
             }
@@ -222,8 +262,82 @@ pub fn execute(cli: &Cli) -> Result<(serde_json::Value, Vec<Diagnostic>), Failur
                 .map_err(option_value)?;
             serde_json::to_value(view).map_err(internal_serialization)?
         }
+        Command::Reference { action } => match action.as_ref() {
+            ReferenceAction::Add {
+                path,
+                id,
+                kind,
+                title,
+                locator,
+                citation,
+                reference_type,
+                publisher,
+                authors,
+                published_at,
+                updated_at,
+                accessed_at,
+                edition,
+                version,
+                visibility,
+                ..
+            } => {
+                let draft = ReferenceDraft {
+                    id: id.clone(),
+                    kind: kind.clone(),
+                    title: title.clone(),
+                    locator: locator.clone(),
+                    citation: citation.clone(),
+                    reference_type: reference_type.clone(),
+                    publisher: publisher.clone(),
+                    authors: authors.clone(),
+                    published_at: published_at.clone(),
+                    updated_at: updated_at.clone(),
+                    accessed_at: accessed_at.clone(),
+                    edition: edition.clone(),
+                    version: version.clone(),
+                    visibility: Some(visibility.clone()),
+                };
+                serde_json::to_value(
+                    references::add_reference(path, &draft).map_err(authoring_failure)?,
+                )
+                .map_err(internal_serialization)?
+            }
+            ReferenceAction::Attach {
+                path,
+                reference_id,
+                resource,
+                assessment,
+                ..
+            } => serde_json::to_value(
+                references::attach_reference(
+                    path,
+                    reference_id,
+                    resource.as_deref(),
+                    assessment.as_deref(),
+                )
+                .map_err(authoring_failure)?,
+            )
+            .map_err(internal_serialization)?,
+            ReferenceAction::List { path, .. } => serde_json::to_value(
+                references::list_references(path).map_err(Failure::from_diagnostics)?,
+            )
+            .map_err(internal_serialization)?,
+        },
     };
     Ok((value, Vec::new()))
+}
+
+/// Authoring edits that the caller got wrong (`OSM_INIT_INVALID`) are invocation
+/// mistakes, so they exit 2 rather than reporting an invalid package.
+fn authoring_failure(diagnostics: Vec<Diagnostic>) -> Failure {
+    if diagnostics
+        .iter()
+        .all(|diagnostic| diagnostic.code == "OSM_INIT_INVALID")
+    {
+        Failure::new(diagnostics, crate::envelope::Exit::Usage)
+    } else {
+        Failure::from_diagnostics(diagnostics)
+    }
 }
 
 /// Diagnostic codes that describe a rejected option value rather than a
@@ -310,6 +424,41 @@ fn text(model: &PackageModel, field: &str) -> String {
         .to_owned()
 }
 
+/// Does the body text contain the script the declared language implies?
+///
+/// Only languages whose script is unambiguous are checked, and only for the
+/// case where the expected script is absent *entirely*. A lesson that mixes
+/// languages, quotes another script, or teaches a foreign writing system must
+/// not be reported, so the check never fires on a partial match.
+fn script_mismatch(declared: &str, body: &str) -> Option<String> {
+    let primary = declared
+        .split(['-', '_'])
+        .next()
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    let (expected, present): (&str, fn(char) -> bool) = match primary.as_str() {
+        "ja" => (
+            "Japanese kana or kanji",
+            |c| matches!(c as u32, 0x3040..=0x30ff | 0x3400..=0x4dbf | 0x4e00..=0x9fff),
+        ),
+        "zh" => (
+            "Han characters",
+            |c| matches!(c as u32, 0x3400..=0x4dbf | 0x4e00..=0x9fff),
+        ),
+        "ko" => (
+            "Hangul",
+            |c| matches!(c as u32, 0x1100..=0x11ff | 0x3130..=0x318f | 0xac00..=0xd7af),
+        ),
+        _ => return None,
+    };
+    if body.chars().any(present) {
+        return None;
+    }
+    Some(format!(
+        "resource declares language {declared} but its body contains no {expected}"
+    ))
+}
+
 fn runtime(cli: &Cli) -> Result<osmium_store::runtime::Runtime, Failure> {
     let home = match &cli.home {
         Some(path) => path.clone(),
@@ -329,6 +478,7 @@ fn init_command(
         // name, so that rule lives in exactly one place.
         package_id: package_id.unwrap_or_default().to_owned(),
         language: language.unwrap_or(init::SCAFFOLD_LANGUAGE).to_owned(),
+        title: None,
     };
     let created_files = init::init_source(&request).map_err(|error| {
         let diagnostic = Diagnostic {

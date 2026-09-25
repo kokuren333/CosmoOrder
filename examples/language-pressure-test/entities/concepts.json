@@ -1,21 +1,5 @@
 [
-  {
-    "id": "politeness",
-    "title": "Polite requests",
-    "requires": []
-  },
-  {
-    "id": "directions",
-    "title": "Direction phrases",
-    "requires": [
-      "politeness"
-    ]
-  },
-  {
-    "id": "pronunciation",
-    "title": "Pronunciation cues",
-    "requires": [
-      "directions"
-    ]
-  }
+ { "id": "requests", "title": "助けを求める表現", "requires": [] },
+ { "id": "directions", "title": "道順をたずね、説明する", "requires": ["requests"] },
+ { "id": "listening", "title": "道案内を聞き取り、確認する", "requires": ["directions"] }
 ]

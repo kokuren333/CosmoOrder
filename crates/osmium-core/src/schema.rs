@@ -82,6 +82,23 @@ static VALIDATORS: LazyLock<Vec<(DocumentKind, jsonschema::Validator)>> = LazyLo
         .collect()
 });
 
+/// Validator for a single entity ID, so authoring tools reject a bad identifier
+/// before writing a file instead of producing an unloadable package.
+static ID_VALIDATOR: LazyLock<jsonschema::Validator> = LazyLock::new(|| {
+    let mut schema: Value =
+        serde_json::from_str(SCHEMA_JSON).expect("embedded schema is valid JSON");
+    schema["$ref"] = Value::String("#/$defs/id".into());
+    jsonschema::draft202012::options()
+        .should_validate_formats(true)
+        .build(&schema)
+        .expect("the ID definition is valid")
+});
+
+/// Whether a string is a syntactically valid entity or Reference ID.
+pub fn is_valid_id(id: &str) -> bool {
+    ID_VALIDATOR.is_valid(&Value::String(id.to_owned()))
+}
+
 /// Validate structure without mutating input or loading external resources.
 /// Locations refer to JSON pointers; source coordinates require a parser map.
 pub fn validate_document(kind: DocumentKind, document: &Value) -> Vec<Diagnostic> {

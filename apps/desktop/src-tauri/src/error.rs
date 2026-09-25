@@ -11,8 +11,11 @@ use serde::Serialize;
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct ErrorView {
     pub code: String,
+    pub severity: String,
     pub message: String,
     pub file: Option<String>,
+    pub line: Option<usize>,
+    pub column: Option<usize>,
     pub path: String,
     pub suggestions: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -41,8 +44,11 @@ impl CommandError {
         Self {
             diagnostics: vec![ErrorView {
                 code: code.to_owned(),
+                severity: "error".to_owned(),
                 message: message.to_string(),
                 file: None,
+                line: None,
+                column: None,
                 path: String::new(),
                 suggestions: Vec::new(),
                 entity_type: None,
@@ -69,15 +75,15 @@ impl From<ErrorView> for Diagnostic {
     fn from(view: ErrorView) -> Self {
         Diagnostic {
             code: view.code,
-            severity: "error".to_owned(),
+            severity: view.severity,
             file: view.file,
-            line: None,
-            column: None,
+            line: view.line,
+            column: view.column,
             path: view.path,
             message: view.message,
             suggestions: view.suggestions,
-            entity_type: None,
-            entity_id: None,
+            entity_type: view.entity_type,
+            entity_id: view.entity_id,
         }
     }
 }
@@ -86,8 +92,11 @@ impl From<Diagnostic> for ErrorView {
     fn from(diagnostic: Diagnostic) -> Self {
         Self {
             code: diagnostic.code,
+            severity: diagnostic.severity,
             message: diagnostic.message,
             file: diagnostic.file,
+            line: diagnostic.line,
+            column: diagnostic.column,
             path: diagnostic.path,
             suggestions: diagnostic.suggestions,
             entity_type: diagnostic.entity_type,
@@ -107,3 +116,44 @@ impl std::error::Error for CommandError {}
 /// Commands return `Result<T, CommandError>`; the frontend receives the
 /// serialized `CommandError` as the rejection value of `invoke`.
 pub type CommandResult<T> = Result<T, CommandError>;
+
+#[cfg(test)]
+mod tests {
+    use super::{CommandError, ErrorView};
+    use osmium_core::schema::Diagnostic;
+
+    #[test]
+    fn diagnostic_severity_survives_the_desktop_ipc_projection() {
+        let warning = Diagnostic {
+            code: "OSM_LINT_LICENSE_UNKNOWN".into(),
+            severity: "warning".into(),
+            entity_type: Some("resource".into()),
+            entity_id: Some("lesson".into()),
+            file: Some("entities/resources.json".into()),
+            line: Some(4),
+            column: Some(7),
+            path: "/0/license".into(),
+            message: "license status is unknown".into(),
+            suggestions: vec!["confirm reuse conditions".into()],
+        };
+        let error = CommandError::new(vec![warning]);
+        let payload = serde_json::to_value(&error).expect("serializable diagnostics");
+        assert_eq!(payload["diagnostics"][0]["severity"], "warning");
+        assert_eq!(payload["diagnostics"][0]["path"], "/0/license");
+        assert_eq!(payload["diagnostics"][0]["line"], 4);
+        assert_eq!(payload["diagnostics"][0]["column"], 7);
+
+        let view: ErrorView = error.diagnostics.into_iter().next().unwrap();
+        let round_trip: Diagnostic = view.into();
+        assert_eq!(round_trip.severity, "warning");
+        assert_eq!(round_trip.line, Some(4));
+        assert_eq!(round_trip.column, Some(7));
+        assert_eq!(round_trip.entity_id.as_deref(), Some("lesson"));
+    }
+
+    #[test]
+    fn shell_failures_are_errors_at_the_ipc_boundary() {
+        let error = CommandError::shell("OSM_SHELL", "failed");
+        assert_eq!(error.diagnostics[0].severity, "error");
+    }
+}

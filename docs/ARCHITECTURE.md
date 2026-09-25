@@ -30,13 +30,14 @@ Phase 4aの`osmium-core::evaluation::evaluate`は検証済みPackageModel、Asse
 
 Phase 2bでは `osmium-core::query`（inspect/query/context）と `osmium-core::lint` を追加し、`osmium-cli` を引数・出力・exit statusのadapterとして実装。Source作成はPackage層の `init_source` が担い、全pathの事前検査、リンク親拒否、create_newによる上書き防止、生成後validationを行う。未知extensionはquery/contextでuntrusted dataとして扱い、lintは構造充足を教育品質と同一視しない。
 
-- Package: package ID、作品version、schema version、capabilities、内容一覧。
+- Package: package ID、作品version、schema version、capabilities、内容一覧、Reference registry。
 - Concept: 学ぶ対象。安定IDとtitle、requiresを持つ。個人の習熟度を持たない。
 - LearningObjective: 何ができるか。Conceptを参照する。
 - Curriculum: Objectiveを選択し推奨順序を持つ。Conceptのrequiresを変更しない。
-- Resource: `teaches`でObjectiveを参照し、本文・素材・権利情報を記述。
-- Assessment: `measures`でObjectiveを参照し、Stimulus/Response/Evaluation/Feedbackを分離。
-- LearningEvent: 実際に提示された問題、回答、評価、時刻を記録。
+- Reference: learner/distributionが到達できる知識資源。`kind`（解決方法）と`type`（資料種別）を分ける。
+- Resource: `teaches`でObjectiveを参照し、`evidence_reference_ids`でEvidenceを示し、本文・素材・権利情報を記述。
+- Assessment: `measures`でObjectiveを参照し、Stimulus/Response/Evaluation/Feedbackを分離。`cognitive_level`は任意・非規範。
+- LearningEvent: 実際に提示された問題、回答、評価、時刻を記録。definitionへは書き戻さない。
 
 参照はpackage ID + entity kind + entity IDで修飾する。ファイル名変更ではIDを変えない。Packageのversionが変わっても古いeventを更新しない。型の異なるID参照を拒否する。
 
@@ -109,6 +110,28 @@ Evaluator、ResourceProvider、Renderer、将来のMasteryEngine、CurriculumEng
 
 ## Authoring and agent operations
 
-The stable direction is a shared capability surface: CLI and a future MCP adapter call the same Core and Package operations. Core validates package meaning and source references without I/O; Package handles bounded source loading, build sanitization, and distribution verification. CLI remains an argument/JSON envelope adapter. MCP should expose equivalent structured inputs/outputs and must not introduce alternate validation semantics. There is not yet a full application-operation facade or MCP server; extract one when an MCP adapter is implemented rather than prebuilding a generic plugin layer.
+The stable direction is a shared capability surface: CLI and a future MCP adapter call the same Core and Package operations. Core validates package meaning and source references without I/O; Package handles bounded source loading, build sanitization, distribution verification and the three Reference authoring edits. CLI remains an argument/JSON envelope adapter. MCP should expose equivalent structured inputs/outputs and must not introduce alternate validation semantics. There is not yet a full application-operation facade or MCP server; extract one when an MCP adapter is implemented rather than prebuilding a generic plugin layer.
 
-Skills live above this capability surface and specify workflow/policy, not new operations. Search capability, shell availability, or MCP availability are agent runtime capabilities, not package semantics. Source acquisition method is not required in the portable provenance record. Detailed source fields and visibility behavior are in `SOURCES_AND_PROVENANCE.md`.
+Skills live above this capability surface and specify workflow/policy, not new operations. Search capability, shell availability, or MCP availability are agent runtime capabilities, not package semantics. Source acquisition method is not required in the portable Reference record. Detailed Reference fields, Evidence and visibility behavior are in [`SOURCES_AND_PROVENANCE.md`](SOURCES_AND_PROVENANCE.md).
+
+## Reference, Evidence and authoring boundaries
+
+Three kinds of information are kept apart on purpose, and the module layout enforces it:
+
+```text
+manifest.references[]            Reference   — distributable knowledge resources
+evidence_reference_ids[]         Evidence    — Resource/Assessment → Reference links
+<package>/.osmium/               Authoring Provenance — inputs and history, never distributed
+```
+
+`osmium-core::reference` owns the vocabulary — registry field names, the Evidence field, the two visibility axes, the reuse-policy predicate and the locator query heuristic — so validation, lint, distribution and the Runtime projection cannot drift apart. `crates/osmium-core/tests/reference.rs` pins the compatibility mapping in one place.
+
+The boundary is applied at three independent points, because a single point is a single bug away from a leak:
+
+| Point | Enforces |
+| --- | --- |
+| `osmium-package::load_source` | `.osmium/` is skipped during inventory, so authoring input never becomes package payload |
+| `osmium-package::distribution` (`compile_source`, `verify_files`) | private records, hidden locators and non-public asset bytes are removed, then a built archive that still carries one is rejected |
+| `osmium-store::runtime::Runtime::resource` | only record-public, resource-linked, locator-public fields reach the learner DTO |
+
+Assessment responsibility boundaries — item, interaction, response model, scoring, feedback, result and presentation — are documented in [`ASSESSMENT_MODEL.md`](ASSESSMENT_MODEL.md), and the QTI mapping plus its lossy points in [`INTEROPERABILITY.md`](INTEROPERABILITY.md).

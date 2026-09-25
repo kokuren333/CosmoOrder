@@ -299,6 +299,43 @@ impl Store {
         Ok(events)
     }
 
+    /// Read a bounded, newest-first history page across every Package. Events
+    /// intentionally retain their Package IDs and assessment snapshots so
+    /// answers remain inspectable after a Package payload is uninstalled.
+    pub fn history_all(&self, limit: usize, offset: usize) -> Result<Vec<Value>> {
+        if limit == 0 || limit > 64 || offset > i64::MAX as usize {
+            return Err(failure(
+                "OSM_QUERY_LIMIT",
+                "history requires limit 1..64 and a bounded offset",
+            ));
+        }
+        let mut statement = self
+            .connection
+            .prepare("SELECT event_json FROM events ORDER BY sequence DESC LIMIT ?1 OFFSET ?2")
+            .map_err(db)?;
+        let rows = statement
+            .query_map(params![limit as i64, offset as i64], |r| {
+                r.get::<_, String>(0)
+            })
+            .map_err(db)?;
+        let mut bytes = 0;
+        let mut events = Vec::new();
+        for row in rows {
+            let row = row.map_err(db)?;
+            bytes += row.len();
+            if bytes > 8 * 1024 * 1024 {
+                return Err(failure(
+                    "OSM_INPUT_LIMIT",
+                    "history exceeds 8 MiB; request a smaller page",
+                ));
+            }
+            let event = serde_json::from_str(&row).map_err(db)?;
+            validate_event(&event)?;
+            events.push(event);
+        }
+        Ok(events)
+    }
+
     pub fn progress(&self, package: &Distribution) -> Result<Vec<ObjectiveProgress>> {
         let mut result = Vec::new();
         for objective in package.model.documents().objectives.as_array().unwrap() {

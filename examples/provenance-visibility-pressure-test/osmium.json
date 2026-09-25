@@ -1,0 +1,55 @@
+{
+  "schema_version": "0.1",
+  "package_id": "org.osmium.pressure/provenance",
+  "package_version": "0.3.0",
+  "title": "Reference and privacy boundary pressure test",
+  "language": "ja-JP",
+  "capabilities": {
+    "required": [],
+    "optional": []
+  },
+  "entities": {
+    "concepts": "entities/concepts.json",
+    "objectives": "entities/objectives.json",
+    "curricula": "entities/curricula.json",
+    "resources": "entities/resources.json",
+    "assessments": "entities/assessments.json"
+  },
+  "extensions": {},
+  "references": [
+    {
+      "id": "public-safe-query",
+      "kind": "url",
+      "type": "webpage",
+      "title": "Public page",
+      "locator": "https://example.org/article?id=123&lang=ja",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public",
+      "publisher": "Example Organization",
+      "version": "1"
+    },
+    {
+      "id": "hidden-locator",
+      "kind": "url",
+      "type": "document",
+      "title": "Citable internal document",
+      "citation": "Example Organization. Internal document.",
+      "locator": "https://example.org/internal?id=4",
+      "visibility": "attribution_only",
+      "record_visibility": "public",
+      "locator_visibility": "hidden"
+    },
+    {
+      "id": "packaged-asset",
+      "kind": "package_asset",
+      "type": "document",
+      "title": "Included teaching asset",
+      "locator": "assets/reference-excerpt.txt",
+      "content_hash": "sha256:555502564e66b81cd03c2330ff31a07ddf5a5f01cc8e5142750c35390343b26a",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    }
+  ]
+}

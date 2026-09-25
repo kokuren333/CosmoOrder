@@ -18,7 +18,7 @@ apps/desktop/
     src/commands.rs    # command層。runtime + content IR を呼ぶだけ
     src/lib.rs         # window生成、data root決定、command登録
     tauri.conf.json    # CSP、frontendDist、bundle設定
-    capabilities/      # core:default のみ（外部plugin権限なし）
+    capabilities/      # core + native file/folder dialogs
     tests/desktop.rs   # windowなしの受入れ試験
   e2e/desktop-e2e.mjs  # 実アプリをCDPで操作するE2E受入れ
 ```
@@ -72,16 +72,22 @@ Cargoの再ビルド対象として登録しているため、rendererを編集�
 
 ## 教材を開いて問題を解く手順
 
-1. **ライブラリ**: 起動直後の教材カードから対象Packageを選びます。一覧は導入済み
-   Packageを再検証してから表示します。0件の場合は先にCLIでinstallしてください。
+1. **ライブラリ**: 起動直後の教材カードから対象versionを選びます。同じPackage IDの複数versionも
+   それぞれ選択でき、選んだversionが学習・回答・履歴まで引き継がれます。取得中・空・読み込み
+   エラーは別状態で表示し、失敗時は再試行できます。破損した配布物は学習を停止して、履歴を残した
+   ままライブラリから削除できます。
 2. **Curriculum / Concept**: 選択したPackageのCurriculum、Concept、Objectiveが表示され
    ます。テーマ内の学習目標ごとに「読んで理解する」「問題で確かめる」が関連づけられます。
    「最初の教材を読む」は目次の先頭を開きます。推薦・習得判定は行いません。
 3. **教材を読む**: 教材名を選ぶと本文を表示します。本文の上下にある「前の教材」「次の教材」で
    パッケージ宣言順に移動できます。Package由来のHTMLは実行されず、literal textとして
-   表示されます。Resource末尾の「参考資料」を開くと、Resourceの`source_ids`に結び付いた
-   根拠資料を確認できます。publicは題名・書誌情報・locator、attribution_onlyは題名・書誌情報を
-   表示し、privateは表示しません。公開URLは現在クリック可能にせず文字列表示します。
+   表示されます。Resource末尾の「参考資料」を開くと、Resourceの`evidence_reference_ids`に
+   結び付いたReferenceを確認できます。表示するかどうかは2軸で決まります。`record_visibility`
+   がpublicの記録だけを表示し（旧`visibility`のpublic／attribution_onlyはどちらもpublic相当）、
+   そのうち`locator_visibility`がpublicのものだけが題名・書誌情報・locatorを、hiddenのものは
+   題名・書誌情報のみを表示します。privateは表示しません。RuntimeがこのDTOを作る時点で
+   authoring provenanceを除去しているため、Desktopは非公開情報を受け取りません。
+   公開URLは現在クリック可能にせず文字列表示します。
 4. **問題で確かめる**: 問題文を選ぶと問題を表示します。`single_select` と `boolean` は
    いずれも回答カードを選択し、「採点する」で送信します。採点はRustの評価器
    `org.osmium.exact.v1` v1 が行い、結果とfeedbackが表示されます。採点後に次問へ進めます。
@@ -96,6 +102,20 @@ Cargoの再ビルド対象として登録しているため、rendererを編集�
 画面上部の共通ナビゲーションからライブラリ・現在の教材・進捗・履歴へ移動できます。
 文字サイズはヘッダーの「文字サイズ」を開き、100% / 150% / 200%に切り替えられます。keyboard操作、
 focus表示、`prefers-reduced-motion`、`prefers-color-scheme` に対応しています。
+
+## 教材の作成・配布
+
+ライブラリの「教材を追加」から、新規教材の作成、編集用教材フォルダーを開く、`.osmium`教材
+ファイルの追加を選べます。新規作成時は教材名・言語・保存先を指定すると、package IDはPackage
+authoring APIが一意性を考慮して生成します。既存schemaや`namespace/name`契約は変更しません。
+
+JSON source editorでは、複数のテーマ、学習目標、Markdown教材、学習順、前提テーマ、選択式問題と
+○×問題を作れます。画面で管理しないsource JSONフィールドは保持し、保存時は候補source全体を
+Package loader/Coreで検証します。YAML sourceはread-onlyです。保存後に「教材をチェック」し、問題が
+ない教材は「ライブラリに追加して学ぶ」からdistribution buildとRuntime installを通して開けます。
+「教材ファイルを書き出す」は同じPackage distribution builderを使い、`.osmium`はLibraryのnative file
+chooserからimportできます。教材を削除する操作は選んだversionのpayloadだけを削除し、Learning Eventと
+履歴は保持します。再installした同じdigest/versionは過去のprogressを参照します。
 
 ## Golden Package の build と install
 
@@ -144,6 +164,8 @@ Curriculum/Concept閲覧、Markdown本文表示、回答と採点、feedback、p
 `--home` は新規または空のディレクトリを指定してください。既存データを含む場合は拒否します。
 選択カードとキーボード、真偽式、技術情報のdisclosure、light/darkと100/150/200%の
 横幅も検証し、`<home>/screenshots/` に表示確認用PNGを保存します。
+E2E専用buildではsource folderと`.osmium`のimport/export destinationを注入してGUI flowを実行します。
+通常buildでは注入分岐は無効です。OS native folder/file chooserそのもののマウス操作はE2E対象外です。
 
 ## v1での制限
 

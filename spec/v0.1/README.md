@@ -1,6 +1,6 @@
 # 開発形式0.1の構造契約
 
-`package.schema.json`はJSON Schema 2020-12の自己完結bundleです。rootはmanifest、各 `$defs` にconcept/objective/curriculum/resource/assessment、複数形のEntity配列、learning_eventを定義します。外部 `$ref` はありません。Rustを使わないvalidatorでも、同じbundleのroot `$ref` を対象定義に切り替えて利用できます。
+`package.schema.json`はJSON Schema 2020-12の自己完結bundleです。rootはmanifest、各 `$defs` にconcept/objective/curriculum/resource/assessment/reference、複数形のEntity配列、learning_eventを定義します。外部 `$ref` はありません。Rustを使わないvalidatorでも、同じbundleのroot `$ref` を対象定義に切り替えて利用できます。
 
 この形式は開発版です。Sourceは`manifest`、Distributionは`distribution_manifest`定義を選択します。DistributionはSource manifestを`package`に保持し、`files`に各payloadのsize/SHA-256を記録します。バイト規則とZIP profileは[Package形式](../../docs/PACKAGE_FORMAT.md#安定性hash)を参照。hash照合は作者の真正性や署名を保証しません。
 
@@ -15,6 +15,9 @@
 - 非空文字列本文は最大16,384文字。Resource本文ファイルのbyte上限は後のloader policyで定める。
 - pathは最大240文字、slashで区切る。絶対path、backslash、colon、制御文字は構造で拒否。dot segment、device名、symlink等はloaderの意味検証が必要。
 - languageはBCP 47を意図する文字列。Schemaは長さを、Coreの意味検証はBCP 47構文を検証する。登録済み言語かどうかのネット照合はしない。
+- Reference registryは `manifest.references`（旧 `sources` も読む）。recordは `kind`（解決方法）と `type`（資料種別）、`visibility`（互換enum）と `record_visibility`／`locator_visibility`（2軸）を持ち、`published_at`／`updated_at`／`accessed_at`／`edition`／`version`／`publisher`／`authors`／`identifiers` は任意。ResourceとAssessmentは `evidence_reference_ids`（旧 `source_ids` も読む）でEvidenceを示す。1 manifest内で `references` と `sources` は併用できず、1 entity内で `evidence_reference_ids` と `source_ids` も併用できない。Coreは曖昧なalias混在を拒否する。
+- Resourceの再利用条件は `license_status`（`known`／`unknown`／`unspecified`）で示し、`license` 本文は `license_status: known` のときだけ意味を持つ。Schemaはenumのみ検証し、「意味のあるknown licenseか」はlint heuristicである。
+- Assessmentの `cognitive_level` は任意・自由文字列（最大64文字）で、taxonomyを固定しない。値の妥当性は検証しない。
 - EventのUUID/date-timeはformat validation有効で検証する。サンプルのdigestは形状説明用の値で、実データとの整合はStore実装時の責務。
 
 ## 構造検証と意味検証
@@ -27,9 +30,9 @@ pathの字句検証ではdot segment、Windows device名、末尾dot/space等も
 
 ## Sourceの読込み契約
 
-`osmium.json`か`osmium.yaml`のどちらか1つをSource rootへ置く。EntityファイルはJSON、Resource本文はUTF-8の `.md`。ルートの `.git` は走査・同梱せず、他のnotesは安全性・サイズ検査のみ行い、参照されなければLoadedSourceに含めない。
+`osmium.json`か`osmium.yaml`のどちらか1つをSource rootへ置く。EntityファイルはJSON、Resource本文はUTF-8の `.md`。ルートの `.git` は走査・同梱せず、他のnotesは安全性・サイズ検査のみ行い、参照されなければLoadedSourceに含めない。ルートの `.osmium/` はAuthoring Workspaceであり、inventory以前に除外する。制作時のlocal pathやprivate URLはそちらへ置き、Package内へ入れない（[Authoring Workspace](../../docs/AUTHORING_WORKSPACE.md)）。
 
-上限はrootの `.git` を除いて4,096 entries（directory含む）、合計64 MiB、深度32、読込み対象の各fileは4 MiB。metadata上のサイズだけでなく実際の読込みbytesにも制限を適用する。元のSourceは変更しない。
+上限はrootの `.git` と `.osmium/` を除いて4,096 entries（directory含む）、合計64 MiB、深度32、読込み対象の各fileは4 MiB。metadata上のサイズだけでなく実際の読込みbytesにも制限を適用する。元のSourceは変更しない。
 
 YAMLはUTF-8・単一document・深度64以下。anchor、alias、tag（標準tagを含む）、merge key、重複key、非文字列keyを拒否。引用文字列とblock scalarは文字列のまま保持。plain scalarのうちJSON構文のnull/boolean/numberだけをその型に変換し、それ以外は文字列。空scalarはnull。schema_version/revisionのような文字列fieldは引用すること。`yes`や日付を暗黙にbool/dateへ変換しない。独自YAML objectの実行は行わない。
 
@@ -40,6 +43,8 @@ filesystem検査は静的な教材ディレクトリを対象とする。読込�
 ## Fixtures
 
 - `examples/arithmetic/`: 自作の日本語教材、全5種類のEntity、単一選択と真偽問題。
+- `examples/provenance-visibility-pressure-test/`: Reference可視性、locator可視性、package asset、安全な公開query、known／unknown licenseのpressure test。
 - `fixtures/valid/learning-event.json`: Package外に保存する履歴の形状例。
 - `fixtures/invalid/`: 回答型不一致、未知core field、必須参照field欠落。
 - `crates/osmium-core/tests/schema.rs`: 全定義のmeta-schema適合、offline compilation、良/不正fixture、version拒否、拡張値のroundtripとID制約を検証。
+- `crates/osmium-core/tests/reference.rs`: Reference語彙、2軸visibilityと旧enumの対応、license意味判定、URL query heuristicを検証。

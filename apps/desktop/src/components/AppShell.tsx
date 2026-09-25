@@ -22,6 +22,7 @@ export function AppShell({
   onLesson,
   onProgress,
   onHistory,
+  onAuthoring,
   language,
   onLanguage,
   children,
@@ -36,6 +37,7 @@ export function AppShell({
   onLesson: () => void;
   onProgress: () => void;
   onHistory: () => void;
+  onAuthoring: () => void;
   language: UiLanguage;
   onLanguage: (language: UiLanguage) => void;
   children: ReactNode;
@@ -53,13 +55,13 @@ export function AppShell({
           className="brand ghost"
           onClick={onLibrary}
           disabled={busy}
-          aria-label={`Osmium ${t("library")}`}
+          aria-label={`CosmoOrder ${t("library")}`}
         >
           <span className="brand-mark">
             <BrandGem />
           </span>
           <span className="brand-copy">
-            <span>Osmium</span>
+            <span>CosmoOrder</span>
           </span>
         </button>
         <div className="header-tools">
@@ -113,10 +115,18 @@ export function AppShell({
           aria-label={t("history")}
           aria-current={section === "history" ? "page" : undefined}
           onClick={onHistory}
-          disabled={busy || title === null}
+          disabled={busy}
         >
           <History size={17} aria-hidden="true" />
           {t("history")}
+        </button>
+        <button
+          aria-label={t("authoring")}
+          aria-current={section === "authoring" ? "page" : undefined}
+          onClick={onAuthoring}
+          disabled={busy}
+        >
+          {t("authoring")}
         </button>
       </nav>
       <main id="main-content" tabIndex={-1}>

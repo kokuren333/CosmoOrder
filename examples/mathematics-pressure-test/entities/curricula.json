@@ -1,11 +1,12 @@
 [
   {
     "id": "core",
-    "title": "Core sequence",
+    "title": "確率の基礎からベイズ更新へ",
     "objectives": [
-      "probability.bounds",
-      "conditional.compute",
-      "bayes.apply"
+      "probability.model",
+      "events.combine",
+      "conditional.table",
+      "bayes.update"
     ]
   }
 ]

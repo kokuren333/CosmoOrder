@@ -1,9 +1,9 @@
 {
   "schema_version": "0.1",
   "package_id": "org.osmium.pressure/programming",
-  "package_version": "0.1.0",
-  "title": "Reading safe program output",
-  "language": "en",
+  "package_version": "0.2.0",
+  "title": "プログラムを読む・エラーを追う・変更を確かめる",
+  "language": "ja",
   "capabilities": {
     "required": [],
     "optional": []
@@ -15,5 +15,31 @@
     "resources": "entities/resources.json",
     "assessments": "entities/assessments.json"
   },
-  "extensions": {}
+  "extensions": {},
+  "references": [
+    {
+      "id": "python-tutorial-errors",
+      "kind": "url",
+      "type": "document",
+      "title": "Python公式チュートリアル：式、関数、エラーと例外",
+      "locator": "https://docs.python.org/3/tutorial/",
+      "citation": "Python Software Foundation. The Python Tutorial, sections 3 and 8.",
+      "publisher": "Python Software Foundation",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    },
+    {
+      "id": "git-diff-manual",
+      "kind": "url",
+      "type": "document",
+      "title": "Git公式マニュアル：git diff",
+      "locator": "https://git-scm.com/docs/git-diff",
+      "citation": "Git Project. git-diff documentation.",
+      "publisher": "Git Project",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    }
+  ]
 }
