@@ -1,8 +1,8 @@
 {
   "schema_version": "0.1",
   "package_id": "org.osmium.pressure/language",
-  "package_version": "0.1.0",
-  "title": "Japanese and English: asking for directions",
+  "package_version": "0.2.1",
+  "title": "旅行で使う英語：道をたずね、案内する",
   "language": "ja",
   "capabilities": {
     "required": [],
@@ -15,5 +15,79 @@
     "resources": "entities/resources.json",
     "assessments": "entities/assessments.json"
   },
-  "extensions": {}
+  "extensions": {},
+  "references": [
+    {
+      "id": "bc-polite-requests",
+      "kind": "url",
+      "type": "webpage",
+      "title": "依頼・申し出・招待の表現（British Council LearnEnglish）",
+      "locator": "https://learnenglish.britishcouncil.org/free-resources/grammar/english-grammar-reference/requests-offers-invitations",
+      "citation": "British Council. LearnEnglish, “Requests, offers and invitations.”",
+      "publisher": "British Council",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    },
+    {
+      "id": "cambridge-station-pronunciation",
+      "kind": "url",
+      "type": "webpage",
+      "title": "station の発音（Cambridge Dictionary）",
+      "locator": "https://dictionary.cambridge.org/pronunciation/english/station",
+      "citation": "Cambridge University Press. Cambridge Dictionary, “station,” pronunciation (UK and US).",
+      "publisher": "Cambridge University Press",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    },
+    {
+      "id": "cambridge-straight-definition",
+      "kind": "url",
+      "type": "webpage",
+      "title": "straight の意味・用法（Cambridge Dictionary）",
+      "locator": "https://dictionary.cambridge.org/dictionary/english/straight",
+      "citation": "Cambridge University Press. Cambridge Dictionary, “straight,” adjective and adverb.",
+      "publisher": "Cambridge University Press",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    },
+    {
+      "id": "cambridge-next-to-definition",
+      "kind": "url",
+      "type": "webpage",
+      "title": "next to の意味・用法（Cambridge Dictionary）",
+      "locator": "https://dictionary.cambridge.org/dictionary/english/next-to",
+      "citation": "Cambridge University Press. Cambridge Dictionary, “next to,” phrase.",
+      "publisher": "Cambridge University Press",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    },
+    {
+      "id": "cambridge-across-definition",
+      "kind": "url",
+      "type": "webpage",
+      "title": "across の意味・用法（Cambridge Dictionary）",
+      "locator": "https://dictionary.cambridge.org/dictionary/english/across",
+      "citation": "Cambridge University Press. Cambridge Dictionary, “across,” preposition and adverb.",
+      "publisher": "Cambridge University Press",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    },
+    {
+      "id": "cambridge-where-indirect",
+      "kind": "url",
+      "type": "webpage",
+      "title": "where を使う間接疑問（Cambridge Grammar）",
+      "locator": "https://dictionary.cambridge.org/grammar/british-grammar/where",
+      "citation": "Cambridge University Press. Cambridge Dictionary, English Grammar Today, “Where.”",
+      "publisher": "Cambridge University Press",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    }
+  ]
 }

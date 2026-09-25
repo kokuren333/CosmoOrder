@@ -2,40 +2,66 @@
   {
     "id": "probability.lesson",
     "type": "markdown",
-    "title": "Probability basics",
+    "title": "確率モデルをつくる",
     "path": "content/probability.md",
     "teaches": [
-      "probability.bounds"
+      "probability.model"
     ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text",
-    "language": "en"
+    "language": "ja",
+    "creator": "Osmium編集プロジェクト（AI支援執筆）",
+    "attribution": "この教材向けに日本語で新規執筆。考え方の参照先は参考資料を参照。",
+    "license_status": "unknown",
+    "evidence_reference_ids": [
+      "openstax-intro-stats-probability"
+    ]
+  },
+  {
+    "id": "events.lesson",
+    "type": "markdown",
+    "title": "事象を組み合わせる",
+    "path": "content/events.lesson.md",
+    "teaches": [
+      "events.combine"
+    ],
+    "language": "ja",
+    "creator": "Osmium編集プロジェクト（AI支援執筆）",
+    "attribution": "この教材向けに日本語で新規執筆。考え方の参照先は参考資料を参照。",
+    "license_status": "unknown",
+    "evidence_reference_ids": [
+      "openstax-intro-stats-probability"
+    ]
   },
   {
     "id": "conditional.lesson",
     "type": "markdown",
-    "title": "Conditional probability",
+    "title": "条件付き確率を表で読む",
     "path": "content/conditional.md",
     "teaches": [
-      "conditional.compute"
+      "conditional.table"
     ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text",
-    "language": "en"
+    "language": "ja",
+    "creator": "Osmium編集プロジェクト（AI支援執筆）",
+    "attribution": "この教材向けに日本語で新規執筆。考え方の参照先は参考資料を参照。",
+    "license_status": "unknown",
+    "evidence_reference_ids": [
+      "openstax-intro-stats-probability"
+    ]
   },
   {
     "id": "bayes.lesson",
     "type": "markdown",
-    "title": "Bayes' rule",
+    "title": "ベイズの定理で確率を更新する",
     "path": "content/bayes.lesson.md",
     "teaches": [
-      "bayes.apply"
+      "bayes.update"
     ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original pressure-test text",
-    "language": "en"
+    "language": "ja",
+    "creator": "Osmium編集プロジェクト（AI支援執筆）",
+    "attribution": "この教材向けに日本語で新規執筆。考え方の参照先は参考資料を参照。",
+    "license_status": "unknown",
+    "evidence_reference_ids": [
+      "openstax-intro-stats-probability",
+      "openstax-data-science-bayes"
+    ]
   }
 ]

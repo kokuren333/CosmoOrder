@@ -15,6 +15,7 @@ export function AssessmentView({
   onNext,
   onShowProgress,
   hasNext,
+  onReviewResource,
   position,
   total,
 }: {
@@ -27,6 +28,7 @@ export function AssessmentView({
   onNext: () => void;
   onShowProgress: () => void;
   hasNext: boolean;
+  onReviewResource?: () => void;
   position: number;
   total: number;
 }) {
@@ -138,6 +140,7 @@ export function AssessmentView({
                 ? tr("記録済みの回答を表示しています。", "Showing the recorded answer.")
                 : tr("回答を保存しました。", "Answer saved.")}
             </p>
+            {!attempt.correct && onReviewResource ? <button type="button" className="ghost" disabled={busy} onClick={onReviewResource}>{tr("関連教材を読み直して再挑戦", "Review the related resource and retry")}</button> : null}
             <button
               className="primary"
               disabled={busy}

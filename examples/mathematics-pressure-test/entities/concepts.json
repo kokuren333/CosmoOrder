@@ -1,28 +1,6 @@
 [
-  {
-    "id": "probability",
-    "title": "Probability",
-    "requires": []
-  },
-  {
-    "id": "events",
-    "title": "Events",
-    "requires": [
-      "probability"
-    ]
-  },
-  {
-    "id": "conditional",
-    "title": "Conditional probability",
-    "requires": [
-      "events"
-    ]
-  },
-  {
-    "id": "bayes",
-    "title": "Bayes' rule",
-    "requires": [
-      "conditional"
-    ]
-  }
+  {"id":"probability","title":"確率と標本空間","requires":[]},
+  {"id":"events","title":"事象と集合演算","requires":["probability"]},
+  {"id":"conditional","title":"条件付き確率と分割表","requires":["events"]},
+  {"id":"bayes","title":"ベイズの定理と事前確率","requires":["conditional"]}
 ]

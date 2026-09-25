@@ -14,6 +14,84 @@ fn source() -> PathBuf {
 }
 
 #[test]
+fn authoring_workspace_is_excluded_and_public_references_survive() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../examples/provenance-visibility-pressure-test");
+    let temp = tempfile::tempdir().unwrap();
+    let loaded = osmium_package::load_source(&fixture).unwrap();
+    for (name, bytes) in loaded.files {
+        let path = temp.path().join(name);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, bytes).unwrap();
+    }
+    // The Authoring Workspace holds inputs that must never travel: local paths,
+    // private URLs, author notes and agent workflow metadata.
+    fs::create_dir(temp.path().join(".osmium")).unwrap();
+    fs::write(
+        temp.path().join(".osmium/provenance.json"),
+        r#"{"local_path":"C:\\private\\notes.pdf","private_url":"https://user:secret@example.org/draft?token=abc"}"#,
+    )
+    .unwrap();
+    fs::write(
+        temp.path().join(".osmium/authoring.md"),
+        "Author-only note about an unpublished repository draft.",
+    )
+    .unwrap();
+
+    let distribution = compile_source(temp.path()).unwrap();
+    assert!(
+        !distribution
+            .files
+            .keys()
+            .any(|name| name.contains(".osmium"))
+    );
+    for bytes in distribution.files.values() {
+        let text = String::from_utf8_lossy(bytes);
+        assert!(!text.contains("notes.pdf"), "{text}");
+        assert!(!text.contains("token=abc"), "{text}");
+        assert!(!text.contains("Author-only note"), "{text}");
+    }
+
+    let manifest = &distribution.model.documents().manifest;
+    assert_eq!(
+        manifest["references"][0]["locator"],
+        "https://example.org/article?id=123&lang=ja"
+    );
+    // A hidden locator keeps the record attributable but never ships the URL.
+    assert!(manifest["references"][1].get("locator").is_none());
+    assert_eq!(
+        manifest["references"][1]["citation"],
+        "Example Organization. Internal document."
+    );
+    assert_eq!(
+        distribution.model.documents().resources[0]["evidence_reference_ids"]
+            .as_array()
+            .unwrap()
+            .len(),
+        3
+    );
+    // The package asset travels and stays hash-verified.
+    assert!(
+        distribution
+            .files
+            .contains_key("assets/reference-excerpt.txt")
+    );
+    // Reuse policy survives distribution so a reader can still show it.
+    let resources = distribution.model.documents().resources.as_array().unwrap();
+    assert_eq!(resources[0]["license_status"], "unknown");
+    assert_eq!(resources[1]["license_status"], "known");
+    assert_eq!(resources[1]["license"], "CC0-1.0");
+    // Reading the built archive back reproduces the same Reference registry.
+    let output = temp.path().join("built");
+    build(temp.path(), &output).unwrap();
+    let read_back = read_distribution(&output).unwrap();
+    assert_eq!(
+        read_back.model.documents().manifest["references"],
+        manifest["references"]
+    );
+}
+
+#[test]
 fn canonical_profile_and_hash_have_fixed_vectors() {
     assert_eq!(
         sha256(b"abc"),
@@ -153,36 +231,48 @@ fn existing_outputs_and_invalid_sources_are_preserved() {
 }
 
 #[test]
-fn private_and_attribution_only_provenance_is_sanitized_before_distribution() {
+fn hidden_locator_evidence_is_sanitized_before_distribution() {
+    // The medicine package is a real teaching package: it carries learner-facing
+    // evidence only. Authoring-only input lives in the Authoring Workspace, so
+    // this test asserts what a distributable medical package must contain
+    // rather than seeding an artificial private record into it.
     let distribution = compile_source(
         &Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/medicine-pressure-test"),
     )
     .unwrap();
     let package = &distribution.model.documents().manifest;
-    let sources = package["sources"].as_array().unwrap();
+    let references = package["references"].as_array().unwrap();
     assert!(
-        !sources
+        references
             .iter()
-            .any(|source| source["id"] == "private-author-note")
+            .all(|record| record["record_visibility"] == "public")
     );
-    let attribution = sources
+    assert_eq!(
+        package.get("sources"),
+        None,
+        "a distribution uses the canonical references registry only"
+    );
+    let nice = references
         .iter()
-        .find(|source| source["id"] == "nice-cg174")
+        .find(|record| record["id"] == "nice-cg174")
         .unwrap();
-    assert!(attribution.get("locator").is_none());
-    assert!(attribution["citation"].is_string());
+    assert_eq!(nice["type"], "guideline");
+    assert_eq!(nice["record_visibility"], "public");
+    assert_eq!(nice["locator_visibility"], "hidden");
+    assert!(nice.get("locator").is_none());
+    // Citations remain attributable; only public locators travel.
+    for record in references {
+        assert!(record["citation"].is_string());
+        if record["id"] != "nice-cg174" {
+            assert!(record["locator"].is_string());
+        }
+    }
     for bytes in distribution.files.values() {
         let text = String::from_utf8_lossy(bytes);
         assert!(!text.contains("C:\\\\Users"));
         assert!(!text.contains("/home/"));
         assert!(!text.contains("private-author-note"));
-        assert!(!text.contains("../../docs/MEDICINE_PACKAGE_REVIEW.md"));
     }
-    assert!(
-        sources
-            .iter()
-            .any(|source| source["visibility"] == "public" && source["locator"].is_string())
-    );
     assert!(
         distribution
             .model
@@ -207,12 +297,60 @@ fn untrusted_distribution_cannot_inject_private_provenance() {
     assert!(
         read_distribution(&folder).unwrap_err()[0]
             .message
-            .contains("private provenance")
+            .contains("authoring provenance")
+    );
+    // The same record hidden behind the two-axis spelling is rejected too, so a
+    // package cannot bypass the boundary by renaming the field.
+    let path = folder.join("manifest.json");
+    let mut value: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    value["package"]["sources"] = json!([{"id":"private-demo","kind":"url","locator":"https://example.org/private","visibility":"public","record_visibility":"private"}]);
+    fs::write(path, canonical_json(&value)).unwrap();
+    assert!(
+        read_distribution(&folder).unwrap_err()[0]
+            .message
+            .contains("authoring provenance")
     );
 }
 
 #[test]
-fn package_asset_sources_are_included_and_hash_checked() {
+fn source_cannot_hide_private_provenance_in_the_legacy_registry_alias() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().join("source");
+    fs::create_dir(&root).unwrap();
+    for (name, bytes) in osmium_package::load_source(source()).unwrap().files {
+        let path = root.join(name);
+        fs::create_dir_all(path.parent().unwrap()).unwrap();
+        fs::write(path, bytes).unwrap();
+    }
+
+    let manifest_path = root.join("osmium.json");
+    let mut manifest: serde_json::Value =
+        serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
+    manifest["references"] = json!([{
+        "id":"public-reference",
+        "kind":"url",
+        "locator":"https://example.org/public",
+        "visibility":"public"
+    }]);
+    manifest["sources"] = json!([{
+        "id":"private-authoring-input",
+        "kind":"url",
+        "locator":"https://example.org/private?token=sentinel",
+        "visibility":"private"
+    }]);
+    fs::write(manifest_path, canonical_json(&manifest)).unwrap();
+
+    let errors = compile_source(&root).unwrap_err();
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == "OSM_SOURCE_REFERENCE"),
+        "mixed registry aliases must fail validation before a package can be built: {errors:?}"
+    );
+}
+
+#[test]
+fn package_asset_references_are_included_and_hash_checked() {
     let temp = tempfile::tempdir().unwrap();
     let root = temp.path().join("source");
     fs::create_dir(&root).unwrap();
@@ -232,17 +370,17 @@ fn package_asset_sources_are_included_and_hash_checked() {
     }
     let asset = b"portable source excerpt";
     let private_asset = b"private note content";
-    let citation_asset = b"citation only source";
+    let hidden_asset = b"citation only source";
     fs::write(root.join("evidence.txt"), asset).unwrap();
     fs::write(root.join("private.txt"), private_asset).unwrap();
-    fs::write(root.join("citation.txt"), citation_asset).unwrap();
+    fs::write(root.join("citation.txt"), hidden_asset).unwrap();
     let manifest_path = root.join("osmium.json");
     let mut manifest: serde_json::Value =
         serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
-    manifest["sources"] = json!([
-        {"id":"included-evidence","kind":"package_asset","locator":"evidence.txt","visibility":"public","content_hash":format!("sha256:{}",sha256(asset))},
-        {"id":"private-evidence","kind":"package_asset","locator":"private.txt","visibility":"private"},
-        {"id":"citation-evidence","kind":"package_asset","locator":"citation.txt","title":"Citation only","citation":"Example citation","visibility":"attribution_only"}
+    manifest["references"] = json!([
+        {"id":"included-evidence","kind":"package_asset","type":"document","locator":"evidence.txt","visibility":"public","record_visibility":"public","locator_visibility":"public","content_hash":format!("sha256:{}",sha256(asset))},
+        {"id":"private-evidence","kind":"package_asset","type":"document","locator":"private.txt","visibility":"private","record_visibility":"private"},
+        {"id":"citation-evidence","kind":"package_asset","type":"document","locator":"citation.txt","title":"Citation only","citation":"Example citation","visibility":"attribution_only","record_visibility":"public","locator_visibility":"hidden"}
     ]);
     fs::write(
         &manifest_path,
@@ -252,7 +390,7 @@ fn package_asset_sources_are_included_and_hash_checked() {
     let resource_path = root.join("entities/resources.json");
     let mut resources: serde_json::Value =
         serde_json::from_slice(&fs::read(&resource_path).unwrap()).unwrap();
-    resources[0]["source_ids"] =
+    resources[0]["evidence_reference_ids"] =
         json!(["included-evidence", "private-evidence", "citation-evidence"]);
     fs::write(
         &resource_path,
@@ -262,10 +400,28 @@ fn package_asset_sources_are_included_and_hash_checked() {
     let distribution = compile_source(&root).unwrap();
     assert_eq!(distribution.files["evidence.txt"], asset);
     assert!(!distribution.files.contains_key("private.txt"));
+    // A hidden locator means the bytes never travel, even though the record
+    // itself stays attributable.
     assert!(!distribution.files.contains_key("citation.txt"));
     assert_eq!(
-        distribution.model.documents().resources[0]["source_ids"],
+        distribution.model.documents().resources[0]["evidence_reference_ids"],
         json!(["included-evidence", "citation-evidence"])
+    );
+    let references = distribution.model.documents().manifest["references"]
+        .as_array()
+        .unwrap();
+    assert!(
+        !references
+            .iter()
+            .any(|record| record["id"] == "private-evidence")
+    );
+    assert!(
+        references
+            .iter()
+            .find(|record| record["id"] == "citation-evidence")
+            .unwrap()
+            .get("locator")
+            .is_none()
     );
     let output = temp.path().join("built");
     build(&root, &output).unwrap();
@@ -275,6 +431,58 @@ fn package_asset_sources_are_included_and_hash_checked() {
             .unwrap_err()
             .iter()
             .any(|d| d.code == "OSM_HASH")
+    );
+}
+
+#[test]
+fn legacy_source_registry_still_builds_but_never_gains_private_records() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path().join("source");
+    fs::create_dir(&root).unwrap();
+    for entry in fs::read_dir(source()).unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        let target = root.join(entry.file_name());
+        if path.is_dir() {
+            fs::create_dir(&target).unwrap();
+            for nested in fs::read_dir(path).unwrap() {
+                let nested = nested.unwrap();
+                fs::copy(nested.path(), target.join(nested.file_name())).unwrap();
+            }
+        } else {
+            fs::copy(path, target).unwrap();
+        }
+    }
+    let manifest_path = root.join("osmium.json");
+    let mut manifest: serde_json::Value =
+        serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
+    manifest["sources"] = json!([
+        {"id":"legacy-public","kind":"url","locator":"https://example.org/guide","title":"Guide","visibility":"public"},
+        {"id":"legacy-private","kind":"local_file","locator":"notes/authoring.md","title":"Notes","visibility":"private"}
+    ]);
+    fs::write(
+        &manifest_path,
+        serde_json::to_vec_pretty(&manifest).unwrap(),
+    )
+    .unwrap();
+    let resource_path = root.join("entities/resources.json");
+    let mut resources: serde_json::Value =
+        serde_json::from_slice(&fs::read(&resource_path).unwrap()).unwrap();
+    resources[0]["source_ids"] = json!(["legacy-public", "legacy-private"]);
+    fs::write(
+        &resource_path,
+        serde_json::to_vec_pretty(&resources).unwrap(),
+    )
+    .unwrap();
+    let distribution = compile_source(&root).unwrap();
+    let sources = distribution.model.documents().manifest["sources"]
+        .as_array()
+        .unwrap();
+    assert_eq!(sources.len(), 1);
+    assert_eq!(sources[0]["id"], "legacy-public");
+    assert_eq!(
+        distribution.model.documents().resources[0]["source_ids"],
+        json!(["legacy-public"])
     );
 }
 

@@ -1,12 +1,30 @@
-# Output and errors
+# エラー表示を調査手順に変える
 
-Console output is evidence about a run, not proof of correctness.
+エラー出力は「どこを調べるか」の手がかりです。表示された名前だけで原因を決めつけず、入力、周辺の定義、処理の流れを確かめます。この例も実行せずに読みます。
 
 ```text
-$ python example.py
-hello
 Traceback (most recent call last):
-  ValueError: invalid input
+  File "report.py", line 8, in <module>
+    total = price + "円"
+TypeError: unsupported operand type(s) for +
 ```
 
-HTML/XML source is shown as code: `<img src=x onerror=alert(1)>` and `&lt;node attr="x"/&gt;`.
+この出力では、最後の行に例外名 `TypeError` と説明があります。Tracebackのフレームは、例外が表面化したファイルと行をたどる情報です。ここでは `price + "円"` の組み合わせをまず調べます。ただし、price の実際の値・型、意図された出力形式までは分かりません。
+
+## 診断を小さく進める
+
+1. 最後の行から例外の種類とメッセージを読み取る。
+2. 関連するファイル・行・式を特定する。
+3. その式に渡る値がどこで作られたかを追う。
+4. 期待する入力や仕様と照らし、仮説を一つずつ検証する。
+5. 修正後は同じ条件で確認し、他の条件も壊れていないか調べる。
+
+構文エラーはコードの形を解釈する段階で見つかる問題です。例外は、構文として読めても実行中に処理できない状況で起きます。どちらもメッセージは役立ちますが、エラー名だけで根本原因が全て確定するわけではありません。
+
+### よくある読み違い
+
+- Tracebackの行を原因そのものと決めつける。そこは失敗が観測された位置で、値を作った場所が別の可能性があります。
+- 最後の行だけ読んで、直前のフレームや入力条件を無視する。
+- 例外名から修正を先に決め、実際のデータ型や仕様を確認しない。
+
+Python公式Tutorialの「Errors and Exceptions」は、例外名とTracebackの読み取りを確認する参考資料です。例の原因を確定するには、実際の定義と入力も必要です。

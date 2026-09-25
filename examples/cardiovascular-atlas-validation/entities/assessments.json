@@ -1,0 +1,60 @@
+[
+  {
+    "id": "cycle.check",
+    "revision": "1",
+    "measures": ["cycle.sequence"],
+    "cognitive_level": "sequence",
+    "stimulus": {"markdown": "心周期の説明で、収縮期と拡張期を区別する基本的な基準はどれですか？"},
+    "response": {"type": "single_select", "options": [{"id":"a","text":"心室が血液を駆出する局面と、弛緩して充満する局面"},{"id":"b","text":"肺循環と体循環の別名"},{"id":"c","text":"心房と心室の左右の区別"}]},
+    "evaluation": {"type":"exact","answer":"a"},
+    "feedback": {"markdown":"収縮期は心室の収縮・駆出、拡張期は弛緩と充満を中心に説明します。"},
+    "evidence_reference_ids": ["openstax-cardiac-cycle"]
+  },
+  {
+    "id": "output.check",
+    "revision": "1",
+    "measures": ["output.calculate"],
+    "cognitive_level": "application",
+    "stimulus": {"markdown": "心拍出量を構成する二つの基本量の組み合わせはどれですか？"},
+    "response": {"type":"single_select","options":[{"id":"a","text":"心拍数と一回拍出量"},{"id":"b","text":"血圧と駆出率"},{"id":"c","text":"前負荷と後負荷"}]},
+    "evaluation":{"type":"exact","answer":"a"},
+    "feedback":{"markdown":"心拍出量は単位時間あたりの拍出量で、心拍数と一回拍出量の関係で表されます。"},
+    "evidence_reference_ids":["openstax-cardiac-physiology"]
+  },
+  {
+    "id":"preload.check","revision":"1","measures":["preload.explain"],"cognitive_level":"discrimination",
+    "stimulus":{"markdown":"前負荷の概念に最も近い説明はどれですか？"},
+    "response":{"type":"single_select","options":[{"id":"a","text":"収縮前の心室筋の伸展・充満に関係する負荷"},{"id":"b","text":"駆出中に心室が向き合う抵抗だけを指す"},{"id":"c","text":"単位時間あたりの心拍数"}]},
+    "evaluation":{"type":"exact","answer":"a"},"feedback":{"markdown":"前負荷は収縮前の充満・心筋伸展に関係する概念で、後負荷や心拍数と区別します。"},"evidence_reference_ids":["openstax-cardiac-physiology"]
+  },
+  {
+    "id":"starling.check","revision":"1","measures":["starling.explain"],"cognitive_level":"application",
+    "stimulus":{"markdown":"Frank-Starling機序の基本的な定性的関係はどれですか？"},
+    "response":{"type":"single_select","options":[{"id":"a","text":"生理的範囲では充満の増加が拍出量の増加につながり得る"},{"id":"b","text":"心拍数の増加は常に一回拍出量を同じ割合で増やす"},{"id":"c","text":"血管抵抗と心室充満は同じ量である"}]},
+    "evaluation":{"type":"exact","answer":"a"},"feedback":{"markdown":"これは充満と拍出を結びつける定性的な機序であり、無制限・常時の直線関係を意味しません。"},"evidence_reference_ids":["openstax-cardiac-physiology"]
+  },
+  {
+    "id":"compensation.check","revision":"1","measures":["retention.explain"],"cognitive_level":"integration",
+    "stimulus":{"markdown":"循環・腎灌流の変化に対する神経体液性反応を学ぶ際の適切なまとめはどれですか？"},
+    "response":{"type":"single_select","options":[{"id":"a","text":"RAASやADHなどの反応は水・ナトリウム調節に関係するが、反応の意味は文脈と時間経過で考える"},{"id":"b","text":"それらの反応は心臓や腎臓の状態と無関係である"},{"id":"c","text":"一つの反応だけで個人の診断や治療を決められる"}]},
+    "evaluation":{"type":"exact","answer":"a"},"feedback":{"markdown":"ここでは生理学的な概念関係を扱います。個別の臨床判断や治療選択を示すものではありません。"},"evidence_reference_ids":["openstax-cardiac-physiology","aha-heart-failure-2022"]
+  },
+  {
+    "id":"hf.check","revision":"1","measures":["hf-syndrome.explain"],"cognitive_level":"discrimination",
+    "stimulus":{"markdown":"心不全という概念の説明として最も適切なのはどれですか？"},
+    "response":{"type":"single_select","options":[{"id":"a","text":"症候群として捉え、駆出率だけと同一視しない"},{"id":"b","text":"駆出率の単一数値だけを指す"},{"id":"c","text":"すべての患者で同じ機序・経過をとる"}]},
+    "evaluation":{"type":"exact","answer":"a"},"feedback":{"markdown":"心不全は臨床症候群として理解され、駆出率はその特徴を捉える複数の情報の一つです。"},"evidence_reference_ids":["aha-heart-failure-2022","esc-heart-failure-2026"]
+  },
+  {
+    "id":"phenotype.check","revision":"1","measures":["phenotypes.compare"],"cognitive_level":"classification",
+    "stimulus":{"markdown":"駆出率による心不全分類を学ぶときの注意として適切なのはどれですか？"},
+    "response":{"type":"single_select","options":[{"id":"a","text":"分類は表現型を整理する枠組みであり、心不全全体を単一数値へ還元しない"},{"id":"b","text":"分類名だけで全ての症状と機序が決まる"},{"id":"c","text":"分類は心室充満や臨床情報と無関係である"}]},
+    "evaluation":{"type":"exact","answer":"a"},"feedback":{"markdown":"表現型名は分類の入口です。詳しい診断・治療判断をこの検証Packageから導くことはできません。"},"evidence_reference_ids":["aha-heart-failure-2022","esc-heart-failure-2026"]
+  },
+  {
+    "id":"classes.check","revision":"1","measures":["acei.describe"],"cognitive_level":"identification",
+    "stimulus":{"markdown":"このPackageで扱う薬剤群を学習するときの安全な読み方はどれですか？"},
+    "response":{"type":"single_select","options":[{"id":"a","text":"薬剤クラスと生理系の概念上のつながりを識別するに留め、個別の処方判断とは分ける"},{"id":"b","text":"クラス名だけで個人に適した治療を決める"},{"id":"c","text":"薬剤クラスはConcept graphにあるため患者への使用を推奨する"}]},
+    "evaluation":{"type":"exact","answer":"a"},"feedback":{"markdown":"この素材は構造とUXの検証用です。薬剤選択・用量・個別の医療判断を提供しません。"},"evidence_reference_ids":["aha-heart-failure-2022","esc-heart-failure-2026"]
+  }
+]

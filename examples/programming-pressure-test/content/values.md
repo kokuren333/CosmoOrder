@@ -1,17 +1,46 @@
-# Inspecting code as text
+# コードを実行せずに一行ずつ読む
 
-The inline expression `2 + 2` evaluates in many languages, but Osmium displays package code and never executes it.
+この教材は、プログラミング初学者が短いPython風コードを**読む**ためのものです。例は紙上の思考材料で、この画面から実行されません。コードを読んだだけで分かることと、実行結果を見ないと分からないことを分けましょう。
+
+## 値、名前、式
 
 ```python
-message = "hello"
-print(message)
-result = transform(input_value, configuration, optional_context, validation_mode, required_context, audit_metadata)
+base = "note"
+count = 3
+label = format_label(base, count)
 ```
 
-Long lines remain horizontally scrollable.
+1行目は名前 `base` に文字列を代入し、2行目は `count` に整数を代入しています。3行目は2つの名前が指す値を引数として関数を呼び、その結果を `label` に代入しようとしています。
 
-[External reference](https://example.test/reference), [Local package reference](content/other.md), [blocked script](javascript:alert(1)) or [blocked traversal](../../outside.md).
+ここから「`format_label` が必ず文字列を返す」とまでは言えません。関数の定義、呼び出し時の入力、外部状態などが例にないためです。名前が見慣れた英語でも、処理の意味は定義と使われ方で確かめます。
 
-![diagram fallback text](https://example.test/diagram.png)
+長い呼び出しを見つけたら、改行・括弧・カンマごとに引数を区切って眺めます。横に長い一行を読めることと、そこで何が起きるかを知っていることは別です。
 
-Raw HTML stays text: <img src="x" onerror="alert(1)">
+```python
+result = normalize_record(incoming_record, default_locale, strict_mode, allowed_fields, clock, audit_context, retry_policy, output_format)
+```
+
+## 読む順番
+
+- `名前 = 式` を見つけ、左辺の名前と右辺の値・計算を分ける。
+- 関数呼び出しでは、関数名、引数、結果の受け取り先を記録する。
+- 定義されていない関数や変数の動作は、名前から想像せず「この断片だけでは未確定」とする。
+- 実行結果の例がある場合は、それをコードそのものの保証と混同しない。
+
+### 表示と実行の境界
+
+コードフェンス内は説明用の文字列です。HTMLに似た入力があっても教材内の例として表示するだけです。
+
+```html
+<img src=x onerror="alert('これは実行例ではありません')">
+```
+
+`<b>このタグも文字列として扱います</b>`
+
+- [Python公式Tutorial](https://docs.python.org/3/tutorial/) は式や関数の動きを確認するための参照先です。
+- [端末を開くリンク](javascript:alert(1)) や [Package外を指す相対リンク](../../outside.md) は教材リンクとして使わないでください。
+- ![図が読み込めないときの説明](https://example.invalid/diagram.png) の代替テキストは、図の情報を文章で補う場所です。この例の画像URLは実在資料ではありません。
+
+## 確認
+
+`label = format_label(base, count)` から分かるのは、関数名と2つの引数を使って結果を `label` に代入しようとしていることです。返り値の内容を知るには、関数定義や実行時の観察が別途必要です。

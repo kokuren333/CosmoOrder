@@ -1,9 +1,9 @@
 {
   "schema_version": "0.1",
   "package_id": "org.osmium.pressure/mathematics",
-  "package_version": "0.1.0",
-  "title": "Probability and conditional reasoning",
-  "language": "en",
+  "package_version": "0.2.0",
+  "title": "確率を条件で読み解く",
+  "language": "ja",
   "capabilities": {
     "required": [],
     "optional": []
@@ -15,5 +15,35 @@
     "resources": "entities/resources.json",
     "assessments": "entities/assessments.json"
   },
-  "extensions": {}
+  "extensions": {},
+  "references": [
+    {
+      "id": "openstax-intro-stats-probability",
+      "kind": "url",
+      "type": "book",
+      "title": "確率の基本と事象（OpenStax『Introductory Statistics 2e』第3章）",
+      "locator": "https://openstax.org/books/introductory-statistics-2e/pages/3-1-terminology",
+      "citation": "Barbara Illowsky and Susan Dean. Introductory Statistics 2e. OpenStax, Chapter 3, especially Sections 3.1 and 3.3.",
+      "publisher": "OpenStax (Rice University)",
+      "authors": [
+        "Barbara Illowsky",
+        "Susan Dean"
+      ],
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    },
+    {
+      "id": "openstax-data-science-bayes",
+      "kind": "url",
+      "type": "book",
+      "title": "条件付き確率とベイズの定理（OpenStax『Principles of Data Science』第3.4節）",
+      "locator": "https://openstax.org/books/principles-data-science/pages/3-4-probability-theory",
+      "citation": "OpenStax. Principles of Data Science. Section 3.4, Probability Theory.",
+      "publisher": "OpenStax (Rice University)",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    }
+  ]
 }

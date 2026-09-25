@@ -1,0 +1,22 @@
+{
+  "schema_version": "0.1",
+  "package_id": "org.example/cardiovascular-atlas-validation",
+  "package_version": "0.1.0",
+  "title": "循環生理と心不全の概念地図（UX検証用）",
+  "language": "ja",
+  "capabilities": { "required": [], "optional": [] },
+  "entities": {
+    "concepts": "entities/concepts.json",
+    "objectives": "entities/objectives.json",
+    "curricula": "entities/curricula.json",
+    "resources": "entities/resources.json",
+    "assessments": "entities/assessments.json"
+  },
+  "extensions": {},
+  "references": [
+    { "id": "openstax-cardiac-cycle", "kind": "url", "type": "book", "title": "Anatomy and Physiology 2e: The Cardiac Cycle", "locator": "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-3-cardiac-cycle", "citation": "OpenStax. Anatomy and Physiology 2e, section 19.3 Cardiac Cycle.", "visibility": "public", "record_visibility": "public", "locator_visibility": "public" },
+    { "id": "openstax-cardiac-physiology", "kind": "url", "type": "book", "title": "Anatomy and Physiology 2e: Cardiac Physiology", "locator": "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-4-cardiac-physiology", "citation": "OpenStax. Anatomy and Physiology 2e, section 19.4 Cardiac Physiology.", "visibility": "public", "record_visibility": "public", "locator_visibility": "public" },
+    { "id": "esc-heart-failure-2026", "kind": "url", "type": "guideline", "title": "2026 ESC Guidelines for the management of heart failure", "locator": "https://www.escardio.org/guidelines/clinical-practice-guidelines/all-esc-practice-guidelines/heart-failure/", "citation": "European Society of Cardiology. 2026 ESC Guidelines for the management of heart failure. Published 2026-08-28.", "visibility": "public", "record_visibility": "public", "locator_visibility": "public", "version": "2026" },
+    { "id": "aha-heart-failure-2022", "kind": "url", "type": "guideline", "title": "2022 AHA/ACC/HFSA Guideline for the Management of Heart Failure", "locator": "https://doi.org/10.1161/CIR.0000000000001063", "citation": "Heidenreich PA, et al. 2022 AHA/ACC/HFSA Guideline for the Management of Heart Failure. Circulation. 2022.", "visibility": "public", "record_visibility": "public", "locator_visibility": "public", "version": "2022" }
+  ]
+}

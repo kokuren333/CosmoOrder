@@ -1,11 +1,3 @@
 [
-  {
-    "id": "core",
-    "title": "Core sequence",
-    "objectives": [
-      "values.read",
-      "errors.read",
-      "diffs.review"
-    ]
-  }
+  {"id":"core","title":"コード読解から変更レビューまで","objectives":["expressions.trace","errors.diagnose","diffs.review"]}
 ]

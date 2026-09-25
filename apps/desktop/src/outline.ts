@@ -1,6 +1,6 @@
 // Read-only views over a lesson. This module only groups what the package
 // already declares; it never decides what is correct, what is next, or what a
-// learner has mastered. Ordering comes from the package's own arrays.
+// learner has attempted. Ordering comes from the package's own arrays.
 
 import type { Assessment, Concept, Curriculum, LessonView, Objective, Resource } from "./types.ts";
 

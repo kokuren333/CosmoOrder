@@ -1,0 +1,30 @@
+{
+  "schema_version": "0.1",
+  "package_id": "org.example/authoring-review",
+  "package_version": "1.0.0",
+  "title": "Authoring review fixture",
+  "language": "en",
+  "capabilities": { "required": [], "optional": [] },
+  "entities": {
+    "concepts": "entities/concepts.json",
+    "objectives": "entities/objectives.json",
+    "curricula": "entities/curricula.json",
+    "resources": "entities/resources.json",
+    "assessments": "entities/assessments.json"
+  },
+  "extensions": {},
+  "references": [
+    {
+      "id": "public-reference",
+      "kind": "url",
+      "type": "article",
+      "title": "Public reference",
+      "locator": "https://example.org/reference",
+      "citation": "Example Organization. A reference for the fixture.",
+      "publisher": "Example Organization",
+      "visibility": "public",
+      "record_visibility": "public",
+      "locator_visibility": "public"
+    }
+  ]
+}

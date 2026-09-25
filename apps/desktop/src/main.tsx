@@ -7,7 +7,7 @@ import "highlight.js/styles/github.css";
 
 const container = document.getElementById("root");
 if (container === null) {
-  throw new Error("the Osmium root element is missing");
+  throw new Error("the CosmoOrder root element is missing");
 }
 
 createRoot(container).render(

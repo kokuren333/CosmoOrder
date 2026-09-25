@@ -3,6 +3,7 @@
 //! File loading, duplicate JSON key rejection and archive checks belong to
 //! the input boundary. This module never accesses a filesystem or network.
 
+use crate::reference::{self, Visibility};
 use crate::schema::{Diagnostic, DocumentKind, SCHEMA_VERSION, validate_document};
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
@@ -154,19 +155,47 @@ pub fn validate_package(documents: PackageDocuments) -> Result<PackageModel, Vec
     let objectives = documents.objectives.as_array().unwrap();
     let resources = documents.resources.as_array().unwrap();
     let assessments = documents.assessments.as_array().unwrap();
-    if let Some(sources) = documents.manifest.get("sources").and_then(Value::as_array) {
-        let mut source_ids = BTreeSet::new();
-        for (index, source) in sources.iter().enumerate() {
-            let id = source["id"].as_str().unwrap_or_default();
-            if !source_ids.insert(id) {
+    if documents.manifest.get(reference::REFERENCES).is_some()
+        && documents
+            .manifest
+            .get(reference::LEGACY_REFERENCES)
+            .is_some()
+    {
+        errors.push(error(
+            "manifest",
+            "/references".into(),
+            "OSM_SOURCE_REFERENCE",
+            "manifest cannot contain both references and legacy sources registries",
+        ));
+    }
+    for (kind, entities) in [("resources", resources), ("assessments", assessments)] {
+        for (index, entity) in entities.iter().enumerate() {
+            if entity.get(reference::EVIDENCE).is_some()
+                && entity.get(reference::LEGACY_EVIDENCE).is_some()
+            {
                 errors.push(error(
-                    "manifest",
-                    format!("/sources/{index}/id"),
-                    "OSM_DUPLICATE_SOURCE",
-                    format!("duplicate source ID: {id}"),
+                    kind,
+                    format!("/{index}/{}", reference::EVIDENCE),
+                    "OSM_SOURCE_REFERENCE",
+                    "an entity cannot contain both evidence_reference_ids and legacy source_ids",
                 ));
             }
-            let visibility = source["visibility"].as_str().unwrap_or_default();
+        }
+    }
+    if let Some(registry) = reference::registry_field(&documents.manifest) {
+        let sources = documents.manifest[registry].as_array().unwrap();
+        let mut reference_ids = BTreeSet::new();
+        for (index, source) in sources.iter().enumerate() {
+            let id = source["id"].as_str().unwrap_or_default();
+            if !reference_ids.insert(id) {
+                errors.push(error(
+                    "manifest",
+                    format!("/{registry}/{index}/id"),
+                    "OSM_DUPLICATE_SOURCE",
+                    format!("duplicate reference ID: {id}"),
+                ));
+            }
+            let visibility = reference::visibility(source);
             let kind = source["kind"].as_str().unwrap_or_default();
             let locator = source
                 .get("locator")
@@ -178,12 +207,12 @@ pub fn validate_package(documents: PackageDocuments) -> Result<PackageModel, Vec
             {
                 errors.push(error(
                     "manifest",
-                    format!("/sources/{index}/locator"),
+                    format!("/{registry}/{index}/locator"),
                     "OSM_SOURCE_LOCATOR",
                     "package_asset locator must be a safe package-relative path",
                 ));
             }
-            if visibility != "private"
+            if visibility != Visibility::Private
                 && kind != "manual"
                 && locator.trim().is_empty()
                 && source
@@ -193,30 +222,47 @@ pub fn validate_package(documents: PackageDocuments) -> Result<PackageModel, Vec
             {
                 errors.push(error(
                     "manifest",
-                    format!("/sources/{index}"),
+                    format!("/{registry}/{index}"),
                     "OSM_SOURCE_LOCATOR",
-                    "a distributable source requires a locator or citation",
+                    "a distributable reference requires a locator or citation",
                 ));
             }
-            if visibility == "public" && locator.trim().is_empty() {
+            if visibility == Visibility::Public && locator.trim().is_empty() {
                 errors.push(error(
                     "manifest",
-                    format!("/sources/{index}/locator"),
+                    format!("/{registry}/{index}/locator"),
                     "OSM_SOURCE_LOCATOR",
-                    "a public source requires a usable locator",
+                    "a public reference requires a usable locator",
                 ));
             }
-            if visibility != "private"
-                && (!locator_is_portable(locator)
-                    || locator.contains('?')
-                    || url_has_credentials(locator))
-            {
+            if visibility != Visibility::Private && !locator_is_portable(locator) {
                 errors.push(error(
                     "manifest",
-                    format!("/sources/{index}/locator"),
+                    format!("/{registry}/{index}/locator"),
                     "OSM_SOURCE_PRIVACY",
-                    "distributable locators must be portable and must not contain query parameters",
+                    "public locators must be portable package-relative or absolute URLs",
                 ));
+            }
+            // A locator can be present in the source manifest that is committed
+            // to version control even when it will be stripped from a build.
+            // Reject recognizable credentials at authoring time for every
+            // visibility; ordinary publication queries are allowed.
+            if !locator.trim().is_empty() {
+                if reference::url_has_credentials(locator) {
+                    errors.push(error(
+                        "manifest",
+                        format!("/{registry}/{index}/locator"),
+                        "OSM_SOURCE_PRIVACY",
+                        "locators must not embed user credentials",
+                    ));
+                } else if let Some(key) = reference::sensitive_query_key(locator) {
+                    errors.push(error(
+                        "manifest",
+                        format!("/{registry}/{index}/locator"),
+                        "OSM_SOURCE_PRIVACY",
+                        format!("locators must not carry credential-like query parameter: {key}"),
+                    ));
+                }
             }
         }
         for (index, resource) in resources.iter().enumerate() {
@@ -230,48 +276,45 @@ pub fn validate_package(documents: PackageDocuments) -> Result<PackageModel, Vec
                     ));
                 }
             }
+            let field = reference::evidence_field(resource);
             let mut refs = BTreeSet::new();
-            for (ref_index, source_id) in resource
-                .get("source_ids")
-                .and_then(Value::as_array)
-                .into_iter()
-                .flatten()
-                .enumerate()
+            for (ref_index, source_id) in
+                resource[field].as_array().into_iter().flatten().enumerate()
             {
                 let source_id = source_id.as_str().unwrap_or_default();
-                if !source_ids.contains(source_id) {
+                if !reference_ids.contains(source_id) {
                     errors.push(error(
                         "resources",
-                        format!("/{index}/source_ids/{ref_index}"),
+                        format!("/{index}/{field}/{ref_index}"),
                         "OSM_SOURCE_REFERENCE",
-                        format!("unknown source ID: {source_id}"),
+                        format!("unknown reference ID: {source_id}"),
                     ));
                 }
                 if !refs.insert(source_id) {
                     errors.push(error(
                         "resources",
-                        format!("/{index}/source_ids/{ref_index}"),
+                        format!("/{index}/{field}/{ref_index}"),
                         "OSM_SOURCE_REFERENCE",
-                        format!("duplicate source reference: {source_id}"),
+                        format!("duplicate evidence reference: {source_id}"),
                     ));
                 }
             }
         }
         for (index, assessment) in assessments.iter().enumerate() {
-            for (ref_index, source_id) in assessment
-                .get("source_ids")
-                .and_then(Value::as_array)
+            let field = reference::evidence_field(assessment);
+            for (ref_index, source_id) in assessment[field]
+                .as_array()
                 .into_iter()
                 .flatten()
                 .enumerate()
             {
                 let source_id = source_id.as_str().unwrap_or_default();
-                if !source_ids.contains(source_id) {
+                if !reference_ids.contains(source_id) {
                     errors.push(error(
                         "assessments",
-                        format!("/{index}/source_ids/{ref_index}"),
+                        format!("/{index}/{field}/{ref_index}"),
                         "OSM_SOURCE_REFERENCE",
-                        format!("unknown source ID: {source_id}"),
+                        format!("unknown reference ID: {source_id}"),
                     ));
                 }
             }
@@ -288,28 +331,22 @@ pub fn validate_package(documents: PackageDocuments) -> Result<PackageModel, Vec
                     ));
                 }
             }
-            if resource
-                .get("source_ids")
-                .is_some_and(|v| !v.as_array().is_some_and(Vec::is_empty))
-            {
+            if reference::has_evidence(resource) {
                 errors.push(error(
                     "resources",
-                    format!("/{index}/source_ids"),
+                    format!("/{index}/evidence_reference_ids"),
                     "OSM_SOURCE_REFERENCE",
-                    "resource references sources but manifest has no source registry",
+                    "resource declares evidence but manifest has no reference registry",
                 ));
             }
         }
         for (index, assessment) in assessments.iter().enumerate() {
-            if assessment
-                .get("source_ids")
-                .is_some_and(|v| !v.as_array().is_some_and(Vec::is_empty))
-            {
+            if reference::has_evidence(assessment) {
                 errors.push(error(
                     "assessments",
-                    format!("/{index}/source_ids"),
+                    format!("/{index}/evidence_reference_ids"),
                     "OSM_SOURCE_REFERENCE",
-                    "assessment references sources but manifest has no source registry",
+                    "assessment declares evidence but manifest has no reference registry",
                 ));
             }
         }
@@ -551,11 +588,4 @@ fn locator_is_portable(locator: &str) -> bool {
         || lower.contains("\\home\\")
         || locator.contains("\\")
         || locator.chars().any(char::is_control))
-}
-
-fn url_has_credentials(locator: &str) -> bool {
-    locator
-        .split_once("://")
-        .and_then(|(_, rest)| rest.split('/').next())
-        .is_some_and(|authority| authority.contains('@'))
 }

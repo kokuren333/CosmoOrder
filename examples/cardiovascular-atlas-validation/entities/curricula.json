@@ -1,0 +1,22 @@
+[
+  {
+    "id": "foundations",
+    "title": "心臓の構造と循環の基礎",
+    "objectives": ["structure.explain", "chambers.compare", "valves.describe", "pulmonary.trace", "systemic.trace", "myocardium.describe", "conduction.trace", "coronary.explain", "cycle.sequence", "phases.compare"]
+  },
+  {
+    "id": "hemodynamics",
+    "title": "拍出量と血行動態",
+    "objectives": ["stroke-volume.explain", "heart-rate.explain", "output.calculate", "ef.interpret", "return.trace", "filling.explain", "preload.explain", "contractility.explain", "afterload.explain", "resistance.explain", "pv-loop.read", "starling.explain"]
+  },
+  {
+    "id": "compensation-and-syndrome",
+    "title": "灌流・代償反応・心不全",
+    "objectives": ["perfusion.explain", "renal-perfusion.explain", "sympathetic.explain", "raas.explain", "adh.explain", "natriuretic.explain", "retention.explain", "congestion.explain", "hf-syndrome.explain", "remodeling.explain", "cardiorenal.explain"]
+  },
+  {
+    "id": "phenotypes-and-classes",
+    "title": "表現型と治療クラスの概観",
+    "objectives": ["phenotypes.compare", "hfref.describe", "hfmr.describe", "hfpef.describe", "diuretics.describe", "acei.describe", "arb.describe", "arni.describe", "beta.describe", "mra.describe", "sglt2.describe"]
+  }
+]

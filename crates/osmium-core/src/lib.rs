@@ -8,6 +8,7 @@ pub mod evaluation;
 pub mod lint;
 pub mod parsing;
 pub mod query;
+pub mod reference;
 pub mod schema;
 pub mod validation;
 pub mod yaml;

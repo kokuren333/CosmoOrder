@@ -1,41 +1,50 @@
 [
   {
-    "id": "values.lesson",
+    "id": "expressions.lesson",
     "type": "markdown",
-    "title": "Inspecting code as text",
+    "title": "コードを実行せずに一行ずつ読む",
     "path": "content/values.md",
     "teaches": [
-      "values.read"
+      "expressions.trace"
     ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text",
-    "language": "en"
+    "language": "ja",
+    "creator": "Osmium編集プロジェクト（AI支援執筆）",
+    "attribution": "本教材向けに新規執筆。根拠資料は「参考資料」を参照。",
+    "license_status": "unknown",
+    "evidence_reference_ids": [
+      "python-tutorial-errors"
+    ]
   },
   {
     "id": "errors.lesson",
     "type": "markdown",
-    "title": "Output and errors",
+    "title": "エラー表示を調査手順に変える",
     "path": "content/errors.md",
     "teaches": [
-      "errors.read"
+      "errors.diagnose"
     ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text",
-    "language": "en"
+    "language": "ja",
+    "creator": "Osmium編集プロジェクト（AI支援執筆）",
+    "attribution": "本教材向けに新規執筆。根拠資料は「参考資料」を参照。",
+    "license_status": "unknown",
+    "evidence_reference_ids": [
+      "python-tutorial-errors"
+    ]
   },
   {
     "id": "diffs.lesson",
     "type": "markdown",
-    "title": "Reviewing a diff",
+    "title": "差分を読んでレビューする",
     "path": "content/diffs.md",
     "teaches": [
       "diffs.review"
     ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text",
-    "language": "en"
+    "language": "ja",
+    "creator": "Osmium編集プロジェクト（AI支援執筆）",
+    "attribution": "本教材向けに新規執筆。根拠資料は「参考資料」を参照。",
+    "license_status": "unknown",
+    "evidence_reference_ids": [
+      "git-diff-manual"
+    ]
   }
 ]

@@ -1,25 +1,66 @@
 [
   {
+    "id": "expressions.check",
+    "revision": "1",
+    "measures": [
+      "expressions.trace"
+    ],
+    "cognitive_level": "application",
+    "stimulus": {
+      "markdown": "次のコードを読んでください。**この教材ではコードを実行しません。** `format_label` の呼び出しに渡される値として読み取れるものはどれですか？\n\n```python\nbase = \"note\"\ncount = 3\nlabel = format_label(base, count)\n```"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "文字列 \"note\" と整数 3。関数が返す値は定義がないため分からない。"
+        },
+        {
+          "id": "b",
+          "text": "必ず文字列 \"note3\" が返る。"
+        },
+        {
+          "id": "c",
+          "text": "このコードだけで、format_label の内部処理も分かる。"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
+    "feedback": {
+      "markdown": "代入行から `base` と `count` に入る値は読めます。関数本体が示されていないので、戻り値や内部処理は断定できません。"
+    },
+    "evidence_reference_ids": [
+      "python-tutorial-errors"
+    ]
+  },
+  {
     "id": "errors.check",
     "revision": "1",
     "measures": [
-      "values.read",
-      "errors.read",
-      "diffs.review"
+      "errors.diagnose"
     ],
+    "cognitive_level": "application",
     "stimulus": {
-      "markdown": "Which token names the exception type?\n\n```text\nValueError: invalid input\n```"
+      "markdown": "次の出力が示されたとき、まず確かめるべき箇所はどれですか？\n\n```text\nTraceback (most recent call last):\n  File \"report.py\", line 8, in <module>\n    total = price + \"円\"\nTypeError: unsupported operand type(s) for +\n```"
     },
     "response": {
       "type": "single_select",
       "options": [
         {
           "id": "a",
-          "text": "ValueError"
+          "text": "`TypeError` と行8の式を手がかりに、price の実際の型と文字列連結の意図を確認する。"
         },
         {
           "id": "b",
-          "text": "input"
+          "text": "エラー名だけで原因を確定し、ファイルの入力値は調べない。"
+        },
+        {
+          "id": "c",
+          "text": "Traceback の先頭行を修正し、行8は読まない。"
         }
       ]
     },
@@ -28,30 +69,36 @@
       "answer": "a"
     },
     "feedback": {
-      "markdown": "The exception type precedes the message text."
-    }
+      "markdown": "最後の行は例外の種類と説明を示し、Tracebackのフレームは発生箇所をたどる手がかりです。実際の入力値や周辺コードも確かめてから原因を判断します。"
+    },
+    "evidence_reference_ids": [
+      "python-tutorial-errors"
+    ]
   },
   {
-    "id": "errors.check.review",
+    "id": "diffs.check",
     "revision": "1",
     "measures": [
-      "values.read",
-      "errors.read",
       "diffs.review"
     ],
+    "cognitive_level": "discrimination",
     "stimulus": {
-      "markdown": "Which statement best summarizes the concepts in **Reading safe program output**?"
+      "markdown": "次の差分から確実に言えることと、追加で調べることの組み合わせとして最も適切なのはどれですか？\n\n```diff\n- timeout = 10\n+ timeout = 30\n```"
     },
     "response": {
       "type": "single_select",
       "options": [
         {
           "id": "a",
-          "text": "Use evidence and definitions from the resources"
+          "text": "設定値が10から30に変わった。単位・影響する処理・妥当な範囲は定義や利用箇所を確認する。"
         },
         {
           "id": "b",
-          "text": "Infer an answer without checking the material"
+          "text": "処理が必ず3倍遅くなり、他の挙動は変わらない。"
+        },
+        {
+          "id": "c",
+          "text": "追加行だけが存在するので、timeoutの値は変化していない。"
         }
       ]
     },
@@ -60,7 +107,10 @@
       "answer": "a"
     },
     "feedback": {
-      "markdown": "Return to the related resources and connect the stated concepts to the objective."
-    }
+      "markdown": "`-` は比較元からの削除、`+` は比較先への追加を表します。差分が示す変更と、変数の意味や実行時の影響についての推測を分けてレビューします。"
+    },
+    "evidence_reference_ids": [
+      "git-diff-manual"
+    ]
   }
 ]

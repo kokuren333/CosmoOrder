@@ -40,12 +40,37 @@ export interface ContentView {
 /** One diagnostic as Core or Package reported it. */
 export interface ErrorView {
   code: string;
+  severity: string;
   message: string;
   file: string | null;
+  line: number | null;
+  column: number | null;
   path: string;
   suggestions: string[];
   entity_type?: string;
   entity_id?: string;
+}
+
+/** Source-manifest Reference metadata for an authoring or review surface. */
+export interface ReferenceRecord {
+  id: string;
+  kind: "url" | "doi" | "isbn" | "citation" | "local_file" | "package_asset" | "manual";
+  visibility: "public" | "attribution_only" | "private";
+  title?: string;
+  locator?: string;
+  citation?: string;
+  record_visibility?: "public" | "private";
+  locator_visibility?: "public" | "hidden";
+  type?: "webpage" | "article" | "book" | "guideline" | "dataset" | "document" | "other";
+  publisher?: string;
+  authors?: string[];
+  published_at?: string;
+  updated_at?: string;
+  accessed_at?: string;
+  edition?: string;
+  version?: string;
+  identifiers?: { doi?: string; isbn?: string };
+  content_hash?: string;
 }
 
 export interface CommandError {
@@ -67,7 +92,159 @@ export interface PackageView {
   entity_counts: Record<string, number>;
   digest: string;
   selected_version: string;
+  integrity_error?: string | null;
 }
+
+export interface UninstallReport {
+  package_id: string;
+  package_version: string;
+  digest: string;
+}
+
+export type PackageEntityKind = "concept" | "objective" | "curriculum" | "resource" | "assessment";
+
+export interface PackageContextNode {
+  id: string;
+  kind: PackageEntityKind;
+  title: string;
+  depth: number;
+  entity: Record<string, unknown>;
+}
+
+export interface PackageContextRelation {
+  relation: string;
+  from_kind: PackageEntityKind;
+  from_id: string;
+  to_kind: PackageEntityKind;
+  to_id: string;
+  incoming: boolean;
+}
+
+/** Core's bounded, read-only Package-local neighborhood for Route/Atlas views. */
+export interface PackageContextView {
+  target: { id: string; kind: PackageEntityKind; title: string; detail: Record<string, unknown> };
+  depth: number;
+  nodes: PackageContextNode[];
+  relations: PackageContextRelation[];
+  truncated: boolean;
+  prerequisite_depth: number | null;
+  content_is_untrusted: boolean;
+}
+
+/** Small Concept-title search result set returned by the Core read model. */
+export interface ConceptSearchView {
+  query: string;
+  total: number;
+  limit: number;
+  results: Array<{
+    id: string;
+    kind: "concept";
+    title: string;
+    detail: Record<string, unknown>;
+  }>;
+  truncated: boolean;
+}
+
+export interface BuildReport {
+  package_id: string;
+  package_version: string;
+  digest: string;
+  files: number;
+  output: string;
+  archive_sha256: string | null;
+}
+
+/** Explicit installed package version selected in the Library. */
+export interface InstalledPackageRef {
+  package_id: string;
+  package_version: string;
+}
+
+/** Source-only validation/lint response; never supplied to learner views. */
+export interface SourceReviewView {
+  source_directory: string;
+  valid: boolean;
+  package_id: string | null;
+  package_version: string | null;
+  schema_version: string | null;
+  title: string | null;
+  references: ReferenceRecord[];
+  diagnostics: ErrorView[];
+}
+
+export interface SourceEditorView {
+  source_directory: string;
+  package_id: string;
+  editable: boolean;
+  title: string;
+  description: string | null;
+  language: string;
+  resource_title: string;
+  markdown: string;
+  concept_title: string;
+}
+
+/** Reference to either an existing schema ID or a package-generated pending ID. */
+export type DraftKey =
+  | { origin: "existing"; value: string }
+  | { origin: "new"; value: string };
+
+export interface ConceptDraft {
+  key: DraftKey;
+  title: string;
+  requires: DraftKey[];
+}
+
+export interface ObjectiveDraft {
+  key: DraftKey;
+  concept: DraftKey;
+  description: string;
+}
+
+export interface ResourceDraft {
+  key: DraftKey;
+  title: string;
+  markdown: string;
+  teaches: DraftKey[];
+}
+
+export interface CurriculumDraft {
+  key: DraftKey;
+  title: string;
+  objectives: DraftKey[];
+}
+
+export interface OptionDraft {
+  key: DraftKey;
+  text: string;
+}
+
+export type AssessmentResponseDraft =
+  | { type: "single_select"; options: OptionDraft[]; answer: DraftKey }
+  | { type: "boolean"; answer: boolean };
+
+export interface AssessmentDraft {
+  key: DraftKey;
+  measures: DraftKey[];
+  stimulus: string;
+  feedback: string;
+  response: AssessmentResponseDraft;
+}
+
+export interface AuthoringWorkspace {
+  sourceDirectory: string;
+  packageId: string;
+  editable: boolean;
+  title: string;
+  language: string;
+  concepts: ConceptDraft[];
+  objectives: ObjectiveDraft[];
+  resources: ResourceDraft[];
+  curricula: CurriculumDraft[];
+  assessments: AssessmentDraft[];
+}
+
+export interface WorkspaceEdits extends Omit<AuthoringWorkspace, "packageId" | "editable"> {}
 
 export interface Manifest {
   schema_version: string;
@@ -123,6 +300,8 @@ export interface Assessment {
   id: string;
   revision: string;
   measures: string[];
+  /** Free-form, non-normative label for what the item asks of a learner. */
+  cognitive_level?: string;
   stimulus: { markdown: string };
   response: AssessmentResponse;
   evaluation: { type: string; answer: string | boolean };
@@ -150,16 +329,31 @@ export interface ResourceView {
   resource: Resource;
   content: Content;
   content_is_untrusted: boolean;
-  sources: ResourceSource[];
+  references: ResourceReference[];
 }
 
-/** Source metadata already projected by Runtime to learner-visible fields. */
-export interface ResourceSource {
+/**
+ * Reference metadata already projected by Runtime to learner-visible fields.
+ * Private records and hidden locators never reach this DTO.
+ */
+export interface ResourceReference {
   id: string;
   title: string;
-  visibility: "public" | "attribution_only";
+  /** Legacy single-enum visibility, still emitted for older distributions. */
+  visibility: "public" | "attribution_only" | "private";
+  record_visibility?: "public" | "private";
+  locator_visibility?: "public" | "hidden";
   citation?: string;
   locator?: string;
+  type?: string;
+  publisher?: string;
+  authors?: string[];
+  published_at?: string;
+  updated_at?: string;
+  accessed_at?: string;
+  version?: string;
+  edition?: string;
+  identifiers?: Record<string, string>;
 }
 
 export interface ObjectiveProgress {
@@ -187,6 +381,10 @@ export interface LearningEvent {
   duration_ms: number | null;
   hints_used: number | null;
   evaluator: { id: string; version: string };
+  /** Snapshot fields needed to interpret an event after its Package is removed. */
+  assessment_snapshot?: {
+    stimulus?: { markdown?: string };
+  };
 }
 
 export interface AttemptView {

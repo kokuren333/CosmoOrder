@@ -3,6 +3,7 @@
 
 use crate::distribution::{Distribution, read_distribution};
 use crate::{diagnostic, io_error, reject_link};
+use osmium_core::parsing::{MAX_DOCUMENT_BYTES, parse_json};
 use osmium_core::schema::Diagnostic;
 use serde::Serialize;
 use std::{
@@ -25,10 +26,23 @@ pub struct InstalledPackage {
     pub path: PathBuf,
 }
 
+#[derive(Debug, Clone)]
+pub struct PackageInventoryItem {
+    pub package: InstalledPackage,
+    pub integrity_error: Option<String>,
+}
+
 #[derive(Debug, Serialize)]
 pub struct InstallReport {
     pub package: InstalledPackage,
     pub already_installed: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct UninstallReport {
+    pub package_id: String,
+    pub package_version: String,
+    pub digest: String,
 }
 
 #[derive(Debug)]
@@ -227,6 +241,143 @@ impl Library {
         Ok(packages)
     }
 
+    /// Return packages whose complete distributions still verify. This is for
+    /// Runtime startup recovery only: one damaged payload must not prevent the
+    /// application from opening so the user can remove that payload. Explicit
+    /// listing and reads continue to use `packages()` and report corruption.
+    pub fn valid_packages(&self) -> Result<Vec<InstalledPackage>, Vec<Diagnostic>> {
+        let root = self.home.join("library");
+        let mut packages = Vec::new();
+        let mut identities = std::collections::BTreeSet::new();
+        for entry in fs::read_dir(&root).map_err(|e| io_error(&root, e))? {
+            let entry = entry.map_err(|e| io_error(&root, e))?;
+            if packages.len() >= MAX_INSTALLED_PACKAGES {
+                return Err(error("OSM_INPUT_LIMIT", "too many installed packages"));
+            }
+            let path = entry.path();
+            let meta = fs::symlink_metadata(&path).map_err(|e| io_error(&path, e))?;
+            reject_link(&meta, &path)?;
+            if !meta.is_dir() {
+                return Err(error(
+                    "OSM_LIBRARY",
+                    "installed package must be a directory",
+                ));
+            }
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if !is_digest(&name) {
+                return Err(error("OSM_LIBRARY", "unexpected entry in package library"));
+            }
+            let Ok(package) = read_distribution(&path) else {
+                continue;
+            };
+            if package.digest != name {
+                continue;
+            }
+            let record = record(&package, path);
+            if identities.insert((record.package_id.clone(), record.package_version.clone())) {
+                packages.push(record);
+            }
+        }
+        packages.sort_by(|a, b| {
+            (&a.package_id, &a.package_version).cmp(&(&b.package_id, &b.package_version))
+        });
+        Ok(packages)
+    }
+
+    /// Bounded management inventory. A complete distribution is verified
+    /// before being marked usable. When payload verification fails but the
+    /// canonical manifest header remains readable, the package is still shown
+    /// with its identity so the user can remove that exact payload.
+    pub fn inventory(&self) -> Result<Vec<PackageInventoryItem>, Vec<Diagnostic>> {
+        let root = self.home.join("library");
+        let mut items = Vec::new();
+        for entry in fs::read_dir(&root).map_err(|e| io_error(&root, e))? {
+            let entry = entry.map_err(|e| io_error(&root, e))?;
+            if items.len() >= MAX_INSTALLED_PACKAGES {
+                return Err(error("OSM_INPUT_LIMIT", "too many installed packages"));
+            }
+            let path = entry.path();
+            let meta = fs::symlink_metadata(&path).map_err(|e| io_error(&path, e))?;
+            reject_link(&meta, &path)?;
+            if !meta.is_dir() {
+                return Err(error(
+                    "OSM_LIBRARY",
+                    "installed package must be a directory",
+                ));
+            }
+            let digest = entry.file_name().to_string_lossy().into_owned();
+            if !is_digest(&digest) {
+                return Err(error("OSM_LIBRARY", "unexpected entry in package library"));
+            }
+            match read_distribution(&path) {
+                Ok(distribution) if distribution.digest == digest => {
+                    items.push(PackageInventoryItem {
+                        package: record(&distribution, path),
+                        integrity_error: None,
+                    });
+                }
+                result => {
+                    let manifest_path = path.join("manifest.json");
+                    let manifest_meta = match fs::symlink_metadata(&manifest_path) {
+                        Ok(meta) => meta,
+                        Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+                        Err(error) => return Err(io_error(&manifest_path, error)),
+                    };
+                    reject_link(&manifest_meta, &manifest_path)?;
+                    if !manifest_meta.is_file() || manifest_meta.len() > MAX_DOCUMENT_BYTES as u64 {
+                        continue;
+                    }
+                    let bytes = match fs::read(&manifest_path) {
+                        Ok(bytes) => bytes,
+                        Err(_) => continue,
+                    };
+                    let Ok(header) = parse_json(&bytes, "manifest.json") else {
+                        continue;
+                    };
+                    let package = &header["package"];
+                    let (
+                        Some(package_id),
+                        Some(package_version),
+                        Some(title),
+                        Some(schema_version),
+                    ) = (
+                        package["package_id"].as_str(),
+                        package["package_version"].as_str(),
+                        package["title"].as_str(),
+                        package["schema_version"].as_str(),
+                    )
+                    else {
+                        continue;
+                    };
+                    let message = match result {
+                        Err(diagnostics) => diagnostics
+                            .first()
+                            .map(|d| format!("{}: {}", d.code, d.message))
+                            .unwrap_or_else(|| "package integrity check failed".into()),
+                        Ok(_) => "installed package directory digest mismatch".into(),
+                    };
+                    items.push(PackageInventoryItem {
+                        package: InstalledPackage {
+                            package_id: package_id.to_owned(),
+                            package_version: package_version.to_owned(),
+                            schema_version: schema_version.to_owned(),
+                            title: title.to_owned(),
+                            entity_counts: std::collections::BTreeMap::new(),
+                            digest: digest.clone(),
+                            path,
+                        },
+                        integrity_error: Some(message),
+                    });
+                }
+            }
+        }
+        items.sort_by(|a, b| {
+            (&a.package.package_id, &a.package.package_version)
+                .cmp(&(&b.package.package_id, &b.package.package_version))
+        });
+        Ok(items)
+    }
+
     pub fn read(
         &self,
         package_id: &str,
@@ -307,6 +458,89 @@ impl Library {
         Ok(InstallReport {
             package: incoming_record,
             already_installed: false,
+        })
+    }
+
+    /// Remove one installed version's package payload. The event log and its
+    /// progress projection live in Store and are intentionally untouched.
+    /// The distribution manifest is read separately so a package with damaged
+    /// payload files can still be removed by its known ID/version.
+    pub fn uninstall(
+        &mut self,
+        package_id: &str,
+        package_version: &str,
+    ) -> Result<UninstallReport, Vec<Diagnostic>> {
+        if package_id.trim().is_empty() || package_version.trim().is_empty() {
+            return Err(error("OSM_LIBRARY", "package ID and version are required"));
+        }
+        let root = self.home.join("library");
+        let mut matched: Option<(PathBuf, String)> = None;
+        for entry in fs::read_dir(&root).map_err(|e| io_error(&root, e))? {
+            let entry = entry.map_err(|e| io_error(&root, e))?;
+            let path = entry.path();
+            let meta = fs::symlink_metadata(&path).map_err(|e| io_error(&path, e))?;
+            reject_link(&meta, &path)?;
+            if !meta.is_dir() {
+                return Err(error(
+                    "OSM_LIBRARY",
+                    "installed package must be a directory",
+                ));
+            }
+            let digest = entry.file_name().to_string_lossy().into_owned();
+            if !is_digest(&digest) {
+                return Err(error("OSM_LIBRARY", "unexpected entry in package library"));
+            }
+            let manifest_path = path.join("manifest.json");
+            let manifest_meta = match fs::symlink_metadata(&manifest_path) {
+                Ok(meta) => meta,
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+                Err(error) => return Err(io_error(&manifest_path, error)),
+            };
+            reject_link(&manifest_meta, &manifest_path)?;
+            if !manifest_meta.is_file() || manifest_meta.len() > MAX_DOCUMENT_BYTES as u64 {
+                continue;
+            }
+            let bytes = match fs::read(&manifest_path) {
+                Ok(bytes) => bytes,
+                Err(_) => continue,
+            };
+            let manifest = match parse_json(&bytes, "manifest.json") {
+                Ok(value) => value,
+                Err(_) => continue,
+            };
+            let package = &manifest["package"];
+            if package["package_id"].as_str() != Some(package_id)
+                || package["package_version"].as_str() != Some(package_version)
+            {
+                continue;
+            }
+            if matched.is_some() {
+                return Err(error(
+                    "OSM_VERSION_CONFLICT",
+                    "multiple installed payloads match this package ID/version",
+                ));
+            }
+            matched = Some((path, digest));
+        }
+        let (path, digest) = matched.ok_or_else(|| {
+            error(
+                "OSM_NOT_INSTALLED",
+                "requested package version is not installed",
+            )
+        })?;
+        let library_root = root.canonicalize().map_err(|e| io_error(&root, e))?;
+        let canonical = path.canonicalize().map_err(|e| io_error(&path, e))?;
+        if canonical.parent() != Some(library_root.as_path()) {
+            return Err(error(
+                "OSM_PATH",
+                "uninstall target is outside the package library",
+            ));
+        }
+        fs::remove_dir_all(&canonical).map_err(|e| io_error(&canonical, e))?;
+        Ok(UninstallReport {
+            package_id: package_id.to_owned(),
+            package_version: package_version.to_owned(),
+            digest,
         })
     }
 }

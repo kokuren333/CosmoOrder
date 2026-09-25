@@ -1,8 +1,10 @@
 //! Bounded source-package I/O. No package code is executed.
 
+pub mod authoring;
 pub mod distribution;
 pub mod init;
 pub mod library;
+pub mod references;
 
 use osmium_core::parsing::{MAX_DOCUMENT_BYTES, parse_json};
 use osmium_core::schema::{Diagnostic, DocumentKind, validate_document};
@@ -87,7 +89,7 @@ fn inventory(root: &Path) -> Result<BTreeMap<String, u64>, Vec<Diagnostic>> {
             let path = entry.path();
             // A source may be a Git checkout. Repository internals are never
             // package payload, and are not traversed.
-            if depth == 0 && entry.file_name() == ".git" {
+            if depth == 0 && (entry.file_name() == ".git" || entry.file_name() == ".osmium") {
                 continue;
             }
             total_entries += 1;
@@ -321,17 +323,14 @@ pub fn load_source(path: impl AsRef<Path>) -> Result<LoadedSource, Vec<Diagnosti
             files.insert(name.into(), bytes);
         }
     }
-    if let Some(sources) = manifest
-        .get("sources")
-        .and_then(serde_json::Value::as_array)
-    {
-        for source in sources
+    if let Some(references) = osmium_core::reference::registry(&manifest) {
+        for reference in references
             .iter()
-            .filter(|source| source["kind"] == "package_asset")
+            .filter(|reference| reference["kind"] == "package_asset")
         {
-            let name = source["locator"].as_str().unwrap();
+            let name = reference["locator"].as_str().unwrap();
             let bytes = read_checked(&root, name, &entries)?;
-            if let Some(expected) = source
+            if let Some(expected) = reference
                 .get("content_hash")
                 .and_then(serde_json::Value::as_str)
                 && expected != format!("sha256:{}", crate::distribution::sha256(&bytes))

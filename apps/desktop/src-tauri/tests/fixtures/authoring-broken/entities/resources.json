@@ -1,0 +1,13 @@
+[
+  {
+    "id": "foundations-guide",
+    "type": "markdown",
+    "title": "Foundations guide",
+    "path": "content/guide.md",
+    "teaches": ["apply-foundations"],
+    "creator": "Example authors",
+    "attribution": "Original fixture content",
+    "license_status": "known",
+    "license": "CC BY 4.0"
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "id": "intro",
+    "title": "はじめての足し算",
+    "objectives": [
+      "addition.basic"
+    ]
+  }
+]

@@ -1,17 +1,22 @@
 [
   {
-    "id": "probability.bounds",
+    "id": "probability.model",
     "concept": "probability",
-    "description": "Check probability bounds"
+    "description": "標本空間と確率の範囲を示し、余事象の確率を求める"
   },
   {
-    "id": "conditional.compute",
+    "id": "events.combine",
+    "concept": "events",
+    "description": "事象の共通部分・和集合・余事象を区別し、加法公式を使う"
+  },
+  {
+    "id": "conditional.table",
     "concept": "conditional",
-    "description": "Compute a conditional probability from a table"
+    "description": "分割表の条件となる母集団を定めて条件付き確率を計算する"
   },
   {
-    "id": "bayes.apply",
+    "id": "bayes.update",
     "concept": "bayes",
-    "description": "Apply Bayes' rule and state its assumptions"
+    "description": "全確率の公式とベイズの定理で観測後の確率を求める"
   }
 ]

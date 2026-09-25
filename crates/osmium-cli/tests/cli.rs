@@ -98,10 +98,20 @@ fn lint_reports_advice_without_failing_or_claiming_quality() {
                 && item["entity_type"] == "objective"
                 && item["entity_id"] == "addition.basic")
     );
-    assert!(codes(&outcome).contains(&"OSM_LINT_METADATA".into()));
+    assert!(codes(&outcome).contains(&"OSM_LINT_LICENSE_UNKNOWN".into()));
     assert!(codes(&outcome).contains(&"OSM_LINT_RESOURCE_SHORT".into()));
     assert!(outcome.stdout["data"].get("quality_score").is_none());
     assert!(outcome.stderr.contains("warning"));
+
+    // Missing creator/attribution metadata is still reported separately from an
+    // unspecified license, because the two need different author actions.
+    let directory = source();
+    edit(directory.path(), "entities/resources.json", |v| {
+        v[0].as_object_mut().unwrap().remove("creator");
+    });
+    let outcome = run(&["osmium", "lint", &path_of(&directory), "--json"]);
+    assert_eq!(outcome.exit, Exit::Success);
+    assert!(codes(&outcome).contains(&"OSM_LINT_METADATA".into()));
 }
 
 #[test]
@@ -161,6 +171,19 @@ fn installed_package_survives_independent_cli_processes() {
     assert_eq!(
         packages["data"][0]["digest"],
         installed["data"]["package"]["digest"]
+    );
+    let removed = invoke(&[
+        std::ffi::OsStr::new("uninstall"),
+        std::ffi::OsStr::new("org.example/arithmetic"),
+        std::ffi::OsStr::new("--package-version"),
+        std::ffi::OsStr::new("0.1.0"),
+    ]);
+    assert_eq!(removed["data"]["package_version"], "0.1.0");
+    assert!(
+        invoke(&[std::ffi::OsStr::new("packages")])["data"]
+            .as_array()
+            .unwrap()
+            .is_empty()
     );
 }
 
@@ -649,4 +672,257 @@ fn every_diagnostic_carries_the_contract_fields() {
     assert_eq!(diagnostic["file"], "entities/assessments.json");
     assert_eq!(diagnostic["line"], Value::Null);
     assert_eq!(diagnostic["column"], Value::Null);
+}
+
+#[test]
+fn reference_add_attach_and_list_round_trip_a_written_source() {
+    let directory = source();
+    let root = path_of(&directory);
+
+    let added = run(&[
+        "osmium",
+        "reference",
+        "add",
+        &root,
+        "--id",
+        "nice-cg174",
+        "--kind",
+        "url",
+        "--title",
+        "成人の体液状態評価（NICE CG174）",
+        "--locator",
+        "https://www.nice.org.uk/guidance/cg174",
+        "--citation",
+        "NICE. CG174.",
+        "--type",
+        "guideline",
+        "--publisher",
+        "NICE",
+        "--author",
+        "National Institute for Health and Care Excellence",
+        "--published-at",
+        "2013-12",
+        "--updated-at",
+        "2017-03",
+        "--accessed-at",
+        "2026-01-15",
+        "--version",
+        "CG174",
+        "--visibility",
+        "public",
+        "--json",
+    ]);
+    assert_eq!(added.exit, Exit::Success);
+    assert_eq!(added.stdout["data"]["created"], true);
+    assert_eq!(added.stdout["data"]["registry"], "references");
+    assert_eq!(added.stdout["data"]["file"], "osmium.json");
+
+    // The written source still loads with the third-party loader.
+    let validated = run(&["osmium", "validate", &root, "--json"]);
+    assert_eq!(validated.exit, Exit::Success);
+
+    // Re-adding the same ID is idempotent: it never duplicates the record.
+    let again = run(&[
+        "osmium",
+        "reference",
+        "add",
+        &root,
+        "--id",
+        "nice-cg174",
+        "--kind",
+        "url",
+        "--json",
+    ]);
+    assert_eq!(again.exit, Exit::Success);
+    assert_eq!(again.stdout["data"]["created"], false);
+    let listed = run(&["osmium", "reference", "list", &root, "--json"]);
+    assert_eq!(listed.stdout["data"]["count"], 1);
+    assert_eq!(listed.stdout["data"]["registry"], "references");
+    let record = &listed.stdout["data"]["references"][0];
+    assert_eq!(record["type"], "guideline");
+    assert_eq!(record["updated_at"], "2017-03");
+    assert_eq!(record["accessed_at"], "2026-01-15");
+    // A new record states both visibility axes and the compatibility enum.
+    assert_eq!(record["visibility"], "public");
+    assert_eq!(record["record_visibility"], "public");
+    assert_eq!(record["locator_visibility"], "public");
+    assert_eq!(
+        record["authors"],
+        json!(["National Institute for Health and Care Excellence"])
+    );
+
+    let attached = run(&[
+        "osmium",
+        "reference",
+        "attach",
+        &root,
+        "nice-cg174",
+        "--resource",
+        "addition.lesson",
+        "--json",
+    ]);
+    assert_eq!(attached.exit, Exit::Success);
+    assert_eq!(attached.stdout["data"]["changed"], true);
+    assert_eq!(attached.stdout["data"]["target_kind"], "resource");
+    assert_eq!(
+        attached.stdout["data"]["evidence_field"],
+        "evidence_reference_ids"
+    );
+    // Attaching the same pair twice is a no-op rather than a duplicate edge.
+    let attached_again = run(&[
+        "osmium",
+        "reference",
+        "attach",
+        &root,
+        "nice-cg174",
+        "--resource",
+        "addition.lesson",
+        "--json",
+    ]);
+    assert_eq!(attached_again.exit, Exit::Success);
+    assert_eq!(attached_again.stdout["data"]["changed"], false);
+
+    let attached_assessment = run(&[
+        "osmium",
+        "reference",
+        "attach",
+        &root,
+        "nice-cg174",
+        "--assessment",
+        "addition.01",
+        "--json",
+    ]);
+    assert_eq!(attached_assessment.exit, Exit::Success);
+    assert_eq!(
+        attached_assessment.stdout["data"]["target_kind"],
+        "assessment"
+    );
+
+    // The Evidence relation is now visible to the reader query path.
+    let context = run(&["osmium", "context", &root, "addition.lesson", "--json"]);
+    assert_eq!(context.exit, Exit::Success);
+    let validated = run(&["osmium", "validate", &root, "--json"]);
+    assert_eq!(validated.exit, Exit::Success);
+}
+
+#[test]
+fn reference_authoring_rejects_an_invalid_edit_before_writing() {
+    let directory = source();
+    let root = path_of(&directory);
+    let before = fs::read(directory.path().join("osmium.json")).unwrap();
+
+    // A malformed ID is an invocation mistake and must not touch the file.
+    let bad_id = run(&[
+        "osmium",
+        "reference",
+        "add",
+        &root,
+        "--id",
+        "Not A Valid Id",
+        "--kind",
+        "url",
+        "--json",
+    ]);
+    assert_eq!(bad_id.exit, Exit::Usage);
+    assert_eq!(codes(&bad_id), ["OSM_INIT_INVALID"]);
+    assert_eq!(
+        fs::read(directory.path().join("osmium.json")).unwrap(),
+        before,
+        "a rejected edit must not rewrite the manifest"
+    );
+
+    let bad_visibility = run(&[
+        "osmium",
+        "reference",
+        "add",
+        &root,
+        "--id",
+        "ok-id",
+        "--kind",
+        "url",
+        "--visibility",
+        "secret",
+        "--json",
+    ]);
+    assert_eq!(bad_visibility.exit, Exit::Usage);
+
+    // Schema and package-asset mistakes are rejected before the manifest is
+    // rewritten; the loader must never be left with a record it cannot read.
+    for args in [
+        vec![
+            "osmium",
+            "reference",
+            "add",
+            &root,
+            "--id",
+            "bad-kind",
+            "--kind",
+            "not-a-kind",
+            "--json",
+        ],
+        vec![
+            "osmium",
+            "reference",
+            "add",
+            &root,
+            "--id",
+            "bad-type",
+            "--kind",
+            "url",
+            "--type",
+            "not-a-type",
+            "--json",
+        ],
+        vec![
+            "osmium",
+            "reference",
+            "add",
+            &root,
+            "--id",
+            "missing-asset",
+            "--kind",
+            "package_asset",
+            "--json",
+        ],
+    ] {
+        let rejected = run(&args);
+        assert_eq!(rejected.exit, Exit::Usage);
+        assert_eq!(
+            fs::read(directory.path().join("osmium.json")).unwrap(),
+            before,
+            "a rejected draft must not rewrite the manifest"
+        );
+    }
+
+    // Attaching before anything is registered is a content defect, not a usage
+    // mistake, so it exits 1 and still writes nothing.
+    let unattached = run(&[
+        "osmium",
+        "reference",
+        "attach",
+        &root,
+        "absent-ref",
+        "--resource",
+        "addition.lesson",
+        "--json",
+    ]);
+    assert_eq!(unattached.exit, Exit::Invalid);
+    assert_eq!(codes(&unattached), ["OSM_SOURCE_REFERENCE"]);
+
+    // A credential-like locator is rejected by the same rule that guards build.
+    let added = run(&[
+        "osmium",
+        "reference",
+        "add",
+        &root,
+        "--id",
+        "leaky",
+        "--kind",
+        "url",
+        "--locator",
+        "https://example.org/doc?access_token=abc",
+        "--json",
+    ]);
+    assert_eq!(added.exit, Exit::Invalid);
+    assert_eq!(codes(&added), ["OSM_SOURCE_PRIVACY"]);
 }

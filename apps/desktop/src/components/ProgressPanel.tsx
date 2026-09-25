@@ -103,7 +103,7 @@ export function ProgressPanel({
         </ul>
       )}
       <p className="meta">
-        {tr("保存済みの回答記録です。習得を保証するものではありません。", "Observed answer records; they do not guarantee mastery.")}
+        {tr("保存済みの回答記録です。理解度を判定するものではありません。", "Saved answer records; they do not determine understanding.")}
       </p>
       <DeveloperDetails label={tr("メンテナンス", "Maintenance")}>
         <p>{tr("保存済みEventから進捗を再構築します。", "Rebuild progress from saved events.")}</p>

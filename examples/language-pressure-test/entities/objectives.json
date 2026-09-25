@@ -1,17 +1,5 @@
 [
-  {
-    "id": "request.form",
-    "concept": "politeness",
-    "description": "Choose a polite request form"
-  },
-  {
-    "id": "directions.translate",
-    "concept": "directions",
-    "description": "Match direction phrases across Japanese and English"
-  },
-  {
-    "id": "pronounce.station",
-    "concept": "pronunciation",
-    "description": "Recognize the stressed syllable in station"
-  }
+ { "id": "requests.choose", "concept": "requests", "description": "旅行先の短い会話で、相手や用件に合う依頼表現を選び、必要な情報をたずねられる。" },
+ { "id": "directions.exchange", "concept": "directions", "description": "目的地と目印を含む道順を、順序語と方向表現を使ってたずねたり説明したりできる。" },
+ { "id": "listening.confirm", "concept": "listening", "description": "強く読まれる語や既知の目印を手がかりに要点をつかみ、聞き取れない部分を自然に確認できる。" }
 ]

@@ -2,85 +2,156 @@
   {
     "id": "compartments.check",
     "revision": "1",
-    "measures": ["compartments.explain"],
-    "source_ids": ["openstax-fluid-compartments"],
+    "measures": [
+      "compartments.explain"
+    ],
+    "cognitive_level": "discrimination",
     "stimulus": {
       "markdown": "血漿・間質液・細胞内液の関係を説明する記述として、最も適切なのはどれですか？"
     },
     "response": {
       "type": "single_select",
       "options": [
-        {"id": "a", "text": "血漿と間質液は細胞外液に含まれ、細胞内液とは細胞膜で隔てられる。"},
-        {"id": "b", "text": "血漿は細胞内液の一部で、間質液だけが細胞外液に含まれる。"},
-        {"id": "c", "text": "溶質濃度が異なっても、水は細胞膜を越えて移動しない。"}
+        {
+          "id": "a",
+          "text": "血漿と間質液は細胞外液に含まれ、細胞内液とは細胞膜で隔てられる。"
+        },
+        {
+          "id": "b",
+          "text": "血漿は細胞内液の一部で、間質液だけが細胞外液に含まれる。"
+        },
+        {
+          "id": "c",
+          "text": "溶質濃度が異なっても、水は細胞膜を越えて移動しない。"
+        }
       ]
     },
-    "evaluation": {"type": "exact", "answer": "a"},
+    "evaluation": {
+      "type": "exact",
+      "answer": "a"
+    },
     "feedback": {
       "markdown": "血漿と間質液はいずれも細胞外液です。細胞内液との間では、溶質の濃度差などに応じて水が移動します。"
-    }
+    },
+    "evidence_reference_ids": [
+      "openstax-fluid-compartments"
+    ]
   },
   {
     "id": "losses.check",
     "revision": "1",
-    "measures": ["losses.distinguish"],
-    "source_ids": ["who-diarrhoeal-disease", "merck-volume-depletion"],
+    "measures": [
+      "losses.distinguish"
+    ],
+    "cognitive_level": "application",
     "stimulus": {
       "markdown": "成人が数日間の水様便と摂取低下を経験しました。血清ナトリウム濃度が基準範囲内だったとき、体液の喪失について言えることはどれですか？"
     },
     "response": {
       "type": "single_select",
       "options": [
-        {"id": "a", "text": "ナトリウム濃度が正常なら、体内の水分量と細胞外液量も保たれている。"},
-        {"id": "b", "text": "便から水と電解質が失われ得る。ナトリウム濃度だけでは、体内の総ナトリウム量や循環血液量は判断できない。"},
-        {"id": "c", "text": "脱水と細胞外液量減少は同じ意味なので、別に考える必要はない。"}
+        {
+          "id": "a",
+          "text": "ナトリウム濃度が正常なら、体内の水分量と細胞外液量も保たれている。"
+        },
+        {
+          "id": "b",
+          "text": "便から水と電解質が失われ得る。ナトリウム濃度だけでは、体内の総ナトリウム量や循環血液量は判断できない。"
+        },
+        {
+          "id": "c",
+          "text": "脱水と細胞外液量減少は同じ意味なので、別に考える必要はない。"
+        }
       ]
     },
-    "evaluation": {"type": "exact", "answer": "b"},
+    "evaluation": {
+      "type": "exact",
+      "answer": "b"
+    },
     "feedback": {
       "markdown": "血清ナトリウム濃度は濃度の指標であり、総水分量や総ナトリウム量そのものではありません。下痢では水と複数の電解質が失われ得ます。"
-    }
+    },
+    "evidence_reference_ids": [
+      "who-diarrhoeal-disease",
+      "merck-volume-depletion"
+    ]
   },
   {
     "id": "findings.check",
     "revision": "1",
-    "measures": ["findings.interpret"],
-    "source_ids": ["merck-volume-depletion", "nice-cg174"],
+    "measures": [
+      "findings.interpret"
+    ],
+    "cognitive_level": "application",
     "stimulus": {
       "markdown": "立位で脈拍が増え、口腔粘膜が乾燥している成人がいます。体液状態を評価するときの考え方として、最も適切なのはどれですか？"
     },
     "response": {
       "type": "single_select",
       "options": [
-        {"id": "a", "text": "この二つの所見だけで体液量減少の有無と程度を確定する。"},
-        {"id": "b", "text": "測定条件と症状を確認し、病歴、他の診察所見、バイタルサインや検査値の推移と合わせて解釈する。"},
-        {"id": "c", "text": "血圧が一度保たれていれば、体液量の変化は考えなくてよい。"}
+        {
+          "id": "a",
+          "text": "この二つの所見だけで体液量減少の有無と程度を確定する。"
+        },
+        {
+          "id": "b",
+          "text": "測定条件と症状を確認し、病歴、他の診察所見、バイタルサインや検査値の推移と合わせて解釈する。"
+        },
+        {
+          "id": "c",
+          "text": "血圧が一度保たれていれば、体液量の変化は考えなくてよい。"
+        }
       ]
     },
-    "evaluation": {"type": "exact", "answer": "b"},
+    "evaluation": {
+      "type": "exact",
+      "answer": "b"
+    },
     "feedback": {
       "markdown": "口腔乾燥や起立時の変化には複数の要因があります。所見単独で断定せず、測定条件と患者背景を含めて評価します。"
-    }
+    },
+    "evidence_reference_ids": [
+      "merck-volume-depletion",
+      "nice-cg174"
+    ]
   },
   {
     "id": "integration.check",
     "revision": "1",
-    "measures": ["state.integrate"],
-    "source_ids": ["nice-cg174", "merck-volume-depletion"],
+    "measures": [
+      "state.integrate"
+    ],
+    "cognitive_level": "integration",
     "stimulus": {
       "markdown": "架空の成人症例です。2日間の水様便が続き、食事・飲水が減っています。本人は尿量がいつもより少ないと話し、臥位から立位になると脈拍が上がりました。血圧は大きく変わらず、血清ナトリウム濃度は基準範囲内です。現時点で最も妥当なまとめはどれですか？"
     },
     "response": {
       "type": "single_select",
       "options": [
-        {"id": "a", "text": "血圧とナトリウム濃度が保たれているため、体液喪失は否定できる。"},
-        {"id": "b", "text": "摂取低下・便からの喪失・尿量の変化・起立時所見は細胞外液量低下と整合するが、原因や程度は追加情報と再評価が必要である。"},
-        {"id": "c", "text": "起立時の脈拍変化だけで、脱水の種類と必要な治療を決められる。"}
+        {
+          "id": "a",
+          "text": "血圧とナトリウム濃度が保たれているため、体液喪失は否定できる。"
+        },
+        {
+          "id": "b",
+          "text": "摂取低下・便からの喪失・尿量の変化・起立時所見は細胞外液量低下と整合するが、原因や程度は追加情報と再評価が必要である。"
+        },
+        {
+          "id": "c",
+          "text": "起立時の脈拍変化だけで、脱水の種類と必要な治療を決められる。"
+        }
       ]
     },
-    "evaluation": {"type": "exact", "answer": "b"},
+    "evaluation": {
+      "type": "exact",
+      "answer": "b"
+    },
     "feedback": {
       "markdown": "複数の情報が細胞外液量低下の可能性を示しますが、単一の検査値や所見で体液状態の全体像は決まりません。経時変化と背景を加えて考えます。"
-    }
+    },
+    "evidence_reference_ids": [
+      "nice-cg174",
+      "merck-volume-depletion"
+    ]
   }
 ]

@@ -109,9 +109,10 @@ fn prerequisite_order_requires_both_concepts_in_same_curriculum() {
 #[test]
 fn resource_metadata_and_optional_capability_are_advisory() {
     let metadata = "OSM_LINT_METADATA";
-    assert!(has(documents(), metadata));
     let mut docs = documents();
-    docs.resources[0]["license"] = json!("CC0-1.0");
+    docs.resources[0].as_object_mut().unwrap().remove("creator");
+    assert!(has(docs.clone(), metadata));
+    docs.resources[0]["creator"] = json!("Osmium example authors");
     assert!(!has(docs, metadata));
 
     let optional = "OSM_LINT_OPTIONAL";
@@ -119,6 +120,28 @@ fn resource_metadata_and_optional_capability_are_advisory() {
     let mut docs = documents();
     docs.manifest["capabilities"]["optional"] = json!(["org.osmium.media.v1"]);
     assert!(has(docs, optional));
+}
+
+#[test]
+fn license_lint_requires_a_meaningful_known_license_not_field_presence() {
+    let code = "OSM_LINT_LICENSE_UNKNOWN";
+    // The arithmetic example states no reuse status at all.
+    assert!(has(documents(), code));
+
+    // A placeholder sentence satisfies the old field-presence rule and must
+    // still be reported: the field exists but says nothing usable.
+    let mut docs = documents();
+    docs.resources[0]["license"] = json!("再利用条件は未設定。");
+    assert!(has(docs.clone(), code));
+
+    // `unknown` is an honest status, not a known license.
+    docs.resources[0]["license"] = json!("CC0-1.0");
+    docs.resources[0]["license_status"] = json!("unknown");
+    assert!(has(docs.clone(), code));
+
+    // Only a known status plus a real license name clears the finding.
+    docs.resources[0]["license_status"] = json!("known");
+    assert!(!has(docs, code));
 }
 
 #[test]
@@ -161,4 +184,71 @@ fn findings_are_structured_and_ordered_deterministically() {
         assert!(value["code"].is_string());
         assert!(value["entity_id"].is_string());
     }
+}
+
+/// Add a reference registry plus the matching Evidence relation to a copy.
+fn with_evidence(reference: Value) -> PackageDocuments {
+    let mut docs = documents();
+    docs.manifest["references"] = json!([reference]);
+    let id = docs.manifest["references"][0]["id"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    docs.resources[0]["evidence_reference_ids"] = json!([id]);
+    docs
+}
+
+#[test]
+fn reference_metadata_and_evidence_visibility_are_advisory_heuristics() {
+    let metadata = "OSM_LINT_REFERENCE_METADATA";
+    // A bare locator with no citation, publisher or date is hard to verify later.
+    let bare = with_evidence(json!({
+        "id":"bare","kind":"url","locator":"https://example.org/a","visibility":"public"
+    }));
+    assert!(has(bare.clone(), metadata));
+    // A citation, or a publisher with a date, is enough to clear the heuristic.
+    let cited = with_evidence(json!({
+        "id":"cited","kind":"url","locator":"https://example.org/a","citation":"Example. Report.",
+        "visibility":"public"
+    }));
+    assert!(!has(cited, metadata));
+    let dated = with_evidence(json!({
+        "id":"dated","kind":"url","locator":"https://example.org/a","publisher":"Example",
+        "updated_at":"2026-01","visibility":"public"
+    }));
+    assert!(!has(dated, metadata));
+
+    // Evidence that resolves only to private authoring provenance is reported,
+    // because a learner can never see it.
+    let private = with_evidence(json!({
+        "id":"private-only","kind":"local_file","locator":"notes/a.md","visibility":"private"
+    }));
+    assert!(has(private, "OSM_LINT_SOURCE_VISIBILITY"));
+}
+
+#[test]
+fn assessment_depth_and_reused_distractors_are_advisory_heuristics() {
+    let level = "OSM_LINT_ASSESSMENT_COGNITIVE_LEVEL";
+    assert!(has(documents(), level));
+    let mut docs = documents();
+    for assessment in docs.assessments.as_array_mut().unwrap() {
+        assessment["cognitive_level"] = json!("recall");
+    }
+    assert!(!has(docs, level));
+
+    // A short two-option item is reported; a longer or wider item is not.
+    let shallow = "OSM_LINT_ASSESSMENT_SHALLOW";
+    let mut docs = documents();
+    docs.assessments[0]["stimulus"] = json!({"markdown":"短い問い"});
+    assert!(has(docs.clone(), shallow));
+    docs.assessments[0]["stimulus"] = json!({"markdown":"この教材の内容を踏まえ、二つの概念の違いを説明する記述として最も適切なものを選んでください。その理由も考えながら読みます。"});
+    assert!(!has(docs, shallow));
+
+    // Reused distractor text across items is reported once per owning item.
+    let reused = "OSM_LINT_REUSED_DISTRACTOR";
+    let mut docs = documents();
+    let mut second = docs.assessments[0].clone();
+    second["id"] = json!("addition.03");
+    docs.assessments.as_array_mut().unwrap().push(second);
+    assert!(has(docs, reused));
 }

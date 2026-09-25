@@ -103,6 +103,12 @@ pub enum Command {
     Install { path: PathBuf },
     /// List installed package versions after verifying their contents.
     Packages,
+    /// Remove one installed package version while preserving learning history.
+    Uninstall {
+        package_id: String,
+        #[arg(long = "package-version")]
+        package_version: String,
+    },
     /// Build a verified distribution directory or .osmium ZIP without overwriting.
     Build {
         source: PathBuf,
@@ -182,5 +188,87 @@ pub enum Command {
         /// Maximum number of entities to return.
         #[arg(long, value_name = "N", default_value_t = 64)]
         limit: usize,
+    },
+    /// Register, attach and list learner-facing Reference records.
+    Reference {
+        // Boxed because the `add` option set is much larger than every other
+        // variant and `Command` is parsed exactly once per process.
+        #[command(subcommand)]
+        action: Box<ReferenceAction>,
+    },
+}
+
+/// Reference authoring is the only part of the CLI that writes to a Source.
+///
+/// `Add` carries many optional bibliographic fields, so it is much larger than
+/// the other variants. The enum is built once per process from the command line
+/// and never stored in a collection, so the layout difference costs nothing.
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug, Subcommand)]
+pub enum ReferenceAction {
+    /// Register one Reference in the manifest registry. Existing files are
+    /// never overwritten and an already-registered ID is a no-op.
+    Add {
+        #[command(flatten)]
+        format: LegacyOutput,
+        /// Package Source directory.
+        path: PathBuf,
+        /// Stable Reference ID.
+        #[arg(long, value_name = "ID")]
+        id: String,
+        /// Record kind: url, doi, isbn, citation, local_file, package_asset or manual.
+        #[arg(long, value_name = "KIND")]
+        kind: String,
+        #[arg(long, value_name = "TEXT")]
+        title: Option<String>,
+        /// URL or package-relative path reaching the Reference.
+        #[arg(long, value_name = "LOCATOR")]
+        locator: Option<String>,
+        /// Human-readable citation for a learner bibliography.
+        #[arg(long, value_name = "TEXT")]
+        citation: Option<String>,
+        /// Material type: webpage, article, book, guideline, dataset, document, other.
+        #[arg(long = "type", value_name = "TYPE")]
+        reference_type: Option<String>,
+        #[arg(long, value_name = "NAME")]
+        publisher: Option<String>,
+        /// Repeatable author name, in the order it should be displayed.
+        #[arg(long = "author", value_name = "NAME")]
+        authors: Vec<String>,
+        #[arg(long = "published-at", value_name = "DATE")]
+        published_at: Option<String>,
+        #[arg(long = "updated-at", value_name = "DATE")]
+        updated_at: Option<String>,
+        #[arg(long = "accessed-at", value_name = "DATE")]
+        accessed_at: Option<String>,
+        #[arg(long, value_name = "TEXT")]
+        edition: Option<String>,
+        #[arg(long, value_name = "TEXT")]
+        version: Option<String>,
+        /// public, attribution_only or private.
+        #[arg(long, value_name = "VISIBILITY", default_value = "public")]
+        visibility: String,
+    },
+    /// Attach an existing Reference to a Resource or an Assessment as Evidence.
+    Attach {
+        #[command(flatten)]
+        format: LegacyOutput,
+        /// Package Source directory.
+        path: PathBuf,
+        /// Stable Reference ID to attach.
+        reference_id: String,
+        /// Target Resource ID.
+        #[arg(long, value_name = "ID", conflicts_with = "assessment")]
+        resource: Option<String>,
+        /// Target Assessment ID.
+        #[arg(long, value_name = "ID")]
+        assessment: Option<String>,
+    },
+    /// List registered References without writing anything.
+    List {
+        #[command(flatten)]
+        format: LegacyOutput,
+        /// Package Source directory.
+        path: PathBuf,
     },
 }

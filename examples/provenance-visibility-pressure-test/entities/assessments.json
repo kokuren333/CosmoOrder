@@ -1,0 +1,60 @@
+[
+  {
+    "id": "addition.01",
+    "revision": "1",
+    "measures": [
+      "addition.basic"
+    ],
+    "cognitive_level": "recall",
+    "stimulus": {
+      "markdown": "1 + 1 はいくつですか？"
+    },
+    "response": {
+      "type": "single_select",
+      "options": [
+        {
+          "id": "a",
+          "text": "1"
+        },
+        {
+          "id": "b",
+          "text": "2"
+        }
+      ]
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": "b"
+    },
+    "feedback": {
+      "markdown": "1に1を足すと2です。"
+    },
+    "evidence_reference_ids": [
+      "public-safe-query"
+    ]
+  },
+  {
+    "id": "addition.02",
+    "revision": "1",
+    "measures": [
+      "addition.basic"
+    ],
+    "cognitive_level": "recall",
+    "stimulus": {
+      "markdown": "2 + 1 は 3 ですか？"
+    },
+    "response": {
+      "type": "boolean"
+    },
+    "evaluation": {
+      "type": "exact",
+      "answer": true
+    },
+    "feedback": {
+      "markdown": "2に1を足すと3です。"
+    },
+    "evidence_reference_ids": [
+      "packaged-asset"
+    ]
+  }
+]

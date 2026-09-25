@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "The Osmium window may call only the application's own commands.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "dialog:allow-open", "dialog:allow-save"]
 }

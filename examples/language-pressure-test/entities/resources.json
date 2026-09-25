@@ -1,41 +1,54 @@
 [
   {
-    "id": "politeness.lesson",
+    "id": "requests.lesson",
     "type": "markdown",
-    "title": "A polite request",
-    "path": "content/politeness.md",
+    "title": "ひとこと添えて、丁寧にたずねる",
+    "path": "content/requests.md",
     "teaches": [
-      "request.form"
+      "requests.choose"
     ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text",
-    "language": "ja"
+    "language": "ja",
+    "creator": "Osmium教材制作（AI支援執筆）",
+    "attribution": "このPackage向けに新規執筆。根拠資料は参考資料を参照。",
+    "license_status": "unknown",
+    "evidence_reference_ids": [
+      "bc-polite-requests",
+      "cambridge-where-indirect"
+    ]
   },
   {
     "id": "directions.lesson",
     "type": "markdown",
-    "title": "Direction phrases",
+    "title": "目印と順序で道順を組み立てる",
     "path": "content/directions.md",
     "teaches": [
-      "directions.translate"
+      "directions.exchange"
     ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original fictional pressure-test text",
-    "language": "ja"
+    "language": "ja",
+    "creator": "Osmium教材制作（AI支援執筆）",
+    "attribution": "このPackage向けに新規執筆。語義確認には参考資料を参照。",
+    "license_status": "unknown",
+    "evidence_reference_ids": [
+      "cambridge-straight-definition",
+      "cambridge-next-to-definition",
+      "cambridge-across-definition"
+    ]
   },
   {
-    "id": "pronunciation.lesson",
+    "id": "listening.lesson",
     "type": "markdown",
-    "title": "Pronunciation cues",
-    "path": "content/pronunciation.lesson.md",
+    "title": "聞き取れた語をつなぎ、聞き返す",
+    "path": "content/listening.md",
     "teaches": [
-      "pronounce.station"
+      "listening.confirm"
     ],
-    "creator": "Osmium sample authors",
-    "license": "CC0-1.0",
-    "attribution": "Original pressure-test text",
-    "language": "ja"
+    "language": "ja",
+    "creator": "Osmium教材制作（AI支援執筆）",
+    "attribution": "このPackage向けに新規執筆。IPA表記の確認には参考資料を参照。",
+    "license_status": "unknown",
+    "evidence_reference_ids": [
+      "cambridge-station-pronunciation",
+      "bc-polite-requests"
+    ]
   }
 ]

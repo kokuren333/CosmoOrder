@@ -1,0 +1,5 @@
+Excerpt redistributed inside the package as a Reference asset.
+
+This file is a Package asset: it travels with the distribution, is declared by a
+`kind: package_asset` Reference with a `content_hash`, and is validated against
+that hash when the archive is read back.

@@ -1,11 +1,1 @@
-[
-  {
-    "id": "core",
-    "title": "Core sequence",
-    "objectives": [
-      "request.form",
-      "directions.translate",
-      "pronounce.station"
-    ]
-  }
-]
+[{ "id": "travel-basics", "title": "道をたずねる・案内する", "objectives": ["requests.choose", "directions.exchange", "listening.confirm"] }]

@@ -180,34 +180,35 @@ pub(crate) fn verify_files(
     if !errors.is_empty() {
         return Err(errors);
     }
-    if let Some(sources) = source_manifest.get("sources").and_then(Value::as_array) {
-        if sources
+    if let Some(references) = osmium_core::reference::registry(source_manifest) {
+        if references
             .iter()
-            .any(|source| source["visibility"] == "private")
+            .any(|record| !osmium_core::reference::visibility(record).is_record_public())
         {
             return Err(invalid(
-                "private provenance is forbidden in a distributable package",
+                "private authoring provenance is forbidden in a distributable package",
             ));
         }
-        if sources.iter().any(|source| {
-            source["visibility"] == "attribution_only" && source.get("locator").is_some()
+        if references.iter().any(|record| {
+            !osmium_core::reference::visibility(record).is_locator_public()
+                && record.get("locator").is_some()
         }) {
             return Err(invalid(
-                "attribution-only sources must not distribute their locator",
+                "hidden-locator references must not distribute their locator",
             ));
         }
     }
     let mut used = BTreeSet::from(["manifest.json".to_owned()]);
-    if let Some(sources) = source_manifest.get("sources").and_then(Value::as_array) {
-        for source in sources {
-            if source["kind"] == "package_asset" {
-                let Some(path) = source["locator"].as_str() else {
+    if let Some(references) = osmium_core::reference::registry(source_manifest) {
+        for reference in references {
+            if reference["kind"] == "package_asset" {
+                let Some(path) = reference["locator"].as_str() else {
                     continue;
                 };
                 let bytes = files
                     .get(path)
                     .ok_or_else(|| invalid(format!("missing package asset: {path}")))?;
-                if let Some(expected) = source.get("content_hash").and_then(Value::as_str)
+                if let Some(expected) = reference.get("content_hash").and_then(Value::as_str)
                     && expected != format!("sha256:{}", sha256(bytes))
                 {
                     return Err(diagnostic(path, "OSM_HASH", "package asset hash mismatch"));
@@ -278,17 +279,19 @@ pub(crate) fn verify_files(
 pub fn compile_source(source: &Path) -> Result<Distribution, Vec<Diagnostic>> {
     let loaded = load_source(source)?;
     let mut files = BTreeMap::new();
-    let excluded_assets: BTreeSet<&str> = loaded
-        .model
-        .documents()
-        .manifest
-        .get("sources")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter(|record| record["kind"] == "package_asset" && record["visibility"] != "public")
-        .filter_map(|record| record["locator"].as_str())
-        .collect();
+    // A package asset is only distributable when its locator is. A hidden or
+    // private locator means the bytes never travel, so they are dropped before
+    // the inventory check rather than becoming unreferenced payload.
+    let excluded_assets: BTreeSet<&str> =
+        osmium_core::reference::registry(&loaded.model.documents().manifest)
+            .into_iter()
+            .flatten()
+            .filter(|record| {
+                record["kind"] == "package_asset"
+                    && !osmium_core::reference::visibility(record).is_locator_public()
+            })
+            .filter_map(|record| record["locator"].as_str())
+            .collect();
     for (name, bytes) in &loaded.files {
         if excluded_assets.contains(name.as_str()) {
             continue;
@@ -320,35 +323,36 @@ pub fn compile_source(source: &Path) -> Result<Distribution, Vec<Diagnostic>> {
     let mut assessments: Value =
         parse_json(files.get(assessment_path).unwrap(), assessment_path).map_err(|e| vec![*e])?;
     let mut manifest = loaded.model.documents().manifest.clone();
-    let sources = manifest
-        .get("sources")
-        .and_then(Value::as_array)
+    let registry = osmium_core::reference::registry_field(&manifest);
+    let sources = registry
+        .and_then(|field| manifest[field].as_array())
         .cloned()
         .unwrap_or_default();
     let private_ids: BTreeSet<String> = sources
         .iter()
-        .filter(|source| source["visibility"] == "private")
-        .filter_map(|source| source["id"].as_str().map(str::to_owned))
+        .filter(|record| !osmium_core::reference::visibility(record).is_record_public())
+        .filter_map(|record| record["id"].as_str().map(str::to_owned))
         .collect();
-    if manifest.get("sources").is_some() {
+    if let Some(field) = registry {
         let mut distributable = Vec::new();
-        for mut source in sources {
-            match source["visibility"].as_str().unwrap_or("public") {
-                "private" => continue,
-                "attribution_only" => {
-                    if let Some(object) = source.as_object_mut() {
-                        object.remove("locator");
-                    }
-                }
-                _ => {}
+        for mut record in sources {
+            let visibility = osmium_core::reference::visibility(&record);
+            if !visibility.is_record_public() {
+                continue;
             }
-            distributable.push(source);
+            if !visibility.is_locator_public()
+                && let Some(object) = record.as_object_mut()
+            {
+                object.remove("locator");
+            }
+            distributable.push(record);
         }
-        manifest["sources"] = Value::Array(distributable);
+        manifest[field] = Value::Array(distributable);
     }
     for resource in resources.as_array_mut().unwrap() {
-        if let Some(source_ids) = resource.get_mut("source_ids").and_then(Value::as_array_mut) {
-            source_ids.retain(|id| id.as_str().is_some_and(|id| !private_ids.contains(id)));
+        let field = osmium_core::reference::evidence_field(resource);
+        if let Some(ids) = resource.get_mut(field).and_then(Value::as_array_mut) {
+            ids.retain(|id| id.as_str().is_some_and(|id| !private_ids.contains(id)));
         }
         if let Some(object) = resource.as_object_mut() {
             object.remove("source");
@@ -356,11 +360,9 @@ pub fn compile_source(source: &Path) -> Result<Distribution, Vec<Diagnostic>> {
         }
     }
     for assessment in assessments.as_array_mut().unwrap() {
-        if let Some(source_ids) = assessment
-            .get_mut("source_ids")
-            .and_then(Value::as_array_mut)
-        {
-            source_ids.retain(|id| id.as_str().is_some_and(|id| !private_ids.contains(id)));
+        let field = osmium_core::reference::evidence_field(assessment);
+        if let Some(ids) = assessment.get_mut(field).and_then(Value::as_array_mut) {
+            ids.retain(|id| id.as_str().is_some_and(|id| !private_ids.contains(id)));
         }
     }
     files.insert(manifest_path.to_owned(), canonical_json(&resources));

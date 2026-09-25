@@ -7,6 +7,7 @@ export function HistoryPanel({
   events,
   objectives,
   stimuli,
+  showPackageIdentity,
   onLoadMore,
   onBack,
   busy,
@@ -14,6 +15,7 @@ export function HistoryPanel({
   events: LearningEvent[];
   objectives: Map<string, string>;
   stimuli: Record<string, ContentView>;
+  showPackageIdentity: boolean;
   onLoadMore: () => void;
   onBack: () => void;
   busy: boolean;
@@ -54,10 +56,17 @@ export function HistoryPanel({
                   {new Date(event.timestamp).toLocaleString(language === "ja" ? "ja-JP" : "en-US")}
                 </time>
               </div>
-              <h2>{stimuli[event.assessment_id]?.text || tr("練習問題", "Practice question")}</h2>
+              <h2>
+                {stimuli[event.assessment_id]?.text ||
+                  event.assessment_snapshot?.stimulus?.markdown ||
+                  tr("練習問題", "Practice question")}
+              </h2>
+              {showPackageIdentity ? (
+                <p className="meta">{event.package_id}@{event.package_version}</p>
+              ) : null}
               <p className="meta">
                 {event.objective_ids
-                  .map((id) => objectives.get(id) ?? tr("学習目標", "Objective"))
+                  .map((id) => objectives.get(id) ?? id)
                   .join(language === "ja" ? "、" : ", ")}
               </p>
               <DeveloperDetails label={tr("回答の詳細", "Answer details")}>
